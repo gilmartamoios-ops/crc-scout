@@ -353,11 +353,11 @@ export default function SalaPage() {
 
             {/* RODAPÉ DA SIDEBAR - BOTÃO DE CONVERSÃO FIXO PARA VISITANTES */}
             {modoVisitante && !gestorDesbloqueado && (
-              <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
+              <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto', display: 'none' }}>
                 <a
                   href="/?etapa=quiz"
                   style={{
-                    display: 'block',
+                    display: 'none',
                     background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
                     color: '#050505',
                     textAlign: 'center',

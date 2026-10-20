@@ -181,30 +181,34 @@ export default function LandingPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          indexAxis: window.innerWidth <= 768 ? 'y' : 'x',
           layout: {
-            padding: { top: 35, left: 5, right: 5, bottom: 5 }
+            padding: { top: 15, left: 5, right: 35, bottom: 5 }
           },
           plugins: {
             legend: { display: false },
             tooltip: { enabled: true },
             datalabels: {
               anchor: 'end',
-              align: 'end',
-              offset: 2,
+              align: window.innerWidth <= 768 ? 'right' : 'end',
+              offset: 4,
               color: '#00ff88',
-              font: { weight: 'bold', size: 10 },
+              font: { weight: 'bold', size: 9 },
               formatter: function(value: number, context: any) {
                 const index = context.dataIndex;
                 const gcomCount = dadosGcom[index];
                 const valorFormatado = 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return `${gcomCount} GCom\n${valorFormatado}`;
+                return window.innerWidth <= 768 ? `${gcomCount} GCom • ${valorFormatado}` : `${gcomCount} GCom\n${valorFormatado}`;
               },
-              textAlign: 'center'
+              textAlign: window.innerWidth <= 768 ? 'left' : 'center'
             }
           },
           scales: {
-            y: { display: false, grid: { display: false } },
-            x: {
+            x: { 
+              display: window.innerWidth > 768, 
+              grid: { display: false } 
+            },
+            y: {
               grid: { display: false },
               ticks: { color: '#ffffff', font: { size: 10, weight: 'bold' } }
             }
@@ -213,7 +217,6 @@ export default function LandingPage() {
       });
     }
   };
-
   const toggleAudio = () => {
     if (santinhoVideoRef.current) {
       santinhoVideoRef.current.muted = !isMuted;
