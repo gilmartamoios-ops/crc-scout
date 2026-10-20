@@ -677,7 +677,6 @@ export default function SalaPage() {
       ✨ QUERO FAZER PARTE DA COMUNIDADE →
     </button>
   </div>
-)}
 
                   </div>
                 </div>

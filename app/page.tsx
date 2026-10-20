@@ -144,7 +144,7 @@ export default function LandingPage() {
     const valoresGanhos = dadosEtapas.map(item => item.total);
     const gcomsList = dadosEtapas.map(item => item.gcom);
 
-    setInfoContent(textosExplicativos[d.toString()] || "");
+setInfoContent(textosExplicativos[d.toString()] || "");
     renderizarGrafico(labels, valoresGanhos, gcomsList);
   };
 
@@ -156,6 +156,8 @@ export default function LandingPage() {
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
     // @ts-ignore
     if (typeof Chart !== 'undefined') {
@@ -175,42 +177,49 @@ export default function LandingPage() {
             data: dadosValores,
             backgroundColor: '#00ff88',
             borderRadius: 6,
-            barThickness: 'flex'
+            barThickness: isMobile ? 22 : 'flex'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: window.innerWidth <= 768 ? 'y' : 'x',
+          indexAxis: isMobile ? 'y' : 'x',
           layout: {
-            padding: { top: 15, left: 5, right: 35, bottom: 5 }
+            padding: isMobile 
+              ? { top: 10, left: 10, right: 110, bottom: 10 } 
+              : { top: 35, left: 5, right: 5, bottom: 5 }
           },
           plugins: {
             legend: { display: false },
             tooltip: { enabled: true },
             datalabels: {
               anchor: 'end',
-              align: window.innerWidth <= 768 ? 'right' : 'end',
-              offset: 4,
+              align: isMobile ? 'end' : 'end',
+              offset: 6,
               color: '#00ff88',
-              font: { weight: 'bold', size: 9 },
+              font: { weight: 'bold', size: isMobile ? 10 : 10 },
               formatter: function(value: number, context: any) {
                 const index = context.dataIndex;
                 const gcomCount = dadosGcom[index];
                 const valorFormatado = 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return window.innerWidth <= 768 ? `${gcomCount} GCom • ${valorFormatado}` : `${gcomCount} GCom\n${valorFormatado}`;
+                return isMobile ? `${gcomCount} GCom • ${valorFormatado}` : `${gcomCount} GCom\n${valorFormatado}`;
               },
-              textAlign: window.innerWidth <= 768 ? 'left' : 'center'
+              textAlign: isMobile ? 'left' : 'center'
             }
           },
           scales: {
             x: { 
-              display: window.innerWidth > 768, 
+              display: false, 
               grid: { display: false } 
             },
             y: {
+              display: true,
               grid: { display: false },
-              ticks: { color: '#ffffff', font: { size: 10, weight: 'bold' } }
+              ticks: { 
+                color: '#ffffff', 
+                font: { size: 10, weight: 'bold' },
+                autoSkip: false
+              }
             }
           }
         }
