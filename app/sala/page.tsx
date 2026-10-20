@@ -631,53 +631,53 @@ export default function SalaPage() {
                     </div>
 
                     {/* CARD FLUTUANTE DE CONVERSÃO PARA VISITANTES */}
-                    {modoVisitante && !gestorDesbloqueado && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '92%',
-                        maxWidth: '440px',
-                        background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.96), rgba(5, 5, 5, 0.99))',
-                        border: '1px solid rgba(0, 255, 136, 0.45)',
-                        borderRadius: '16px',
-                        padding: '28px 24px',
-                        textAlign: 'center',
-                        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0,255,136,0.15)',
-                        zIndex: 50
-                      }}>
-                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔒</div>
-                        
-                        <h3 style={{ color: '#fff', fontSize: '17px', fontWeight: '800', marginBottom: '8px', letterSpacing: '0.3px' }}>
-                          Prospecto Digital & Inteligência Territorial
-                        </h3>
-                        
-                        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.5', marginBottom: '20px' }}>
-                          Esta ferramenta automatiza o garimpo de novos Gestores de Comunidade por estado e município com base na Lei das Médias. Preencha sua Ficha de Qualificação para liberar o acesso operacional completo.
-                        </p>
+{modoVisitante && !gestorDesbloqueado && (
+  <div style={{
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '90%',
+    maxWidth: '420px',
+    background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
+    border: '1px solid rgba(0, 255, 136, 0.45)',
+    borderRadius: '20px',
+    padding: '28px 20px',
+    textAlign: 'center',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
+    zIndex: 50
+  }}>
+    <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
+    
+    <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
+      Faça Parte da Nossa Comunidade
+    </h3>
+    
+    <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
+      Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
+    </p>
 
-                        <button
-                          type="button"
-                          onClick={() => { window.location.href = '/?etapa=quiz'; }}
-                          style={{
-                            width: '100%',
-                            background: '#00ff88',
-                            color: '#050505',
-                            border: 'none',
-                            padding: '13px 20px',
-                            borderRadius: '10px',
-                            fontWeight: '900',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            letterSpacing: '0.5px',
-                            boxShadow: '0 0 20px rgba(0,255,136,0.35)',
-                          }}
-                        >
-                          PREENCHER QUIZ & DESBLOQUEAR FERRAMENTA →
-                        </button>
-                      </div>
-                    )}
+    <button
+      type="button"
+      onClick={() => { window.location.href = '/?etapa=quiz'; }}
+      style={{
+        width: '100%',
+        background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+        color: '#050505',
+        border: 'none',
+        padding: '14px 20px',
+        borderRadius: '12px',
+        fontWeight: '900',
+        fontSize: '12px',
+        cursor: 'pointer',
+        letterSpacing: '0.5px',
+        boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
+      }}
+    >
+      ✨ QUERO FAZER PARTE DA COMUNIDADE →
+    </button>
+  </div>
+)}
 
                   </div>
                 </div>
@@ -1355,6 +1355,27 @@ export default function SalaPage() {
         .sala-modal h2 {
           margin: 8px 0 10px;
           font-size: 28px;
+        }
+
+        /* --- AJUSTES EXCLUSIVOS PARA TELA DE CELULAR --- */
+        @media (max-width: 768px) {
+          .sala-page {
+            padding: 8px;
+            max-width: 100vw;
+            overflow-x: hidden;
+          }
+          .sala-shell {
+            border-radius: 16px;
+          }
+          .sala-main {
+            padding: 16px 12px;
+          }
+          .sala-header {
+            padding: 0 12px;
+          }
+          .sala-dynamic-card {
+            padding: 16px;
+          }
         }
       `}</style>
     </main>
