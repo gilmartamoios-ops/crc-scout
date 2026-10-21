@@ -245,7 +245,7 @@ export default function SalaPage() {
   const solicitadosMaster = leads.filter((l) => l.dados?.status_aprovacao === 'solicitado_master').length;
   const codigosLiberados = leads.filter((l) => l.dados?.status_aprovacao === 'codigo_liberado').length;
 
-  const leadsFiltrados = leads.filter((item) => {
+const leadsFiltrados = leads.filter((item) => {
     const nome = item.dados?.convidado?.nome?.toLowerCase() || '';
     const regiao = item.dados?.convidado?.cidade?.toLowerCase() || '';
     const status = item.dados?.status_aprovacao || 'pendente';
@@ -270,7 +270,7 @@ export default function SalaPage() {
               </div>
             </div>
           </div>
-
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               type="button"
@@ -697,7 +697,6 @@ export default function SalaPage() {
     </button>
   </div>
 </div>
-
 
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
