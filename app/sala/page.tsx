@@ -245,7 +245,7 @@ export default function SalaPage() {
   const solicitadosMaster = leads.filter((l) => l.dados?.status_aprovacao === 'solicitado_master').length;
   const codigosLiberados = leads.filter((l) => l.dados?.status_aprovacao === 'codigo_liberado').length;
 
-const leadsFiltrados = leads.filter((item) => {
+  const leadsFiltrados = leads.filter((item) => {
     const nome = item.dados?.convidado?.nome?.toLowerCase() || '';
     const regiao = item.dados?.convidado?.cidade?.toLowerCase() || '';
     const status = item.dados?.status_aprovacao || 'pendente';
@@ -270,7 +270,6 @@ const leadsFiltrados = leads.filter((item) => {
               </div>
             </div>
           </div>
-          
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               type="button"
@@ -351,7 +350,6 @@ const leadsFiltrados = leads.filter((item) => {
               ))}
             </nav>
 
-            {/* RODAPÉ DA SIDEBAR - BOTÃO DE CONVERSÃO FIXO PARA VISITANTES */}
             {modoVisitante && !gestorDesbloqueado && (
               <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto', display: 'none' }}>
                 <a
@@ -425,7 +423,6 @@ const leadsFiltrados = leads.filter((item) => {
 
                   <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden' }}>
 
-                    {/* CONTEÚDO OPERACIONAL AO FUNDO (Desfocado para visitantes) */}
                     <div style={{ 
                       filter: modoVisitante && !gestorDesbloqueado ? 'blur(4px)' : 'none',
                       opacity: modoVisitante && !gestorDesbloqueado ? 0.45 : 1,
@@ -485,7 +482,6 @@ const leadsFiltrados = leads.filter((item) => {
                           </div>
                         </div>
 
-                        {/* RÓTULO ATUALIZADO SOLICITADO */}
                         <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '10px', letterSpacing: '0.5px' }}>
                           SELECIONE O PERFIL DESEJADO:
                         </label>
@@ -584,6 +580,7 @@ const leadsFiltrados = leads.filter((item) => {
 
                                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                     <button
+                                      type="button"
                                       onClick={() => {
                                         navigator.clipboard.writeText(linkBaseGestor);
                                         alert(`📋 Link do SCOUT copiado com sucesso!`);
@@ -628,76 +625,60 @@ const leadsFiltrados = leads.filter((item) => {
                           </div>
                         </div>
                       )}
+
                     </div>
 
                     {/* CARD FLUTUANTE DE CONVERSÃO PARA VISITANTES */}
-<div style={{
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: '420px',
-  background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
-  border: '1px solid rgba(0, 255, 136, 0.45)',
-  borderRadius: '20px',
-  padding: '28px 20px',
-  textAlign: 'center',
-  boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
-  zIndex: 50
-}}>
-  <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
-  
-  <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
-    Faça Parte da Nossa Comunidade
-  </h3>
-  
-  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
-    Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
-  </p>
+                    {modoVisitante && !gestorDesbloqueado && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '90%',
+                        maxWidth: '420px',
+                        background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
+                        border: '1px solid rgba(0, 255, 136, 0.45)',
+                        borderRadius: '20px',
+                        padding: '28px 20px',
+                        textAlign: 'center',
+                        boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
+                        zIndex: 50
+                      }}>
+                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
+                        <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
+                          Faça Parte da Nossa Comunidade
+                        </h3>
+                        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
+                          Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                          style={{
+                            width: '100%',
+                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                            color: '#050505',
+                            border: 'none',
+                            padding: '14px 20px',
+                            borderRadius: '12px',
+                            fontWeight: '900',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
+                          }}
+                        >
+                          ✨ QUERO FAZER PARTE DA COMUNIDADE →
+                        </button>
+                      </div>
+                    )}
 
-  <button
-    type="button"
-    onClick={() => { window.location.href = '/?etapa=quiz'; }}
-    style={{
-      width: '100%',
-      background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-      color: '#050505',
-      border: 'none',
-      padding: '14px 20px',
-      borderRadius: '12px',
-      fontWeight: '900',
-      fontSize: '12px',
-      cursor: 'pointer',
-      letterSpacing: '0.5px',
-      boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
-    }}
-  >
-    ✨ QUERO FAZER PARTE DA COMUNIDADE →
-  </button>
-</div>
-    <button
-      type="button"
-      onClick={() => { window.location.href = '/?etapa=quiz'; }}
-      style={{
-        width: '100%',
-        background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-        color: '#050505',
-        border: 'none',
-        padding: '14px 20px',
-        borderRadius: '12px',
-        fontWeight: '900',
-        fontSize: '12px',
-        cursor: 'pointer',
-        letterSpacing: '0.5px',
-        boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
-      }}
-    >
-      ✨ QUERO FAZER PARTE DA COMUNIDADE →
-    </button>
-  </div>
-</div>
+                  </div>
+                </div>
+              )}
 
+              {/* SUBLINK 2: SANTINHO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>SEU SCOUT · LINK 2</span>
@@ -990,6 +971,7 @@ const leadsFiltrados = leads.filter((item) => {
                   </div>
                 </div>
               )}
+
             </div>
           </section>
         </div>
@@ -1371,7 +1353,6 @@ const leadsFiltrados = leads.filter((item) => {
           font-size: 28px;
         }
 
-        /* --- AJUSTES EXCLUSIVOS PARA TELA DE CELULAR --- */
         @media (max-width: 768px) {
           .sala-page {
             padding: 8px;
