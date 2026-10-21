@@ -169,11 +169,7 @@ setInfoContent(textosExplicativos[d.toString()] || "");
 
      // @ts-ignore
       chartInstanceRef.current = new Chart(ctx, {
-       type: 'bar',
-options: {
-  indexAxis: 'y',
-  // restante das opções que já lá estavam
-}
+        type: 'bar',
         data: {
           labels: labels,
           datasets: [{
