@@ -167,9 +167,9 @@ setInfoContent(textosExplicativos[d.toString()] || "");
         Chart.register(ChartDataLabels);
       }
 
-      // @ts-ignore
+     // @ts-ignore
       chartInstanceRef.current = new Chart(ctx, {
-        type: 'bar',
+        type: 'horizontalBar',
         data: {
           labels: labels,
           datasets: [{
@@ -177,34 +177,34 @@ setInfoContent(textosExplicativos[d.toString()] || "");
             data: dadosValores,
             backgroundColor: '#00ff88',
             borderRadius: 6,
-            barThickness: isMobile ? 22 : 'flex'
+            barThickness: 22
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: isMobile ? 'y' : 'x',
+          indexAxis: 'y', // <--- FIXO EM 'y' PARA FICAR SEMPRE HORIZONTAL
           layout: {
             padding: isMobile 
               ? { top: 10, left: 10, right: 110, bottom: 10 } 
-              : { top: 35, left: 5, right: 5, bottom: 5 }
+              : { top: 35, left: 5, right: 110, bottom: 5 }
           },
           plugins: {
             legend: { display: false },
             tooltip: { enabled: true },
             datalabels: {
               anchor: 'end',
-              align: isMobile ? 'end' : 'end',
+              align: 'end',
               offset: 6,
               color: '#00ff88',
-              font: { weight: 'bold', size: isMobile ? 10 : 10 },
+              font: { weight: 'bold', size: 10 },
               formatter: function(value: number, context: any) {
                 const index = context.dataIndex;
                 const gcomCount = dadosGcom[index];
                 const valorFormatado = 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return isMobile ? `${gcomCount} GCom • ${valorFormatado}` : `${gcomCount} GCom\n${valorFormatado}`;
+                return `${gcomCount} GCom • ${valorFormatado}`;
               },
-              textAlign: isMobile ? 'left' : 'center'
+              textAlign: 'left'
             }
           },
           scales: {

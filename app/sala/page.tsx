@@ -631,32 +631,51 @@ export default function SalaPage() {
                     </div>
 
                     {/* CARD FLUTUANTE DE CONVERSÃO PARA VISITANTES */}
-{modoVisitante && !gestorDesbloqueado && (
-  <div style={{
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '90%',
-    maxWidth: '420px',
-    background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
-    border: '1px solid rgba(0, 255, 136, 0.45)',
-    borderRadius: '20px',
-    padding: '28px 20px',
-    textAlign: 'center',
-    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
-    zIndex: 50
-  }}>
-    <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
-    
-    <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
-      Faça Parte da Nossa Comunidade
-    </h3>
-    
-    <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
-      Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
-    </p>
+<div style={{
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  maxWidth: '420px',
+  background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
+  border: '1px solid rgba(0, 255, 136, 0.45)',
+  borderRadius: '20px',
+  padding: '28px 20px',
+  textAlign: 'center',
+  boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
+  zIndex: 50
+}}>
+  <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
+  
+  <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
+    Faça Parte da Nossa Comunidade
+  </h3>
+  
+  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
+    Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
+  </p>
 
+  <button
+    type="button"
+    onClick={() => { window.location.href = '/?etapa=quiz'; }}
+    style={{
+      width: '100%',
+      background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+      color: '#050505',
+      border: 'none',
+      padding: '14px 20px',
+      borderRadius: '12px',
+      fontWeight: '900',
+      fontSize: '12px',
+      cursor: 'pointer',
+      letterSpacing: '0.5px',
+      boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
+    }}
+  >
+    ✨ QUERO FAZER PARTE DA COMUNIDADE →
+  </button>
+</div>
     <button
       type="button"
       onClick={() => { window.location.href = '/?etapa=quiz'; }}
@@ -677,12 +696,9 @@ export default function SalaPage() {
       ✨ QUERO FAZER PARTE DA COMUNIDADE →
     </button>
   </div>
+</div>
 
-                  </div>
-                </div>
-              )}
 
-              {/* SUBLINK 2: SANTINHO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>SEU SCOUT · LINK 2</span>
