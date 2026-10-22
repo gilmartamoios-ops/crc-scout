@@ -28,7 +28,8 @@ interface ConvidadoRegistro {
     };
     perfil?: string;
     respostas?: Record<string, string>;
-    status_aprovacao?: 'pendente' | 'acompanhamento' | 'solicitado_master' | 'codigo_liberado' | 'desqualificado' | 'nao_interesse';
+    status_aprovacao?: 'pendente' | 'aprovado' | 'reprovado' | 'bloqueado' | 'acompanhamento' | 'solicitado_master' | 'codigo_liberado';
+    codigo_lib?: string;
     codigo_master?: string;
     origem?: string;
   };
@@ -112,10 +113,8 @@ export default function SalaPage() {
   const [buscaNome, setBuscaNome] = useState<string>('');
   const [buscaRegiao, setBuscaRegiao] = useState<string>('');
   
-  // Estado para alerta visual de novo lead em tempo real
   const [novoLeadAlerta, setNovoLeadAlerta] = useState<string | null>(null);
 
-  // Função para tocar bipe sonoro de alerta em tempo real
   const tocarAlertaSonoro = () => {
     try {
       // @ts-ignore
@@ -125,7 +124,7 @@ export default function SalaPage() {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
       gain.gain.setValueAtTime(0.15, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
       osc.connect(gain);
@@ -217,16 +216,21 @@ export default function SalaPage() {
     }
   };
 
+  // Carrega os leads do banco (incluindo os leads sem gestor / sem santinho)
   const carregarLeadsScout = async () => {
     setCarregandoLeads(true);
     try {
+      const slugAtual = gestor?.slug || gestor?.id || 'master';
+      const isMaster = slugAtual === 'master';
+
       let query = supabase
         .from('scout_registros')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (gestor && gestor.slug !== 'master') {
-        query = query.eq('gestor_id', gestor.slug || gestor.id);
+      if (!isMaster) {
+        // Traz os registos atribuídos ao gestor OU os registos sem gestor (NULL)
+        query = query.or(`gestor_id.eq.${slugAtual},gestor_id.is.null`);
       }
 
       const { data, error } = await query;
@@ -243,14 +247,13 @@ export default function SalaPage() {
     }
   };
 
-  // Configuração do Supabase Realtime para Alerta Sonoro e Atualização Automática
+  // Realtime de novos registos
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
     const slugAtual = gestor?.slug || gestor?.id || 'master';
     const isMaster = slugAtual === 'master';
 
-    // Canal do Realtime
     const canal = supabase
       .channel('sala_operacoes_realtime')
       .on(
@@ -263,12 +266,11 @@ export default function SalaPage() {
         (payload) => {
           const novoRegistro = payload.new as ConvidadoRegistro;
 
-          // Filtra: Se for master vê tudo, senão vê apenas os direcionados ao seu gestor_id
-          if (!isMaster && novoRegistro.gestor_id !== slugAtual) {
+          // Se não for master, vê registos diretos ou sem gestor (null)
+          if (!isMaster && novoRegistro.gestor_id !== slugAtual && novoRegistro.gestor_id !== null) {
             return;
           }
 
-          // Dispara alerta sonoro e visual
           tocarAlertaSonoro();
           const nomeLead = novoRegistro.dados?.convidado?.nome || 'Novo Prospecto';
           setNovoLeadAlerta(nomeLead);
@@ -277,7 +279,6 @@ export default function SalaPage() {
             setNovoLeadAlerta(null);
           }, 6000);
 
-          // Atualiza a lista de leads instantaneamente
           setLeads((anterior) => [novoRegistro, ...anterior]);
         }
       )
@@ -294,14 +295,54 @@ export default function SalaPage() {
     }
   }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
 
-  const atualizarStatusLead = async (id: string, novoStatus: 'pendente' | 'acompanhamento' | 'solicitado_master' | 'codigo_liberado' | 'desqualificado' | 'nao_interesse') => {
+  // Função para APROVAR e GERAR CHAVE (codigo_lib)
+  const aprovarLead = async (id: string) => {
+    const leadAlvo = leads.find((l) => l.id === id);
+    if (!leadAlvo) return;
+
+    const gestorIdAtual = gestor?.slug || gestor?.id || 'master';
+    const chaveGerada = `CRC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const novosDados = {
+      ...leadAlvo.dados,
+      status_aprovacao: 'aprovado' as const,
+      codigo_lib: chaveGerada,
+      data_aprovacao: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('scout_registros')
+      .update({
+        gestor_id: leadAlvo.gestor_id || gestorIdAtual, // Assume o lead caso estivesse NULL
+        dados: novosDados,
+      })
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao aprovar lead: ' + error.message);
+      return;
+    }
+
+    setLeads((anterior) =>
+      anterior.map((item) =>
+        item.id === id ? { ...item, gestor_id: item.gestor_id || gestorIdAtual, dados: novosDados } : item
+      )
+    );
+
+    alert(`✅ Lead aprovado! Chave gerada: ${chaveGerada}\nAvisos enviados ao lead.`);
+  };
+
+  // Função para REPROVAR / DELETAR DA VISTA (Soft Delete)
+  const reprovarLead = async (id: string) => {
+    if (!confirm('Deseja remover este lead da sua lista de operações? (O registo permanecerá salvo na base do Supabase)')) return;
+
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
 
     const novosDados = {
       ...leadAlvo.dados,
-      status_aprovacao: novoStatus,
-      data_atualizacao_status: new Date().toISOString(),
+      status_aprovacao: 'reprovado' as const,
+      data_reprovacao: new Date().toISOString(),
     };
 
     const { error } = await supabase
@@ -310,7 +351,31 @@ export default function SalaPage() {
       .eq('id', id);
 
     if (error) {
-      alert('Erro ao atualizar status do prospecto no banco.');
+      alert('Erro ao reprovar lead: ' + error.message);
+      return;
+    }
+
+    // Remove instantaneamente da visualização da lista do gestor
+    setLeads((anterior) => anterior.filter((item) => item.id !== id));
+  };
+
+  // Função de Acompanhamento genérico
+  const atualizarStatusGenerico = async (id: string, novoStatus: 'pendente' | 'acompanhamento') => {
+    const leadAlvo = leads.find((l) => l.id === id);
+    if (!leadAlvo) return;
+
+    const novosDados = {
+      ...leadAlvo.dados,
+      status_aprovacao: novoStatus,
+    };
+
+    const { error } = await supabase
+      .from('scout_registros')
+      .update({ dados: novosDados })
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao atualizar status do registo.');
       return;
     }
 
@@ -323,13 +388,15 @@ export default function SalaPage() {
 
   const linkBaseGestor = `https://crc-scout.vercel.app/?gestor_id=${gestor?.slug || 'master'}`;
 
-  const totalLeads = leads.length;
-  const pendentesFila = leads.filter((l) => (l.dados?.status_aprovacao || 'pendente') === 'pendente').length;
-  const acompanhamentoLeads = leads.filter((l) => l.dados?.status_aprovacao === 'acompanhamento').length;
-  const solicitadosMaster = leads.filter((l) => l.dados?.status_aprovacao === 'solicitado_master').length;
-  const codigosLiberados = leads.filter((l) => l.dados?.status_aprovacao === 'codigo_liberado').length;
+  // Filtra fora os registos 'reprovados' para a vista do gestor
+  const leadsAtivosGestor = leads.filter((l) => l.dados?.status_aprovacao !== 'reprovado');
 
-  const leadsFiltrados = leads.filter((item) => {
+  const totalLeads = leadsAtivosGestor.length;
+  const pendentesFila = leadsAtivosGestor.filter((l) => (l.dados?.status_aprovacao || 'pendente') === 'pendente').length;
+  const acompanhamentoLeads = leadsAtivosGestor.filter((l) => l.dados?.status_aprovacao === 'acompanhamento').length;
+  const aprovadosComChave = leadsAtivosGestor.filter((l) => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').length;
+
+  const leadsFiltrados = leadsAtivosGestor.filter((item) => {
     const nome = item.dados?.convidado?.nome?.toLowerCase() || '';
     const regiao = item.dados?.convidado?.cidade?.toLowerCase() || '';
     const status = item.dados?.status_aprovacao || 'pendente';
@@ -939,7 +1006,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS (SUPABASE) */}
+              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS (SUPABASE + GOVERNANÇA DE APROVAÇÃO) */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
                   
@@ -949,17 +1016,17 @@ export default function SalaPage() {
                         CENTRAL REAL DE ATENDIMENTO
                       </span>
                       <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
-                        Gestão de Prospectos & Liberação Master
+                        Gestão de Prospectos & Liberação de Chaves
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Os prospectos listados abaixo preencheram o Quiz pelo seu link exclusivo. Realize o atendimento no X1 e utilize a prancheta abaixo para gerenciar a fila e solicitar a emissão do Código de Entrada ao <strong>Master (Gilmar)</strong>.
+                      Gerencie a sua fila de atendimento X1. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada na hora e gravada no Supabase. Ao clicar em <strong>"Reprovar"</strong>, o registo é ocultado da sua lista, mas mantido na base do Master.
                     </p>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '22px' }}>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>TOTAL REAL</span>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>TOTAL ATIVOS</span>
                       <strong style={{ fontSize: '20px', color: '#fff' }}>{totalLeads}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
@@ -970,20 +1037,16 @@ export default function SalaPage() {
                       <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>ACOMPANHAMENTO</span>
                       <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{acompanhamentoLeads}</strong>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: '#ffd700', letterSpacing: '1px', display: 'block' }}>AGUARDANDO MASTER</span>
-                      <strong style={{ fontSize: '20px', color: '#ffd700' }}>{solicitadosMaster}</strong>
-                    </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,255,136,0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: '#00ff88', letterSpacing: '1px', display: 'block' }}>CÓDIGOS LIBERADOS</span>
-                      <strong style={{ fontSize: '20px', color: '#00ff88' }}>{codigosLiberados}</strong>
+                      <span style={{ fontSize: '9px', color: '#00ff88', letterSpacing: '1px', display: 'block' }}>APROVADOS COM CHAVE</span>
+                      <strong style={{ fontSize: '20px', color: '#00ff88' }}>{aprovadosComChave}</strong>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILA ATIVA DO SUPABASE</span>
-                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Registros Reais Cadastrados</h3>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILA OPERACIONAL ATIVA</span>
+                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Registros do Supabase</h3>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -999,7 +1062,6 @@ export default function SalaPage() {
                           fontSize: '11px',
                           fontWeight: 'bold',
                         }}
-                        title="Imprimir Prancheta A4 de Acompanhamento"
                       >
                         🖨️ Imprimir / Baixar PDF
                       </button>
@@ -1008,7 +1070,7 @@ export default function SalaPage() {
                         onClick={carregarLeadsScout}
                         style={{ background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.3)', color: '#00ff88', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
                       >
-                        🔄 Atualizar Fila Real
+                        🔄 Atualizar Fila
                       </button>
                     </div>
                   </div>
@@ -1036,20 +1098,17 @@ export default function SalaPage() {
                       <option value="todos">Todos os Status</option>
                       <option value="pendente">Pendentes (Fila Ativa)</option>
                       <option value="acompanhamento">Em Acompanhamento</option>
-                      <option value="solicitado_master">Aguardando Master</option>
-                      <option value="codigo_liberado">Códigos Liberados</option>
-                      <option value="nao_interesse">Não Tenho Interesse (72h+)</option>
-                      <option value="desqualificado">Desqualificados</option>
+                      <option value="aprovado">Aprovados com Chave</option>
                     </select>
                   </div>
 
                   {carregandoLeads ? (
                     <div style={{ padding: '40px', textAlign: 'center', color: '#00ff88', fontSize: '12px' }}>
-                      ⚙️ Conectando ao Supabase e buscando registros reais...
+                      ⚙️ Conectando ao Supabase e buscando registros...
                     </div>
                   ) : leadsFiltrados.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px', background: 'rgba(0,0,0,0.3)' }}>
-                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Sua fila de prospectos reais está limpa.</strong>
+                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Sua fila de prospectos ativos está limpa.</strong>
                       Divulgue seu link exclusivo ou Santinho Digital para capturar novos cadastros diretamente no Quiz.
                     </div>
                   ) : (
@@ -1058,12 +1117,10 @@ export default function SalaPage() {
                         const convidado = item.dados?.convidado;
                         const whatsClean = convidado?.whatsapp?.replace(/\D/g, '') || '';
                         const statusAtual = item.dados?.status_aprovacao || 'pendente';
+                        const chaveCadastrada = item.dados?.codigo_lib || item.dados?.codigo_master;
+                        
                         const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, recebi seu cadastro no Quiz do SCOUT.CRC! Podemos conversar sobre seu objetivo?`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
-
-                        const dataCriacao = new Date(item.created_at).getTime();
-                        const horasDecorridas = (Date.now() - dataCriacao) / (1000 * 60 * 60);
-                        const passouDe72h = horasDecorridas >= 72 && statusAtual === 'pendente';
 
                         return (
                           <div
@@ -1071,7 +1128,7 @@ export default function SalaPage() {
                             className="lead-card-printable"
                             style={{
                               background: 'rgba(0,0,0,0.5)',
-                              border: passouDe72h ? '1px solid rgba(255,100,100,0.4)' : '1px solid rgba(0,255,136,0.2)',
+                              border: statusAtual === 'aprovado' ? '1px solid rgba(0,255,136,0.5)' : '1px solid rgba(255,255,255,0.1)',
                               borderRadius: '14px',
                               padding: '16px',
                               display: 'grid',
@@ -1089,15 +1146,16 @@ export default function SalaPage() {
                                   {item.dados?.perfil?.toUpperCase() || 'RESPOSTAS QUIZ'}
                                 </span>
                                 
-                                <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', background: statusAtual === 'codigo_liberado' ? 'rgba(0,255,136,0.2)' : statusAtual === 'solicitado_master' ? 'rgba(255,215,0,0.2)' : statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : statusAtual === 'nao_interesse' ? 'rgba(255,100,100,0.2)' : 'rgba(255,255,255,0.08)', color: statusAtual === 'codigo_liberado' ? '#00ff88' : statusAtual === 'solicitado_master' ? '#ffd700' : statusAtual === 'acompanhamento' ? '#2bd9ff' : statusAtual === 'nao_interesse' ? '#ff6464' : 'rgba(255,255,255,0.6)' }}>
-                                  {statusAtual === 'codigo_liberado' ? `✦ CÓDIGO: ${item.dados.codigo_master || 'ATIVO'}` : statusAtual === 'solicitado_master' ? '🟡 AGUARDANDO CÓDIGO MASTER' : statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : statusAtual === 'nao_interesse' ? '🔴 NÃO TENHO INTERESSE (72H+)' : '⚪ PENDENTE X1'}
+                                <span style={{ 
+                                  fontSize: '9px', 
+                                  padding: '2px 8px', 
+                                  borderRadius: '10px', 
+                                  fontWeight: 'bold', 
+                                  background: statusAtual === 'aprovado' ? 'rgba(0,255,136,0.2)' : statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : 'rgba(255,255,255,0.08)', 
+                                  color: statusAtual === 'aprovado' ? '#00ff88' : statusAtual === 'acompanhamento' ? '#2bd9ff' : 'rgba(255,255,255,0.6)' 
+                                }}>
+                                  {statusAtual === 'aprovado' ? `✦ APROVADO | CHAVE: ${chaveCadastrada}` : statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
                                 </span>
-
-                                {passouDe72h && (
-                                  <span style={{ fontSize: '8px', background: 'rgba(255,100,100,0.2)', color: '#ff6464', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(255,100,100,0.4)', fontWeight: 'bold' }}>
-                                    ⚠️ +72H SEM RESPOSTA
-                                  </span>
-                                )}
                               </div>
 
                               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '12px', marginTop: '2px', flexWrap: 'wrap' }}>
@@ -1115,27 +1173,27 @@ export default function SalaPage() {
                               )}
 
                               <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }} className="no-print">
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center', marginRight: '4px' }}>Gerir Fila:</span>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center', marginRight: '4px' }}>Acções do Gestor:</span>
                                 
                                 <button
-                                  onClick={() => atualizarStatusLead(item.id, 'solicitado_master')}
-                                  style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  onClick={() => aprovarLead(item.id)}
+                                  style={{ background: 'rgba(0,255,136,0.18)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
-                                  🟢 Solicitar Código ao Master
+                                  🟢 Aprovar & Gerar Chave
                                 </button>
 
                                 <button
-                                  onClick={() => atualizarStatusLead(item.id, 'acompanhamento')}
-                                  style={{ background: 'rgba(43,217,255,0.12)', border: '1px solid rgba(43,217,255,0.3)', color: '#2bd9ff', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  onClick={() => atualizarStatusGenerico(item.id, 'acompanhamento')}
+                                  style={{ background: 'rgba(43,217,255,0.12)', border: '1px solid rgba(43,217,255,0.3)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
                                   🔵 Acompanhamento
                                 </button>
 
                                 <button
-                                  onClick={() => atualizarStatusLead(item.id, 'nao_interesse')}
-                                  style={{ background: 'rgba(255,100,100,0.1)', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6464', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  onClick={() => reprovarLead(item.id)}
+                                  style={{ background: 'rgba(255,100,100,0.12)', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6464', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
-                                  🔴 Não Tenho Interesse
+                                  🔴 Reprovar / Deletar
                                 </button>
                               </div>
                             </div>
