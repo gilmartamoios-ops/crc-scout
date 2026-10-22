@@ -341,13 +341,7 @@ export default function LandingPage() {
         tipo: 'quiz_prospecto',
         gestor_id: uuidGestorValido,
         titulo: `Lead Quiz: ${respostas.objetivo}`,
-        nome: nome.trim(),
-        whatsapp: whatsClean,
-        email: email.trim(),
-        cidade: cidadeFormatada,
-        perfil: respostas.objetivo,
-        status_aprovacao: 'pendente',
-        dados: dadosRegistro,
+        dados: dadosRegistro, // Tudo encapsulado perfeitamente no JSONB
       });
 
       if (error) {
