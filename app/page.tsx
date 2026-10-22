@@ -10,14 +10,6 @@ interface Respostas {
 }
 
 export default function LandingPage() {
-  // Passos da jornada:
-  // 1 = Santinho Digital
-  // 2 = Mini-APN
-  // 2.2 = Aviso de Rigor Técnico
-  // 2.4 = Simulador de Negócio Original (Chart.js + DataLabels)
-  // 3 = Quiz de Qualificação
-  // 8 = Formulário de Cadastro Direto
-  // 9 = Sucesso / Tela Final Desfocada (Blur)
   const [etapa, setEtapa] = useState<number>(1);
   const [isMuted, setIsMuted] = useState(true);
 
@@ -25,7 +17,7 @@ export default function LandingPage() {
     objetivo: '',
   });
 
- const [nome, setNome] = useState('');
+  const [nome, setNome] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   
@@ -107,7 +99,6 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Executa a simulação e renderiza o gráfico Chart.js + DataLabels
   useEffect(() => {
     if (etapa === 2.4) {
       simular();
@@ -176,7 +167,7 @@ export default function LandingPage() {
     const valoresGanhos = dadosEtapas.map(item => item.total);
     const gcomsList = dadosEtapas.map(item => item.gcom);
 
-setInfoContent(textosExplicativos[d.toString()] || "");
+    setInfoContent(textosExplicativos[d.toString()] || "");
     renderizarGrafico(labels, valoresGanhos, gcomsList);
   };
 
@@ -199,7 +190,7 @@ setInfoContent(textosExplicativos[d.toString()] || "");
         Chart.register(ChartDataLabels);
       }
 
-     // @ts-ignore
+      // @ts-ignore
       chartInstanceRef.current = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -215,7 +206,7 @@ setInfoContent(textosExplicativos[d.toString()] || "");
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y', // <--- FIXO EM 'y' PARA FICAR SEMPRE HORIZONTAL
+          indexAxis: 'y',
           layout: {
             padding: isMobile 
               ? { top: 10, left: 10, right: 110, bottom: 10 } 
@@ -258,6 +249,7 @@ setInfoContent(textosExplicativos[d.toString()] || "");
       });
     }
   };
+
   const toggleAudio = () => {
     if (santinhoVideoRef.current) {
       santinhoVideoRef.current.muted = !isMuted;
@@ -312,7 +304,8 @@ setInfoContent(textosExplicativos[d.toString()] || "");
       `🎯 Objetivo: ${respostas.objetivo}\n\n` +
       `Gostaria de agendar meu atendimento e entender como construir minha comunidade!`
     );
-const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
+
+    const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
 
     try {
       const { error } = await supabase.from('scout_registros').insert({
@@ -344,7 +337,7 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
     else if (etapa === 3) setEtapa(2.4);
     else if (etapa === 8) setEtapa(3);
   };
-
+  
   return (
     <main className="scout-landing" style={{ position: 'relative', minHeight: '100vh', background: '#050505', color: '#fff' }}>
       
@@ -515,7 +508,7 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
             </section>
           )}
 
-          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO ORIGINAL (REDIRECIONA PARA /sala?modo=visitante) */}
+          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO ORIGINAL */}
           {etapa === 2.4 && (
             <section className="scout-content" style={{ padding: '12px' }}>
               <div className="card-simulador-original">
@@ -523,7 +516,6 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
                 <h1 className="title-sim">Simulação de Expansão da Comunidade</h1>
                 <p className="subtitle-sim">Projeção baseada em GCom - gestores de comunidade e consumo recorrente.</p>
 
-                {/* Filtros com os Selects */}
                 <div className="sim-grid-original">
                   <div>
                     <label className="sim-label-original">Novos GCom (Gestores de Comunidade) por etapa</label>
@@ -552,7 +544,6 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
                   </div>
                 </div>
 
-                {/* Wrapper de 2 Colunas: Texto à esquerda + Gráfico à direita */}
                 <div className="sim-body-wrapper-original">
                   <div className="info-col-left-original">
                     <div dangerouslySetInnerHTML={{ __html: infoContent }} />
@@ -726,7 +717,10 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
             </section>
           )}
 
-      {/* ETAPA 9: TELA FINAL COM DESFOQUE (BLUR) E RETORNO BLOQUEADO */}
+        </div>
+      </div>
+
+      {/* ETAPA 9: TELA FINAL COM DESFOQUE (BLUR) */}
       {etapa === 9 && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(16px)' }}>
           <div style={{ width: 'min(480px, 100%)', padding: '32px', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '24px', background: '#0b0f0d', boxShadow: '0 30px 100px rgba(0,255,136,0.25)', textAlign: 'center' }}>
@@ -756,7 +750,7 @@ const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
         </div>
       )}
 
-      {/* ESTILOS CSS ORIGINAIS */}
+      {/* ESTILOS CSS */}
       <style jsx>{`
         .btn-destaque-neon {
           width: 100%;
