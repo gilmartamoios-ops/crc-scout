@@ -1,4 +1,4 @@
--'use client';
+'use client';
 
 import Image from 'next/image';
 import Script from 'next/script';
@@ -875,7 +875,7 @@ export default function LandingPage() {
         }
 
         .sim-grid-original {
-          dispatch: grid;
+          display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 10px;
           margin-bottom: 12px;
@@ -967,7 +967,7 @@ export default function LandingPage() {
         @media(max-width: 720px) {
           .card-simulador-original { padding: 14px; }
           .sim-grid-original { grid-template-columns: 1fr; gap: 6px; }
-          .sim-body-wrapper-original { flex-direction: column; gap: 10px; }
+          .sim-body-wrapper-original { flexDirection: column; gap: 10px; }
           .info-col-left-original { width: 100%; min-width: 100%; padding: 12px; }
           .chart-col-right-original { min-height: 240px; }
         }
