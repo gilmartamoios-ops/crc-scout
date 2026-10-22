@@ -297,7 +297,6 @@ export default function LandingPage() {
       origem: 'quiz_publico',
     };
 
-    // Redireciona para o seu WhatsApp master (5522999231211) se for lead solto ou padrão
     const numeroDestino = '5522999231211';
 
     const msgWhats = encodeURIComponent(
@@ -315,6 +314,12 @@ export default function LandingPage() {
         tipo: 'quiz_prospecto',
         gestor_id: gestorId || 'master',
         titulo: `Lead Quiz: ${respostas.objetivo}`,
+        nome: nome.trim(),
+        whatsapp: whatsClean,
+        email: email.trim(),
+        cidade: cidadeFormatada,
+        perfil: respostas.objetivo,
+        status_aprovacao: 'pendente',
         dados: dadosRegistro,
       });
 
@@ -324,7 +329,12 @@ export default function LandingPage() {
         return;
       }
 
-      window.location.href = linkWhatsAppFinal;
+      setEnviado(true);
+      setEtapa(9);
+      
+      setTimeout(() => {
+        window.location.href = linkWhatsAppFinal;
+      }, 1000);
 
     } catch (err) {
       console.error('Falha de conexão:', err);
