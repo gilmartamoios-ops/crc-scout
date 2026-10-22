@@ -334,26 +334,18 @@ export default function LandingPage() {
     }).catch(err => console.error('Erro ao enviar para Telegram:', err));
 
     try {
+      // Validação rigorosa do UUID do gestor para evitar erro 22P02 no Supabase
+      const uuidGestorValido = gestorId && gestorId !== 'master' && gestorId.length > 10 ? gestorId : null;
+
       const { error } = await supabase.from('scout_registros').insert({
         tipo: 'quiz_prospecto',
-        gestor_id: gestorId || 'master',
+        gestor_id: uuidGestorValido,
         titulo: `Lead Quiz: ${respostas.objetivo}`,
-        dados: {
-          convidado: {
-            nome: nome.trim(),
-            whatsapp: whatsClean,
-            email: email.trim(),
-            cidade: cidadeFormatada,
-          },
-          perfil: respostas.objetivo,
-          respostas: respostas,
-          status_aprovacao: 'pendente',
-          origem: 'quiz_publico',
-        }
+        dados: dadosRegistro
       });
 
       if (error) {
-        console.warn('Supabase bloqueado/erro, ativando fallback WhatsApp:', error);
+        console.error('Erro detalhado do Supabase:', error);
         window.location.href = linkWhatsAppFinal;
         return;
       }
