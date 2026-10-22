@@ -312,8 +312,7 @@ setInfoContent(textosExplicativos[d.toString()] || "");
       `🎯 Objetivo: ${respostas.objetivo}\n\n` +
       `Gostaria de agendar meu atendimento e entender como construir minha comunidade!`
     );
-
-    const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
+const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
 
     try {
       const { error } = await supabase.from('scout_registros').insert({
@@ -375,7 +374,6 @@ setInfoContent(textosExplicativos[d.toString()] || "");
                 <a href="/sala" className="scout-gestor-link">Acesso do Gestor</a> 
               </div>
             </div>
-            
             <div className="scout-header-note">
               {gestorId ? `GESTOR: ${gestorId.toUpperCase()}` : 'CONHEÇA · EXPLORE · DECIDA'}
             </div>
