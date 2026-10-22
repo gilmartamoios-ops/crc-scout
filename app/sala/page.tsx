@@ -35,6 +35,12 @@ interface ConvidadoRegistro {
   };
 }
 
+interface GestorItem {
+  id: string;
+  nome: string;
+  slug: string | null;
+}
+
 const modulos: Modulo[] = [
   {
     nome: 'Visão Geral & Boas-Vindas',
@@ -98,6 +104,8 @@ export default function SalaPage() {
     email?: string;
     slug: string | null;
   } | null>(null);
+
+  const [listaGestores, setListaGestores] = useState<GestorItem[]>([]);
 
   const [estadoSelecionado, setEstadoSelecionado] = useState<string>('RJ');
   const [municipiosDoEstado, setMunicipiosDoEstado] = useState<string[]>([]);
@@ -167,7 +175,24 @@ export default function SalaPage() {
     }
 
     verificarSessao();
+    carregarListaGestores();
   }, []);
+
+  // Busca a lista de gestores cadastrados no Supabase para preencher o Dropdown
+  const carregarListaGestores = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scout_gestores')
+        .select('id, nome, slug')
+        .order('nome', { ascending: true });
+
+      if (!error && data) {
+        setListaGestores(data as GestorItem[]);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar lista de gestores:', err);
+    }
+  };
 
   useEffect(() => {
     async function carregarMunicipiosIBGE() {
@@ -216,7 +241,7 @@ export default function SalaPage() {
     }
   };
 
-  // Carrega os leads do banco (incluindo os leads sem gestor / sem santinho)
+  // Carrega os leads do banco (incluindo os leads sem gestor / Pool Geral)
   const carregarLeadsScout = async () => {
     setCarregandoLeads(true);
     try {
@@ -229,7 +254,6 @@ export default function SalaPage() {
         .order('created_at', { ascending: false });
 
       if (!isMaster) {
-        // Traz os registos atribuídos ao gestor OU os registos sem gestor (NULL)
         query = query.or(`gestor_id.eq.${slugAtual},gestor_id.is.null`);
       }
 
@@ -266,7 +290,6 @@ export default function SalaPage() {
         (payload) => {
           const novoRegistro = payload.new as ConvidadoRegistro;
 
-          // Se não for master, vê registos diretos ou sem gestor (null)
           if (!isMaster && novoRegistro.gestor_id !== slugAtual && novoRegistro.gestor_id !== null) {
             return;
           }
@@ -295,6 +318,32 @@ export default function SalaPage() {
     }
   }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
 
+  // Função para ATRIBUIR / TRANSFERIR o lead para um Gestor via Dropdown
+  const atribuirGestorLead = async (id: string, novoGestorId: string) => {
+    const leadAlvo = leads.find((l) => l.id === id);
+    if (!leadAlvo) return;
+
+    const valorParaSalvar = novoGestorId === '' ? null : novoGestorId;
+
+    const { error } = await supabase
+      .from('scout_registros')
+      .update({ gestor_id: valorParaSalvar })
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao atribuir gestor: ' + error.message);
+      return;
+    }
+
+    setLeads((anterior) =>
+      anterior.map((item) =>
+        item.id === id ? { ...item, gestor_id: valorParaSalvar } : item
+      )
+    );
+
+    alert(`✅ Lead atribuído ao gestor com sucesso!`);
+  };
+
   // Função para APROVAR e GERAR CHAVE (codigo_lib)
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
@@ -313,7 +362,7 @@ export default function SalaPage() {
     const { error } = await supabase
       .from('scout_registros')
       .update({
-        gestor_id: leadAlvo.gestor_id || gestorIdAtual, // Assume o lead caso estivesse NULL
+        gestor_id: leadAlvo.gestor_id || gestorIdAtual,
         dados: novosDados,
       })
       .eq('id', id);
@@ -329,12 +378,12 @@ export default function SalaPage() {
       )
     );
 
-    alert(`✅ Lead aprovado! Chave gerada: ${chaveGerada}\nAvisos enviados ao lead.`);
+    alert(`✅ Lead aprovado! Chave gerada: ${chaveGerada}`);
   };
 
   // Função para REPROVAR / DELETAR DA VISTA (Soft Delete)
   const reprovarLead = async (id: string) => {
-    if (!confirm('Deseja remover este lead da sua lista de operações? (O registo permanecerá salvo na base do Supabase)')) return;
+    if (!confirm('Deseja remover este lead da sua lista de operações? (O registo permanecerá salvo no Supabase)')) return;
 
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -355,7 +404,6 @@ export default function SalaPage() {
       return;
     }
 
-    // Remove instantaneamente da visualização da lista do gestor
     setLeads((anterior) => anterior.filter((item) => item.id !== id));
   };
 
@@ -388,7 +436,6 @@ export default function SalaPage() {
 
   const linkBaseGestor = `https://crc-scout.vercel.app/?gestor_id=${gestor?.slug || 'master'}`;
 
-  // Filtra fora os registos 'reprovados' para a vista do gestor
   const leadsAtivosGestor = leads.filter((l) => l.dados?.status_aprovacao !== 'reprovado');
 
   const totalLeads = leadsAtivosGestor.length;
@@ -1006,7 +1053,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS (SUPABASE + GOVERNANÇA DE APROVAÇÃO) */}
+              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS (SUPABASE + ATRIBUIÇÃO E APROVAÇÃO) */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
                   
@@ -1020,7 +1067,7 @@ export default function SalaPage() {
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Gerencie a sua fila de atendimento X1. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada na hora e gravada no Supabase. Ao clicar em <strong>"Reprovar"</strong>, o registo é ocultado da sua lista, mas mantido na base do Master.
+                      Gerencie a sua fila de atendimento X1. Você pode vincular um gestor diretamente pelo menu <strong>"Gestor Responsável"</strong>. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada e salva no banco. Ao clicar em <strong>"Reprovar"</strong>, o registo é ocultado da tela, mas preservado no Supabase.
                     </p>
                   </div>
 
@@ -1172,8 +1219,43 @@ export default function SalaPage() {
                                 </div>
                               )}
 
+                              {/* DROPDOWN DE SELEÇÃO E ATRIBUIÇÃO DE GESTOR */}
+                              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
+                                  👤 Gestor Responsável:
+                                </span>
+                                <select
+                                  value={item.gestor_id || ''}
+                                  onChange={(e) => atribuirGestorLead(item.id, e.target.value)}
+                                  style={{
+                                    background: '#080808',
+                                    border: '1px solid rgba(0,255,136,0.3)',
+                                    color: '#00ff88',
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                  }}
+                                >
+                                  <option value="">(Sem Gestor - Pool Geral)</option>
+                                  <option value="master">Master (Gilmar)</option>
+                                  {listaGestores.map((g) => {
+                                    const valorOption = g.slug || g.id;
+                                    if (valorOption === 'master') return null;
+                                    return (
+                                      <option key={g.id} value={valorOption}>
+                                        {g.nome}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+
+                              {/* BOTOES DE AÇÃO DO GESTOR */}
                               <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }} className="no-print">
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center', marginRight: '4px' }}>Acções do Gestor:</span>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center', marginRight: '4px' }}>Acções:</span>
                                 
                                 <button
                                   onClick={() => aprovarLead(item.id)}
