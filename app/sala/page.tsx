@@ -401,15 +401,24 @@ export default function SalaPage() {
             {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
               <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
+                  
+                  {/* CARD ESQUERDO COM A IMAGEM DA CAPA DO LIVRO */}
                   <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ fontSize: '64px', marginBottom: '10px' }}>📖</div>
+                    <div style={{ width: '100%', maxWidth: '180px', margin: '0 auto 14px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.7)', border: '1px solid rgba(0,255,136,0.3)' }}>
+                      <img 
+                        src="/assets/capa-livro.jpg" 
+                        alt="Capa do Livro O Oleiro e a Argila" 
+                        style={{ width: '100%', height: 'auto', display: 'block' }} 
+                      />
+                    </div>
                     <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase' }}>
                       OBRA OFICIAL DE FUNDAÇÃO
                     </span>
-                    <h3 style={{ fontSize: '20px', color: '#fff', margin: '8px 0 4px' }}>O Oleiro e a Argila</h3>
+                    <h3 style={{ fontSize: '18px', color: '#fff', margin: '8px 0 4px' }}>O Oleiro e a Argila</h3>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>O Gestor de Comunidades</p>
                   </div>
 
+                  {/* CONTEÚDO EXPLICATIVO E BOTÃO AMAZON */}
                   <div>
                     <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
                     <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
@@ -440,10 +449,10 @@ export default function SalaPage() {
                       🛒 ADQUIRIR LIVRO NA AMAZON →
                     </a>
                   </div>
+
                 </div>
               </div>
             )}
-
               {/* SUBLINK 1: PROSPECTO DIGITAL */}
               {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
