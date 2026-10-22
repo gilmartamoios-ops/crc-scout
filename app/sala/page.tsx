@@ -111,6 +111,31 @@ export default function SalaPage() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [buscaNome, setBuscaNome] = useState<string>('');
   const [buscaRegiao, setBuscaRegiao] = useState<string>('');
+  
+  // Estado para alerta visual de novo lead em tempo real
+  const [novoLeadAlerta, setNovoLeadAlerta] = useState<string | null>(null);
+
+  // Função para tocar bipe sonoro de alerta em tempo real
+  const tocarAlertaSonoro = () => {
+    try {
+      // @ts-ignore
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+      console.log('Áudio bloqueado pelo navegador até interação', e);
+    }
+  };
 
   const lidarComCliqueModulo = (modulo: Modulo) => {
     if (!gestorDesbloqueado && !modoVisitante) {
@@ -218,6 +243,51 @@ export default function SalaPage() {
     }
   };
 
+  // Configuração do Supabase Realtime para Alerta Sonoro e Atualização Automática
+  useEffect(() => {
+    if (!gestorDesbloqueado) return;
+
+    const slugAtual = gestor?.slug || gestor?.id || 'master';
+    const isMaster = slugAtual === 'master';
+
+    // Canal do Realtime
+    const canal = supabase
+      .channel('sala_operacoes_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'scout_registros',
+        },
+        (payload) => {
+          const novoRegistro = payload.new as ConvidadoRegistro;
+
+          // Filtra: Se for master vê tudo, senão vê apenas os direcionados ao seu gestor_id
+          if (!isMaster && novoRegistro.gestor_id !== slugAtual) {
+            return;
+          }
+
+          // Dispara alerta sonoro e visual
+          tocarAlertaSonoro();
+          const nomeLead = novoRegistro.dados?.convidado?.nome || 'Novo Prospecto';
+          setNovoLeadAlerta(nomeLead);
+
+          setTimeout(() => {
+            setNovoLeadAlerta(null);
+          }, 6000);
+
+          // Atualiza a lista de leads instantaneamente
+          setLeads((anterior) => [novoRegistro, ...anterior]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [gestorDesbloqueado, gestor]);
+
   useEffect(() => {
     if (gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos') {
       carregarLeadsScout();
@@ -322,6 +392,30 @@ export default function SalaPage() {
           </div>
         </header>
 
+        {/* Banner Flutuante de Alerta em Tempo Real */}
+        {novoLeadAlerta && (
+          <div style={{
+            background: 'linear-gradient(90deg, #00ff88, #00cc6a)',
+            color: '#050505',
+            padding: '12px 20px',
+            textAlign: 'center',
+            fontWeight: '900',
+            fontSize: '13px',
+            letterSpacing: '0.5px',
+            boxShadow: '0 4px 25px rgba(0,255,136,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            zIndex: 100,
+            animation: 'fadeInOut 0.3s ease'
+          }}>
+            <span>🚨 NOVO LEAD DETECTADO EM TEMPO REAL:</span>
+            <strong style={{ textDecoration: 'underline' }}>{novoLeadAlerta}</strong>
+            <span>➔ Verifique na Fila!</span>
+          </div>
+        )}
+
         <div className="sala-layout">
           {/* Menu Lateral */}
           <aside className="sala-sidebar">
@@ -331,7 +425,6 @@ export default function SalaPage() {
             </div>
 
             <nav className="sala-menu">
-              {/* CTA DESTACADO DO QUIZ EXCLUSIVO PARA VISITANTES NO MENU */}
               {!gestorDesbloqueado && (
                 <button
                   type="button"
@@ -433,9 +526,7 @@ export default function SalaPage() {
                       Você está no coração operacional do <strong>SCOUT.CRC</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
                     </p>
 
-                    {/* TRÊS PILARES DE POSSIBILIDADES */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-                      
                       <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
                         <div style={{ fontSize: '22px', marginBottom: '8px' }}>🎯</div>
                         <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Inteligência Territorial</h4>
@@ -459,7 +550,6 @@ export default function SalaPage() {
                           Qualifique e organize seus convidados com uma prancheta integrada em tempo real com o banco do sistema.
                         </p>
                       </div>
-
                     </div>
 
                     {!gestorDesbloqueado && (
@@ -497,7 +587,6 @@ export default function SalaPage() {
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
                     
-                    {/* CARD ESQUERDO COM A IMAGEM DA CAPA DO LIVRO */}
                     <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <div style={{ width: '100%', maxWidth: '180px', margin: '0 auto 14px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.7)', border: '1px solid rgba(0,255,136,0.3)' }}>
                         <img 
@@ -513,7 +602,6 @@ export default function SalaPage() {
                       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>O Gestor de Comunidades</p>
                     </div>
 
-                    {/* CONTEÚDO EXPLICATIVO E BOTÃO AMAZON */}
                     <div>
                       <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
                       <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
@@ -567,7 +655,6 @@ export default function SalaPage() {
                       transition: 'all 0.3s ease'
                     }}>
 
-                      {/* CARD EXPLICATIVO DA LEI DAS MÉDIAS */}
                       <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(0,0,0,0.5))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '14px', padding: '16px 18px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
@@ -586,7 +673,6 @@ export default function SalaPage() {
                         </p>
                       </div>
 
-                      {/* SELETORES */}
                       <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '22px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '14px', alignItems: 'center', marginBottom: '18px' }}>
                           <div>
@@ -650,7 +736,6 @@ export default function SalaPage() {
                         </div>
                       </div>
 
-                      {/* BOTÃO DE GARIMPO */}
                       <div style={{ marginBottom: '20px', textAlign: 'right' }}>
                         <button
                           type="button"
@@ -672,7 +757,6 @@ export default function SalaPage() {
                         </button>
                       </div>
 
-                      {/* LISTAGEM DOS PERFIS ALVO GARIMPADOS */}
                       {executouGarimpo && (
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
@@ -765,7 +849,6 @@ export default function SalaPage() {
 
                     </div>
 
-                    {/* CARD FLUTUANTE DE CONVERSÃO PARA VISITANTES */}
                     {modoVisitante && !gestorDesbloqueado && (
                       <div style={{
                         position: 'absolute',
@@ -1087,7 +1170,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* MÓDULOS DE CONTEÚDO: INFORMATIVOS, MENTORIA E CURADORIA */}
               {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Informativos' && (
                 <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
                   <InformesPage />
@@ -1116,7 +1198,6 @@ export default function SalaPage() {
         </footer>
       </div>
 
-      {/* Modal Restrito */}
       {moduloRestrito && (
         <div className="sala-modal-backdrop" onClick={() => setModuloRestrito(null)}>
           <div className="sala-modal" onClick={(event) => event.stopPropagation()}>
@@ -1490,25 +1571,9 @@ export default function SalaPage() {
           margin: 8px 0 10px;
           font-size: 28px;
         }
-
-        @media (max-width: 768px) {
-          .sala-page {
-            padding: 8px;
-            max-width: 100vw;
-            overflow-x: hidden;
-          }
-          .sala-shell {
-            border-radius: 16px;
-          }
-          .sala-main {
-            padding: 16px 12px;
-          }
-          .sala-header {
-            padding: 0 12px;
-          }
-          .sala-dynamic-card {
-            padding: 16px;
-          }
+        @keyframes fadeInOut {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </main>
