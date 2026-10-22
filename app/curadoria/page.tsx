@@ -27,8 +27,8 @@ export default function CuradoriaPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', padding: '24px 16px' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <header style={{ marginBottom: '32px', borderBottom: '1px solid rgba(0,255,136,0.2)', pb: '16px' }}>
-          <span style={{ fontSize: '11px', color: '#00ff88', fontWeight 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
+        <header style={{ marginBottom: '32px', borderBottom: '1px solid rgba(0,255,136,0.2)', paddingBottom: '16px' }}>
+          <span style={{ fontSize: '11px', color: '#00ff88', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
             ACERVO & BIBLIOTECA
           </span>
           <h1 style={{ fontSize: '28px', marginTop: '6px', color: '#fff' }}>Curadoria de Conteúdo</h1>
@@ -52,7 +52,7 @@ export default function CuradoriaPage() {
                 {item.tipo}
               </span>
               <h2 style={{ fontSize: '17px', color: '#fff', margin: '6px 0' }}>{item.titulo}</h2>
-              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.4', mb: '12px' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.4', marginBottom: '12px' }}>
                 {item.descricao}
               </p>
               <button

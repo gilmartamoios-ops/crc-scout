@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import InformesPage from '@/app/informes/page';
+import MentoriaPage from '@/app/mentoria/page';
+import CuradoriaPage from '@/app/curadoria/page';
 
 type Modulo = {
   nome: string;
@@ -33,6 +36,11 @@ interface ConvidadoRegistro {
 
 const modulos: Modulo[] = [
   {
+    nome: 'O Oleiro e a Argila',
+    descricao: 'A base conceitual e filosófica do Gestor de Comunidades no modelo CRC.',
+    icone: '📖',
+  },
+  {
     nome: 'Informativos',
     descricao: 'Informes, atualizações e notícias do mercado.',
     icone: '◈',
@@ -62,8 +70,8 @@ const estadosBrasil = [
 ];
 
 export default function SalaPage() {
-  const [moduloAtivo, setModuloAtivo] = useState<string | null>('Seu SCOUT');
-  const [subModuloAtivo, setSubModuloAtivo] = useState<string | null>('Prospecto Digital');
+  const [moduloAtivo, setModuloAtivo] = useState<string | null>('O Oleiro e a Argila');
+  const [subModuloAtivo, setSubModuloAtivo] = useState<string | null>(null);
   const [moduloRestrito, setModuloRestrito] = useState<Modulo | null>(null);
   const [gestorDesbloqueado, setGestorDesbloqueado] = useState(false);
   const [modoVisitante, setModoVisitante] = useState(false);
@@ -350,29 +358,6 @@ export default function SalaPage() {
               ))}
             </nav>
 
-            {modoVisitante && !gestorDesbloqueado && (
-              <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto', display: 'none' }}>
-                <a
-                  href="/?etapa=quiz"
-                  style={{
-                    display: 'none',
-                    background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                    color: '#050505',
-                    textAlign: 'center',
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    fontWeight: '900',
-                    fontSize: '11px',
-                    textDecoration: 'none',
-                    letterSpacing: '0.5px',
-                    boxShadow: '0 0 15px rgba(0,255,136,0.25)',
-                  }}
-                >
-                  📋 PREENCHER FICHA / QUIZ →
-                </a>
-              </div>
-            )}
-
             {!modoVisitante && (
               <div className="sala-sidebar-footer">
                 {gestor ? (
@@ -405,13 +390,60 @@ export default function SalaPage() {
               </div>
 
               <div className="sala-welcome-mark">
-                <span>CRC</span>
-                <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
-              </div>
+              <span>CRC</span>
+              <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
             </div>
+          </div>
 
-            <div className="sala-center-viewport">
-              
+          <div className="sala-center-viewport">
+            
+            {/* MÓDULO NO TOPO: O OLEIRO E A ARGILA */}
+            {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
+              <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: '64px', marginBottom: '10px' }}>📖</div>
+                    <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                      OBRA OFICIAL DE FUNDAÇÃO
+                    </span>
+                    <h3 style={{ fontSize: '20px', color: '#fff', margin: '8px 0 4px' }}>O Oleiro e a Argila</h3>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>O Gestor de Comunidades</p>
+                  </div>
+
+                  <div>
+                    <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
+                    <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '16px' }}>
+                      A plataforma <strong>SCOUT.CRC</strong> não é apenas uma ferramenta de prospecção; ela é a materialização prática dos conceitos apresentados no livro <em>"O Oleiro e a Argila"</em>. 
+                    </p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '20px' }}>
+                      Assim como o oleiro molda a argila com intenção e cuidado, o Gestor de Comunidades molda relações de consumo sustentáveis, liderança relacional e pertencimento na rede.
+                    </p>
+
+                    <a
+                      href="https://www.amazon.com/dp/B0HL9JZBTW"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                        color: '#050505',
+                        padding: '12px 22px',
+                        borderRadius: '12px',
+                        fontWeight: '900',
+                        fontSize: '12px',
+                        textDecoration: 'none',
+                        letterSpacing: '0.5px',
+                        boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+                      }}
+                    >
+                      🛒 ADQUIRIR LIVRO NA AMAZON →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
               {/* SUBLINK 1: PROSPECTO DIGITAL */}
               {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
@@ -950,25 +982,22 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* Módulos Gerais */}
-              {gestorDesbloqueado && moduloAtivo && moduloAtivo !== 'Seu SCOUT' && (
-                <div className="sala-dynamic-card">
-                  <span className="sala-eyebrow" style={{ color: '#00ff88' }}>MÓDULO OPERACIONAL</span>
-                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>{moduloAtivo}</h3>
-                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '10px' }}>
-                    Ambiente dedicado à gestão de comunidade e diretrizes estratégicas.
-                  </p>
+              {/* MÓDULOS DE CONTEÚDO: INFORMATIVOS, MENTORIA E CURADORIA */}
+              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Informativos' && (
+                <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+                  <InformesPage />
                 </div>
               )}
 
-              {/* Visual Padrão */}
-              {(!gestorDesbloqueado || !moduloAtivo) && (
-                <div className="sala-hero-art-container">
-                  <div className="sala-art-text">
-                    <span className="sala-eyebrow">REDE DE CONSUMO & GESTÃO</span>
-                    <h2>Conexão, Pertencimento e Escala</h2>
-                    <p>O ecossistema CRC integra tecnologia de ponta, renda recorrente e desenvolvimento colaborativo.</p>
-                  </div>
+              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Mentoria' && (
+                <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+                  <MentoriaPage />
+                </div>
+              )}
+
+              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Curadoria' && (
+                <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+                  <CuradoriaPage />
                 </div>
               )}
 
@@ -1286,25 +1315,6 @@ export default function SalaPage() {
           border-radius: 20px;
           padding: 30px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-        }
-        .sala-hero-art-container {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          background: rgba(255, 255, 255, 0.015);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 20px;
-          padding: 34px;
-        }
-        .sala-art-text h2 {
-          font-size: 22px;
-          margin: 6px 0 10px;
-          color: #fff;
-        }
-        .sala-art-text p {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.5);
-          line-height: 1.6;
         }
         .sala-footer {
           display: flex;
