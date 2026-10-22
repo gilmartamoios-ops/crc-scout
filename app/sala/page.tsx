@@ -122,7 +122,6 @@ export default function SalaPage() {
 
   useEffect(() => {
     function verificarSessao() {
-      // Lê do localStorage (usado no login) ou do sessionStorage como fallback
       const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
       if (!dados) return;
 
@@ -392,104 +391,103 @@ export default function SalaPage() {
               </div>
 
               <div className="sala-welcome-mark">
-              <span>CRC</span>
-              <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
+                <span>CRC</span>
+                <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
+              </div>
             </div>
-          </div>
 
-          <div className="sala-center-viewport">
-            
             <div className="sala-center-viewport">
-
-            {/* CTA EM DESTAQUE PARA VISITANTES (Some quando o gestor estiver logado) */}
-            {!gestorDesbloqueado && (
-              <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,0,0,0.85))', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '16px', padding: '22px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 0 35px rgba(0,255,136,0.15)' }}>
-                <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
-                  ✦ JORNADA DE EXPANSÃO CRC
-                </span>
-                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '8px' }}>
-                  Conheceu a Sala? Dê o próximo passo.
-                </h3>
-                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginBottom: '16px', lineHeight: '1.5', maxWidth: '520px', margin: '0 auto 16px' }}>
-                  Responda ao Quiz de Qualificação para registrar seu objetivo e iniciar sua estrutura de atendimento no ecossistema.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { window.location.href = '/?etapa=quiz'; }}
-                  style={{
-                    background: '#00ff88',
-                    color: '#050505',
-                    border: 'none',
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    fontWeight: '900',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    letterSpacing: '0.5px',
-                    boxShadow: '0 0 25px rgba(0,255,136,0.4)',
-                  }}
-                >
-                  QUERO CONSTRUIR MINHA COMUNIDADE ➔
-                </button>
-              </div>
-            )}
-            
-            {/* MÓDULO NO TOPO: O OLEIRO E A ARGILA */}
-            {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
-              <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
-                  
-                  {/* CARD ESQUERDO COM A IMAGEM DA CAPA DO LIVRO */}
-                  <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ width: '100%', maxWidth: '180px', margin: '0 auto 14px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.7)', border: '1px solid rgba(0,255,136,0.3)' }}>
-                      <img 
-                        src="/assets/capa-livro.jpg" 
-                        alt="Capa do Livro O Oleiro e a Argila" 
-                        style={{ width: '100%', height: 'auto', display: 'block' }} 
-                      />
-                    </div>
-                    <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase' }}>
-                      OBRA OFICIAL DE FUNDAÇÃO
-                    </span>
-                    <h3 style={{ fontSize: '18px', color: '#fff', margin: '8px 0 4px' }}>O Oleiro e a Argila</h3>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>O Gestor de Comunidades</p>
-                  </div>
-
-                  {/* CONTEÚDO EXPLICATIVO E BOTÃO AMAZON */}
-                  <div>
-                    <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
-                    <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '16px' }}>
-                      A plataforma <strong>SCOUT.CRC</strong> não é apenas uma ferramenta de prospecção; ela é a materialização prática dos conceitos apresentados no livro <em>"O Oleiro e a Argila"</em>. 
-                    </p>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '20px' }}>
-                      Assim como o oleiro molda a argila com intenção e cuidado, o Gestor de Comunidades molda relações de consumo sustentáveis, liderança relacional e pertencimento na rede.
-                    </p>
-
-                    <a
-                      href="https://www.amazon.com/dp/B0HL9JZBTW"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-block',
-                        background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                        color: '#050505',
-                        padding: '12px 22px',
-                        borderRadius: '12px',
-                        fontWeight: '900',
-                        fontSize: '12px',
-                        textDecoration: 'none',
-                        letterSpacing: '0.5px',
-                        boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
-                      }}
-                    >
-                      🛒 ADQUIRIR LIVRO NA AMAZON →
-                    </a>
-                  </div>
-
+              
+              {/* CTA EM DESTAQUE PARA VISITANTES (Some quando o gestor estiver logado) */}
+              {!gestorDesbloqueado && (
+                <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,0,0,0.85))', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '16px', padding: '22px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 0 35px rgba(0,255,136,0.15)' }}>
+                  <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
+                    ✦ JORNADA DE EXPANSÃO CRC
+                  </span>
+                  <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '8px' }}>
+                    Conheceu a Sala? Dê o próximo passo.
+                  </h3>
+                  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginBottom: '16px', lineHeight: '1.5', maxWidth: '520px', margin: '0 auto 16px' }}>
+                    Responda ao Quiz de Qualificação para registrar seu objetivo e iniciar sua estrutura de atendimento no ecossistema.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                    style={{
+                      background: '#00ff88',
+                      color: '#050505',
+                      border: 'none',
+                      padding: '14px 28px',
+                      borderRadius: '12px',
+                      fontWeight: '900',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      letterSpacing: '0.5px',
+                      boxShadow: '0 0 25px rgba(0,255,136,0.4)',
+                    }}
+                  >
+                    QUERO CONSTRUIR MINHA COMUNIDADE ➔
+                  </button>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* MÓDULO NO TOPO: O OLEIRO E A ARGILA */}
+              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
+                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
+                    
+                    {/* CARD ESQUERDO COM A IMAGEM DA CAPA DO LIVRO */}
+                    <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ width: '100%', maxWidth: '180px', margin: '0 auto 14px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 8px 25px rgba(0,0,0,0.7)', border: '1px solid rgba(0,255,136,0.3)' }}>
+                        <img 
+                          src="/assets/capa-livro.jpg" 
+                          alt="Capa do Livro O Oleiro e a Argila" 
+                          style={{ width: '100%', height: 'auto', display: 'block' }} 
+                        />
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                        OBRA OFICIAL DE FUNDAÇÃO
+                      </span>
+                      <h3 style={{ fontSize: '18px', color: '#fff', margin: '8px 0 4px' }}>O Oleiro e a Argila</h3>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>O Gestor de Comunidades</p>
+                    </div>
+
+                    {/* CONTEÚDO EXPLICATIVO E BOTÃO AMAZON */}
+                    <div>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
+                      <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '16px' }}>
+                        A plataforma <strong>SCOUT.CRC</strong> não é apenas uma ferramenta de prospecção; ela é a materialização prática dos conceitos apresentados no livro <em>"O Oleiro e a Argila"</em>. 
+                      </p>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '20px' }}>
+                        Assim como o oleiro molda a argila com intenção e cuidado, o Gestor de Comunidades molda relações de consumo sustentáveis, liderança relacional e pertencimento na rede.
+                      </p>
+
+                      <a
+                        href="https://www.amazon.com/dp/B0HL9JZBTW"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-block',
+                          background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                          color: '#050505',
+                          padding: '12px 22px',
+                          borderRadius: '12px',
+                          fontWeight: '900',
+                          fontSize: '12px',
+                          textDecoration: 'none',
+                          letterSpacing: '0.5px',
+                          boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+                        }}
+                      >
+                        🛒 ADQUIRIR LIVRO NA AMAZON →
+                      </a>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
               {/* SUBLINK 1: PROSPECTO DIGITAL */}
               {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
