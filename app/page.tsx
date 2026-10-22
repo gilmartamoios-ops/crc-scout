@@ -297,6 +297,9 @@ export default function LandingPage() {
       origem: 'quiz_publico',
     };
 
+    // Redireciona para o seu WhatsApp master (5522999231211) se for lead solto ou padrão
+    const numeroDestino = '5522999231211';
+
     const msgWhats = encodeURIComponent(
       `Olá! Meu nome é *${nome.trim()}* (${cidadeFormatada}). Acabei de responder ao Quiz do SCOUT.CRC!\n\n` +
       `📱 Whats: ${whatsClean}\n` +
@@ -305,7 +308,7 @@ export default function LandingPage() {
       `Gostaria de agendar meu atendimento e entender como construir minha comunidade!`
     );
 
-    const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
+    const linkWhatsAppFinal = `https://wa.me/${numeroDestino}?text=${msgWhats}`;
 
     try {
       const { error } = await supabase.from('scout_registros').insert({
@@ -739,7 +742,7 @@ export default function LandingPage() {
             </div>
 
             <a
-              href={`https://wa.me/5522997881122?text=${encodeURIComponent(`Olá! Acabei de responder ao Quiz do SCOUT.CRC. Meu objetivo é: ${respostas.objetivo}.`)}`}
+              href={`https://wa.me/5522999231211?text=${encodeURIComponent(`Olá! Acabei de responder ao Quiz do SCOUT.CRC. Meu objetivo é: ${respostas.objetivo}.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'block', background: '#00ff88', color: '#050505', padding: '14px', borderRadius: '12px', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px' }}
