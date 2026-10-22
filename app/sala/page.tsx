@@ -36,6 +36,11 @@ interface ConvidadoRegistro {
 
 const modulos: Modulo[] = [
   {
+    nome: 'Visão Geral & Boas-Vindas',
+    descricao: 'Bem-vindo ao ecossistema SCOUT.CRC e à central do Gestor.',
+    icone: '🏛️',
+  },
+  {
     nome: 'O Oleiro e a Argila',
     descricao: 'A base conceitual e filosófica do Gestor de Comunidades no modelo CRC.',
     icone: '📖',
@@ -70,7 +75,7 @@ const estadosBrasil = [
 ];
 
 export default function SalaPage() {
-  const [moduloAtivo, setModuloAtivo] = useState<string | null>('O Oleiro e a Argila');
+  const [moduloAtivo, setModuloAtivo] = useState<string | null>('Visão Geral & Boas-Vindas');
   const [subModuloAtivo, setSubModuloAtivo] = useState<string | null>(null);
   const [moduloRestrito, setModuloRestrito] = useState<Modulo | null>(null);
   const [gestorDesbloqueado, setGestorDesbloqueado] = useState(false);
@@ -326,6 +331,22 @@ export default function SalaPage() {
             </div>
 
             <nav className="sala-menu">
+              {/* CTA DESTACADO DO QUIZ EXCLUSIVO PARA VISITANTES NO MENU */}
+              {!gestorDesbloqueado && (
+                <button
+                  type="button"
+                  className="sala-menu-quiz"
+                  onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                >
+                  <span className="sala-menu-icon">🔥</span>
+                  <span className="sala-menu-copy">
+                    <strong>QUERO CONSTRUIR MINHA COMUNIDADE</strong>
+                    <small>Quiz de Qualificação CRC</small>
+                  </span>
+                  <span className="sala-lock">➔</span>
+                </button>
+              )}
+
               {modulos.map((modulo) => (
                 <div key={modulo.nome} className="sala-menu-group">
                   <button
@@ -336,7 +357,7 @@ export default function SalaPage() {
                     <span className="sala-menu-icon">{modulo.icone}</span>
                     <span className="sala-menu-copy">
                       <strong>{modulo.nome}</strong>
-                      <small>{gestorDesbloqueado ? 'acesso de gestor' : '🔒 restrito'}</small>
+                      <small>{gestorDesbloqueado || modoVisitante ? 'ambiente livre' : '🔒 restrito'}</small>
                     </span>
                     <span className="sala-lock">{gestorDesbloqueado ? '✦' : '⌕'}</span>
                   </button>
@@ -369,8 +390,8 @@ export default function SalaPage() {
                   </>
                 ) : (
                   <>
-                    <span className="sala-visitor-tag">CONVIDADO</span>
-                    <p>Aguarde a validação do seu gestor para liberar os recursos operacionais.</p>
+                    <span className="sala-visitor-tag">CONVIDADO / VISITANTE</span>
+                    <p>Explore as possibilidades do ecossistema e responda ao Quiz para iniciar.</p>
                   </>
                 )}
               </div>
@@ -398,40 +419,80 @@ export default function SalaPage() {
 
             <div className="sala-center-viewport">
               
-              {/* CTA EM DESTAQUE PARA VISITANTES (Some quando o gestor estiver logado) */}
-              {!gestorDesbloqueado && (
-                <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,0,0,0.85))', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '16px', padding: '22px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 0 35px rgba(0,255,136,0.15)' }}>
-                  <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
-                    ✦ JORNADA DE EXPANSÃO CRC
-                  </span>
-                  <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '8px' }}>
-                    Conheceu a Sala? Dê o próximo passo.
-                  </h3>
-                  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginBottom: '16px', lineHeight: '1.5', maxWidth: '520px', margin: '0 auto 16px' }}>
-                    Responda ao Quiz de Qualificação para registrar seu objetivo e iniciar sua estrutura de atendimento no ecossistema.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { window.location.href = '/?etapa=quiz'; }}
-                    style={{
-                      background: '#00ff88',
-                      color: '#050505',
-                      border: 'none',
-                      padding: '14px 28px',
-                      borderRadius: '12px',
-                      fontWeight: '900',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      letterSpacing: '0.5px',
-                      boxShadow: '0 0 25px rgba(0,255,136,0.4)',
-                    }}
-                  >
-                    QUERO CONSTRUIR MINHA COMUNIDADE ➔
-                  </button>
+              {/* TELA DE BOAS-VINDAS E VISÃO GERAL */}
+              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Visão Geral & Boas-Vindas' && (
+                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.35)', background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(5,5,5,0.98))' }}>
+                  <div style={{ maxWidth: '820px' }}>
+                    <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+                      ✦ BEM-VINDO À SALA DE OPERAÇÕES DO CRC
+                    </span>
+                    <h2 style={{ fontSize: '26px', color: '#fff', margin: '0 0 14px', lineHeight: '1.2' }}>
+                      Liderança Relacional & Arquitetura de Comunidades
+                    </h2>
+                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.7', marginBottom: '24px' }}>
+                      Você está no coração operacional do <strong>SCOUT.CRC</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
+                    </p>
+
+                    {/* TRÊS PILARES DE POSSIBILIDADES */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+                      
+                      <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
+                        <div style={{ fontSize: '22px', marginBottom: '8px' }}>🎯</div>
+                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Inteligência Territorial</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', lineHeight: '1.5', margin: 0 }}>
+                          Mapeie oportunidades por estado e município com filtros direcionados para transição profissional, saúde integrativa e consumo do lar.
+                        </p>
+                      </div>
+
+                      <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
+                        <div style={{ fontSize: '22px', marginBottom: '8px' }}>📈</div>
+                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Projeção Recorrente</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', lineHeight: '1.5', margin: 0 }}>
+                          Simule a expansão de GCom e visualize com precisão o impacto financeiro da duplicação do consumo consciente.
+                        </p>
+                      </div>
+
+                      <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
+                        <div style={{ fontSize: '22px', marginBottom: '8px' }}>🤝</div>
+                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Acompanhamento X1</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', lineHeight: '1.5', margin: 0 }}>
+                          Qualifique e organize seus convidados com uma prancheta integrada em tempo real com o banco do sistema.
+                        </p>
+                      </div>
+
+                    </div>
+
+                    {!gestorDesbloqueado && (
+                      <div style={{ background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.35)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
+                        <h4 style={{ color: '#fff', fontSize: '15px', margin: '0 0 6px' }}>Pronto para iniciar a sua comunidade?</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
+                          Responda ao Quiz de Qualificação para registrar seu objetivo e acionar seu gestor.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                          style={{
+                            background: '#ff4444',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '12px 24px',
+                            borderRadius: '10px',
+                            fontWeight: '900',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 0 20px rgba(255,68,68,0.35)',
+                          }}
+                        >
+                          QUERO CONSTRUIR MINHA COMUNIDADE ➔
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* MÓDULO NO TOPO: O OLEIRO E A ARGILA */}
+              {/* MÓDULO 2: O OLEIRO E A ARGILA */}
               {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
@@ -714,11 +775,11 @@ export default function SalaPage() {
                         width: '90%',
                         maxWidth: '420px',
                         background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
-                        border: '1px solid rgba(0, 255, 136, 0.45)',
+                        border: '1px solid rgba(255, 68, 68, 0.45)',
                         borderRadius: '20px',
                         padding: '28px 20px',
                         textAlign: 'center',
-                        boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,255,136,0.15)',
+                        boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255,68,68,0.2)',
                         zIndex: 50
                       }}>
                         <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
@@ -733,8 +794,8 @@ export default function SalaPage() {
                           onClick={() => { window.location.href = '/?etapa=quiz'; }}
                           style={{
                             width: '100%',
-                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                            color: '#050505',
+                            background: '#ff4444',
+                            color: '#ffffff',
                             border: 'none',
                             padding: '14px 20px',
                             borderRadius: '12px',
@@ -742,10 +803,10 @@ export default function SalaPage() {
                             fontSize: '12px',
                             cursor: 'pointer',
                             letterSpacing: '0.5px',
-                            boxShadow: '0 4px 20px rgba(0,255,136,0.35)',
+                            boxShadow: '0 4px 20px rgba(255,68,68,0.4)',
                           }}
                         >
-                          ✨ QUERO FAZER PARTE DA COMUNIDADE →
+                          QUERO CONSTRUIR MINHA COMUNIDADE ➔
                         </button>
                       </div>
                     )}
@@ -1163,7 +1224,7 @@ export default function SalaPage() {
         }
         .sala-layout {
           display: grid;
-          grid-template-columns: 260px minmax(0, 1fr);
+          grid-template-columns: 280px minmax(0, 1fr);
           min-height: calc(100vh - 112px);
         }
         @media (max-width: 768px) {
@@ -1188,12 +1249,34 @@ export default function SalaPage() {
         .sala-menu {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
           padding: 0 10px;
         }
         .sala-menu-group {
           display: flex;
           flex-direction: column;
+        }
+        .sala-menu-quiz {
+          display: grid;
+          grid-template-columns: 30px minmax(0, 1fr) auto;
+          gap: 10px;
+          align-items: center;
+          width: 100%;
+          padding: 12px 10px;
+          color: #ffffff;
+          text-align: left;
+          background: linear-gradient(135deg, rgba(255, 68, 68, 0.9), rgba(200, 20, 20, 0.95));
+          border: 1px solid rgba(255, 120, 120, 0.6);
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+          margin-bottom: 6px;
+        }
+        .sala-menu-quiz:hover {
+          background: linear-gradient(135deg, #ff4444, #e60000);
+          box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
+          transform: translateY(-1px);
         }
         .sala-menu-item {
           display: grid;
@@ -1255,11 +1338,12 @@ export default function SalaPage() {
           gap: 3px;
         }
         .sala-menu-copy strong {
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 800;
+          line-height: 1.2;
         }
         .sala-menu-copy small {
-          color: rgba(255, 255, 255, 0.34);
+          color: rgba(255, 255, 255, 0.6);
           font-size: 9px;
         }
         .sala-lock {
