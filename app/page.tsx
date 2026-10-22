@@ -25,13 +25,45 @@ export default function LandingPage() {
     objetivo: '',
   });
 
-  const [nome, setNome] = useState('');
+ const [nome, setNome] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [cidade, setCidade] = useState('');
+  const [email, setEmail] = useState('');
+  
+  // Estados do IBGE e Seletores
+  const [estadoSelecionado, setEstadoSelecionado] = useState('RJ');
+  const [municipios, setMunicipios] = useState<string[]>([]);
+  const [municipioSelecionado, setMunicipioSelecionado] = useState('');
+  const [carregandoCidades, setCarregandoCidades] = useState(false);
+
   const [carregando, setCarregando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState('');
   const [gestorId, setGestorId] = useState<string | null>(null);
+
+  const estadosBrasil = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
+    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
+    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  ];
+
+  // Busca automática de municípios na API do IBGE
+  useEffect(() => {
+    async function carregarCidades() {
+      setCarregandoCidades(true);
+      try {
+        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoSelecionado}/municipios`);
+        const dados = await res.json();
+        const lista = dados.map((c: { nome: string }) => c.nome).sort();
+        setMunicipios(lista);
+        if (lista.length > 0) setMunicipioSelecionado(lista[0]);
+      } catch (err) {
+        console.error('Erro ao buscar cidades do IBGE:', err);
+      } finally {
+        setCarregandoCidades(false);
+      }
+    }
+    carregarCidades();
+  }, [estadoSelecionado]);
 
   // Estados do Simulador de Negócio MMN
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
@@ -250,39 +282,61 @@ setInfoContent(textosExplicativos[d.toString()] || "");
     event.preventDefault();
     setErro('');
 
-    if (!nome.trim() || !whatsapp.trim() || !cidade.trim()) {
-      setErro('Informe seu nome, cidade e WhatsApp para concluir.');
+    const whatsClean = whatsapp.replace(/\D/g, '');
+    const cidadeFormatada = `${municipioSelecionado} / ${estadoSelecionado}`;
+
+    if (!nome.trim() || !whatsClean || !municipioSelecionado || !email.trim()) {
+      setErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
     setCarregando(true);
 
-    const { error } = await supabase.from('scout_registros').insert({
-      tipo: 'quiz_prospecto',
-      gestor_id: gestorId || 'master',
-      titulo: `Lead Quiz: ${respostas.objetivo}`,
-      dados: {
-        convidado: {
-          nome: nome.trim(),
-          whatsapp: whatsapp.trim(),
-          cidade: cidade.trim(),
-        },
-        perfil: respostas.objetivo,
-        respostas,
-        status_aprovacao: 'pendente',
-        origem: 'quiz_publico',
+    const dadosRegistro = {
+      convidado: {
+        nome: nome.trim(),
+        whatsapp: whatsClean,
+        cidade: cidadeFormatada,
+        email: email.trim(),
       },
-    });
+      perfil: respostas.objetivo,
+      respostas,
+      status_aprovacao: 'pendente',
+      origem: 'quiz_publico',
+    };
 
-    if (error) {
-      setErro('Não foi possível concluir agora. Verifique sua conexão.');
+    const msgWhats = encodeURIComponent(
+      `Olá! Meu nome é *${nome.trim()}* (${cidadeFormatada}). Acabei de responder ao Quiz do SCOUT.CRC!\n\n` +
+      `📱 Whats: ${whatsClean}\n` +
+      `✉️ E-mail: ${email.trim()}\n` +
+      `🎯 Objetivo: ${respostas.objetivo}\n\n` +
+      `Gostaria de agendar meu atendimento e entender como construir minha comunidade!`
+    );
+
+    const linkWhatsAppFinal = `https://wa.me/5522997881122?text=${msgWhats}`;
+
+    try {
+      const { error } = await supabase.from('scout_registros').insert({
+        tipo: 'quiz_prospecto',
+        gestor_id: gestorId || 'master',
+        titulo: `Lead Quiz: ${respostas.objetivo}`,
+        dados: dadosRegistro,
+      });
+
+      if (error) {
+        console.warn('Supabase bloqueado/erro, ativando fallback WhatsApp:', error);
+        window.location.href = linkWhatsAppFinal;
+        return;
+      }
+
+      window.location.href = linkWhatsAppFinal;
+
+    } catch (err) {
+      console.error('Falha de conexão:', err);
+      window.location.href = linkWhatsAppFinal;
+    } finally {
       setCarregando(false);
-      return;
     }
-
-    setEnviado(true);
-    setCarregando(false);
-    setEtapa(9);
   };
 
   const voltar = () => {
@@ -582,53 +636,97 @@ setInfoContent(textosExplicativos[d.toString()] || "");
               <div className="scout-section-intro">
                 <div className="scout-eyebrow">CONCLUIR JORNADA</div>
                 <h2 className="scout-section-title">Seus dados para contato direto:</h2>
-                <p className="scout-section-text">Para que o gestor responsável possa falar com você.</p>
+                <p className="scout-section-text">Preencha todos os campos para que o gestor responsável possa falar consigo.</p>
               </div>
 
-              <form className="scout-form" onSubmit={handleSubmit}>
-                <input
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
-                  required
-                />
+              <form className="scout-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '4px' }}>
+                    NOME COMPLETO *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={nome}
+                    onChange={(event) => setNome(event.target.value)}
+                    required
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  placeholder="Cidade / Estado (Ex: Cabo Frio - RJ)"
-                  value={cidade}
-                  onChange={(event) => setCidade(event.target.value)}
-                  required
-                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '4px' }}>
+                      ESTADO (UF) *
+                    </label>
+                    <select
+                      value={estadoSelecionado}
+                      onChange={(e) => setEstadoSelecionado(e.target.value)}
+                      style={{ width: '100%', background: '#080808', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '10px', padding: '12px 8px', color: '#00ff88', fontSize: '13px', fontWeight: 'bold' }}
+                    >
+                      {estadosBrasil.map((uf) => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <input
-                  type="tel"
-                  placeholder="WhatsApp com DDD (Ex: 22997788554)"
-                  value={whatsapp}
-                  onChange={(event) => setWhatsapp(event.target.value)}
-                  required
-                />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '4px' }}>
+                      CIDADE * {carregandoCidades && '(A procurar...)'}
+                    </label>
+                    <select
+                      value={municipioSelecionado}
+                      onChange={(e) => setMunicipioSelecionado(e.target.value)}
+                      disabled={carregandoCidades}
+                      style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px 8px', color: '#fff', fontSize: '13px' }}
+                    >
+                      {municipios.map((cidadeNome) => (
+                        <option key={cidadeNome} value={cidadeNome}>{cidadeNome}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-                {erro && <div className="scout-error">{erro}</div>}
+                <div>
+                  <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '4px' }}>
+                    WHATSAPP COM DDD *
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Ex: 22997788554"
+                    value={whatsapp}
+                    onChange={(event) => setWhatsapp(event.target.value)}
+                    required
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                  />
+                </div>
 
-                <button type="submit" className="btn-destaque-neon" disabled={carregando} style={{ marginTop: '10px' }}>
-                  {carregando ? 'ENVIANDO...' : 'FINALIZAR & FALAR COM GESTOR 🚀'}
+                <div>
+                  <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '4px' }}>
+                    E-MAIL PRINCIPAL *
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="seuemail@exemplo.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                  />
+                </div>
+
+                {erro && <div className="scout-error" style={{ color: '#ff6464', fontSize: '12px', textAlign: 'center' }}>{erro}</div>}
+
+                <button type="submit" className="btn-destaque-neon" disabled={carregando} style={{ marginTop: '8px' }}>
+                  {carregando ? 'A ENVIAR...' : 'FINALIZAR & FALAR COM GESTOR 🚀'}
                 </button>
               </form>
 
-              <button type="button" className="btn-voltar-sutil" onClick={voltar} style={{ marginTop: '12px' }}>
+              <button type="button" className="btn-voltar-sutil" onClick={voltar} style={{ marginTop: '10px' }}>
                 ← Voltar
               </button>
             </section>
           )}
-
-          <footer className="scout-footer">
-            <span>SCOUT.CRC</span>
-            <small>Conheça primeiro. Decida depois.</small>
-          </footer>
-        </div>
-      </div>
 
       {/* ETAPA 9: TELA FINAL COM DESFOQUE (BLUR) E RETORNO BLOQUEADO */}
       {etapa === 9 && (
