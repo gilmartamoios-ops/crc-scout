@@ -1,4 +1,4 @@
-'use client';
+-'use client';
 
 import Image from 'next/image';
 import Script from 'next/script';
@@ -308,6 +308,30 @@ export default function LandingPage() {
     );
 
     const linkWhatsAppFinal = `https://wa.me/${numeroDestino}?text=${msgWhats}`;
+
+    // Disparo instantâneo do Alerta no Telegram
+    const telegramToken = '8943733795:AAGALRSNsq-c9a3nwlpti7VLUI6Hk14LTQ4';
+    const telegramChatId = '6327378053';
+
+    const mensagemTelegram = 
+      `🚨 *NOVO LEAD NO SCOUT.CRC!*\n\n` +
+      `👤 *Nome:* ${nome.trim()}\n` +
+      `📍 *Cidade:* ${cidadeFormatada}\n` +
+      `📱 *WhatsApp:* ${whatsClean}\n` +
+      `✉️ *E-mail:* ${email.trim()}\n` +
+      `🎯 *Objetivo:* ${respostas.objetivo}\n\n` +
+      `👉 [Chamar no WhatsApp](https://wa.me/${whatsClean})`;
+
+    fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: telegramChatId,
+        text: mensagemTelegram,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+      }),
+    }).catch(err => console.error('Erro ao enviar para Telegram:', err));
 
     try {
       const { error } = await supabase.from('scout_registros').insert({
@@ -851,7 +875,7 @@ export default function LandingPage() {
         }
 
         .sim-grid-original {
-          display: grid;
+          dispatch: grid;
           grid-template-columns: 1fr 1fr;
           gap: 10px;
           margin-bottom: 12px;
