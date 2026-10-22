@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -13,10 +12,27 @@ export default function GestorPage() {
   const [etapa, setEtapa] = useState<'email' | 'codigo'>('email');
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const enviandoRef = useRef(false);
 
-    async function enviarCodigo() {
-    if (enviandoRef.current) return;
+  // 1. Verificação automática: Se já estiver salvo no navegador, pula a tela de login
+  useEffect(() => {
+    const gestorSalvo = localStorage.getItem('scout_gestor');
+    if (gestorSalvo) {
+      router.push('/sala');
+    }
+  }, [router]);
+
+  // Cronômetro para o bloqueio de novos envios (Cooldown de 60 segundos)
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
+  async function enviarCodigo() {
+    if (enviandoRef.current || cooldown > 0) return;
 
     const emailLimpo = email.trim().toLowerCase();
 
@@ -26,8 +42,6 @@ export default function GestorPage() {
     }
 
     enviandoRef.current = true;
-    console.log('SCOUT — enviarCodigo foi executada');
-
     setMensagem('');
     setCarregando(true);
 
@@ -51,7 +65,9 @@ export default function GestorPage() {
     setEtapa('codigo');
     setCarregando(false);
     enviandoRef.current = false;
+    setCooldown(60); // Inicia o bloqueio de 60 segundos no botão
   }
+
   async function confirmarCodigo() {
     setMensagem('');
 
@@ -98,7 +114,8 @@ export default function GestorPage() {
       return;
     }
 
-    sessionStorage.setItem(
+    // 2. Mudança para localStorage (Salva permanentemente no navegador)
+    localStorage.setItem(
       'scout_gestor',
       JSON.stringify({
         id: gestor.id,
@@ -157,10 +174,14 @@ export default function GestorPage() {
               <button
                 type="button"
                 onClick={enviarCodigo}
-                disabled={carregando}
+                disabled={carregando || cooldown > 0}
                 className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition"
               >
-                {carregando ? 'Enviando...' : 'Enviar código'}
+                {carregando
+                  ? 'Enviando...'
+                  : cooldown > 0
+                  ? `Aguarde ${cooldown}s para reenviar`
+                  : 'Enviar código'}
               </button>
             </>
           ) : (
@@ -214,7 +235,3 @@ export default function GestorPage() {
     </main>
   );
 }
-
-
-
-

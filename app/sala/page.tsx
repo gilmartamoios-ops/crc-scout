@@ -122,7 +122,8 @@ export default function SalaPage() {
 
   useEffect(() => {
     function verificarSessao() {
-      const dados = sessionStorage.getItem('scout_gestor');
+      // Lê do localStorage (usado no login) ou do sessionStorage como fallback
+      const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
       if (!dados) return;
 
       try {
@@ -132,6 +133,7 @@ export default function SalaPage() {
           setGestorDesbloqueado(true);
         }
       } catch {
+        localStorage.removeItem('scout_gestor');
         sessionStorage.removeItem('scout_gestor');
       }
     }
@@ -396,6 +398,41 @@ export default function SalaPage() {
           </div>
 
           <div className="sala-center-viewport">
+            
+            <div className="sala-center-viewport">
+
+            {/* CTA EM DESTAQUE PARA VISITANTES (Some quando o gestor estiver logado) */}
+            {!gestorDesbloqueado && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,0,0,0.85))', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '16px', padding: '22px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 0 35px rgba(0,255,136,0.15)' }}>
+                <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
+                  ✦ JORNADA DE EXPANSÃO CRC
+                </span>
+                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '8px' }}>
+                  Conheceu a Sala? Dê o próximo passo.
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginBottom: '16px', lineHeight: '1.5', maxWidth: '520px', margin: '0 auto 16px' }}>
+                  Responda ao Quiz de Qualificação para registrar seu objetivo e iniciar sua estrutura de atendimento no ecossistema.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                  style={{
+                    background: '#00ff88',
+                    color: '#050505',
+                    border: 'none',
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    fontWeight: '900',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    letterSpacing: '0.5px',
+                    boxShadow: '0 0 25px rgba(0,255,136,0.4)',
+                  }}
+                >
+                  QUERO CONSTRUIR MINHA COMUNIDADE ➔
+                </button>
+              </div>
+            )}
             
             {/* MÓDULO NO TOPO: O OLEIRO E A ARGILA */}
             {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
