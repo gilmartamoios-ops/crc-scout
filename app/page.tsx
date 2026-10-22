@@ -338,13 +338,18 @@ export default function LandingPage() {
         tipo: 'quiz_prospecto',
         gestor_id: gestorId || 'master',
         titulo: `Lead Quiz: ${respostas.objetivo}`,
-        nome: nome.trim(),
-        whatsapp: whatsClean,
-        email: email.trim(),
-        cidade: cidadeFormatada,
-        perfil: respostas.objetivo,
-        status_aprovacao: 'pendente',
-        dados: dadosRegistro,
+        dados: {
+          convidado: {
+            nome: nome.trim(),
+            whatsapp: whatsClean,
+            email: email.trim(),
+            cidade: cidadeFormatada,
+          },
+          perfil: respostas.objetivo,
+          respostas: respostas,
+          status_aprovacao: 'pendente',
+          origem: 'quiz_publico',
+        }
       });
 
       if (error) {
