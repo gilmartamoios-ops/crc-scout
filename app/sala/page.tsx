@@ -145,7 +145,7 @@ export default function SalaPage() {
   };
 
   const lidarComCliqueModulo = (modulo: Modulo) => {
-    if (!gestorDesbloqueado && !modoVisitante) {
+    if (!gestorDesbloqueado) {
       setModuloRestrito(modulo);
       return;
     }
@@ -178,7 +178,6 @@ export default function SalaPage() {
     carregarListaGestores();
   }, []);
 
-  // Busca a lista de gestores cadastrados no Supabase para preencher o Dropdown
   const carregarListaGestores = async () => {
     try {
       const { data, error } = await supabase
@@ -241,7 +240,6 @@ export default function SalaPage() {
     }
   };
 
-  // Carrega os leads do banco (Garante visibilidade total para o Master / Gilmar Aguiar)
   const carregarLeadsScout = async () => {
     setCarregandoLeads(true);
     try {
@@ -271,7 +269,6 @@ export default function SalaPage() {
     }
   };
 
-  // Realtime de novos registos
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
@@ -318,7 +315,6 @@ export default function SalaPage() {
     }
   }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
 
-  // Função para ATRIBUIR / TRANSFERIR o lead para um Gestor via Dropdown
   const atribuirGestorLead = async (id: string, novoGestorId: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -344,7 +340,6 @@ export default function SalaPage() {
     alert(`✅ Lead atribuído ao gestor com sucesso!`);
   };
 
-  // Função para APROVAR e GERAR CHAVE (codigo_lib)
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -381,7 +376,6 @@ export default function SalaPage() {
     alert(`✅ Lead aprovado! Chave gerada: ${chaveGerada}`);
   };
 
-  // Função para REPROVAR / DELETAR DA VISTA (Soft Delete)
   const reprovarLead = async (id: string) => {
     if (!confirm('Deseja remover este lead da sua lista de operações? (O registo permanecerá salvo no Supabase)')) return;
 
@@ -407,7 +401,6 @@ export default function SalaPage() {
     setLeads((anterior) => anterior.filter((item) => item.id !== id));
   };
 
-  // Função de Acompanhamento genérico
   const atualizarStatusGenerico = async (id: string, novoStatus: 'pendente' | 'acompanhamento') => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -506,7 +499,6 @@ export default function SalaPage() {
           </div>
         </header>
 
-        {/* Banner Flutuante de Alerta em Tempo Real */}
         {novoLeadAlerta && (
           <div style={{
             background: 'linear-gradient(90deg, #00ff88, #00cc6a)',
@@ -531,8 +523,15 @@ export default function SalaPage() {
         )}
 
         <div className="sala-layout">
-          {/* Menu Lateral */}
-          <aside className="sala-sidebar">
+          <aside
+            className="sala-sidebar"
+            style={{
+              pointerEvents: !gestorDesbloqueado ? 'none' : 'auto',
+              opacity: !gestorDesbloqueado ? 0.5 : 1,
+              filter: !gestorDesbloqueado ? 'grayscale(0.6)' : 'none',
+              userSelect: !gestorDesbloqueado ? 'none' : 'auto',
+            }}
+          >
             <div className="sala-sidebar-heading">
               <span>AMBIENTES</span>
               <small>ACESSOS</small>
@@ -544,6 +543,7 @@ export default function SalaPage() {
                   type="button"
                   className="sala-menu-quiz"
                   onClick={() => { window.location.href = '/?etapa=quiz'; }}
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <span className="sala-menu-icon">🔥</span>
                   <span className="sala-menu-copy">
@@ -564,12 +564,12 @@ export default function SalaPage() {
                     <span className="sala-menu-icon">{modulo.icone}</span>
                     <span className="sala-menu-copy">
                       <strong>{modulo.nome}</strong>
-                      <small>{gestorDesbloqueado || modoVisitante ? 'ambiente livre' : '🔒 restrito'}</small>
+                      <small>{gestorDesbloqueado ? 'ambiente livre' : '🔒 restrito'}</small>
                     </span>
                     <span className="sala-lock">{gestorDesbloqueado ? '✦' : '⌕'}</span>
                   </button>
 
-                  {(gestorDesbloqueado || modoVisitante) && modulo.sublinks && moduloAtivo === modulo.nome && (
+                  {gestorDesbloqueado && modulo.sublinks && moduloAtivo === modulo.nome && (
                     <div className="sala-sublinks">
                       {modulo.sublinks.map((sub) => (
                         <button
@@ -605,7 +605,6 @@ export default function SalaPage() {
             )}
           </aside>
 
-          {/* Área Central Operacional */}
           <section className="sala-main">
             <div className="sala-welcome">
               <div>
@@ -626,8 +625,7 @@ export default function SalaPage() {
 
             <div className="sala-center-viewport">
               
-              {/* TELA DE BOAS-VINDAS E VISÃO GERAL */}
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Visão Geral & Boas-Vindas' && (
+              {moduloAtivo === 'Visão Geral & Boas-Vindas' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.35)', background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(5,5,5,0.98))' }}>
                   <div style={{ maxWidth: '820px' }}>
                     <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
@@ -696,8 +694,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* MÓDULO 2: O OLEIRO E A ARGILA */}
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'O Oleiro e a Argila' && (
+              {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
                     
@@ -752,7 +749,7 @@ export default function SalaPage() {
               )}
 
               {/* SUBLINK 1: PROSPECTO DIGITAL */}
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
+              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
                   
                   <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital</h3>
@@ -760,15 +757,9 @@ export default function SalaPage() {
                     Filtre sua busca para encontrar novos Gestores de Comunidade
                   </p>
 
-                  <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
 
-                    <div style={{ 
-                      filter: modoVisitante && !gestorDesbloqueado ? 'blur(4px)' : 'none',
-                      opacity: modoVisitante && !gestorDesbloqueado ? 0.45 : 1,
-                      pointerEvents: modoVisitante && !gestorDesbloqueado ? 'none' : 'auto',
-                      transition: 'all 0.3s ease'
-                    }}>
-
+                    <div>
                       <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(0,0,0,0.5))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '14px', padding: '16px 18px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
@@ -865,6 +856,7 @@ export default function SalaPage() {
                             cursor: 'pointer',
                             letterSpacing: '0.5px',
                             boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+                            width: '100%',
                           }}
                         >
                           ⚡ EXECUTAR GARIMPO DIGITAL DE TERRITÓRIO
@@ -882,7 +874,7 @@ export default function SalaPage() {
                             </span>
                           </div>
 
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                             {perfisGarimpados.map((lead, index) => {
                               const msgSantinho = encodeURIComponent(`Olá ${lead.nome}! Notei seu perfil em ${lead.regiao} (${lead.perfil}). Convidamos você a conhecer o ecossistema CRC. Assista ao vídeo e conheça nossa comunidade: ${linkBaseGestor}`);
                               const linkWhatsSantinho = `https://wa.me/55${lead.whats}?text=${msgSantinho}`;
@@ -895,25 +887,26 @@ export default function SalaPage() {
                                     border: '1px solid rgba(0,255,136,0.2)',
                                     borderRadius: '12px',
                                     padding: '14px',
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr auto',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                     gap: '12px',
-                                    alignItems: 'center',
+                                    width: '100%',
+                                    boxSizing: 'border-box',
                                   }}
                                 >
                                   <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                       <strong style={{ color: '#fff', fontSize: '13px' }}>{lead.nome}</strong>
                                       <span style={{ fontSize: '9px', background: 'rgba(0,255,136,0.15)', color: '#00ff88', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
                                         {lead.regiao}
                                       </span>
                                     </div>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0' }}>
+                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0', wordBreak: 'break-word' }}>
                                       🎯 <strong>Perfil Alvo:</strong> {lead.perfil}
                                     </p>
                                   </div>
 
-                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -929,7 +922,9 @@ export default function SalaPage() {
                                         padding: '8px 10px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
-                                        whiteSpace: 'nowrap',
+                                        flex: 1,
+                                        minWidth: '110px',
+                                        textAlign: 'center',
                                       }}
                                     >
                                       📋 Copiar Link
@@ -948,7 +943,8 @@ export default function SalaPage() {
                                         borderRadius: '8px',
                                         textDecoration: 'none',
                                         textAlign: 'center',
-                                        whiteSpace: 'nowrap',
+                                        flex: 1,
+                                        minWidth: '140px',
                                       }}
                                     >
                                       📨 Enviar Santinho Digital
@@ -962,51 +958,6 @@ export default function SalaPage() {
                       )}
 
                     </div>
-
-                    {modoVisitante && !gestorDesbloqueado && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '90%',
-                        maxWidth: '420px',
-                        background: 'linear-gradient(145deg, rgba(10, 15, 12, 0.98), rgba(5, 5, 5, 0.99))',
-                        border: '1px solid rgba(255, 68, 68, 0.45)',
-                        borderRadius: '20px',
-                        padding: '28px 20px',
-                        textAlign: 'center',
-                        boxShadow: '0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255,68,68,0.2)',
-                        zIndex: 50
-                      }}>
-                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>✦</div>
-                        <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.3px' }}>
-                          Faça Parte da Nossa Comunidade
-                        </h3>
-                        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.6', marginBottom: '22px' }}>
-                          Desbloqueie todo o potencial da inteligência territorial, garimpo digital e expansão de consumo. Venha construir sua jornada no ecossistema CRC.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => { window.location.href = '/?etapa=quiz'; }}
-                          style={{
-                            width: '100%',
-                            background: '#ff4444',
-                            color: '#ffffff',
-                            border: 'none',
-                            padding: '14px 20px',
-                            borderRadius: '12px',
-                            fontWeight: '900',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            letterSpacing: '0.5px',
-                            boxShadow: '0 4px 20px rgba(255,68,68,0.4)',
-                          }}
-                        >
-                          QUERO CONSTRUIR MINHA COMUNIDADE ➔
-                        </button>
-                      </div>
-                    )}
 
                   </div>
                 </div>
@@ -1053,7 +1004,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS (SUPABASE + ATRIBUIÇÃO E APROVAÇÃO) */}
+              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
                   
@@ -1218,7 +1169,6 @@ export default function SalaPage() {
                                 </div>
                               )}
 
-                              {/* DROPDOWN DE SELEÇÃO E ATRIBUIÇÃO DE GESTOR */}
                               <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
                                   👤 Gestor Responsável:
@@ -1252,7 +1202,6 @@ export default function SalaPage() {
                                 </select>
                               </div>
 
-                              {/* PAINEL DE AÇÕES DO GESTOR & BOTAO INICIAR X1 */}
                               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }} className="no-print">
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                                   <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Ações:</span>
@@ -1311,19 +1260,19 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Informativos' && (
+              {gestorDesbloqueado && moduloAtivo === 'Informativos' && (
                 <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
                   <InformesPage />
                 </div>
               )}
 
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Mentoria' && (
+              {gestorDesbloqueado && moduloAtivo === 'Mentoria' && (
                 <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
                   <MentoriaPage />
                 </div>
               )}
 
-              {(gestorDesbloqueado || modoVisitante) && moduloAtivo === 'Curadoria' && (
+              {gestorDesbloqueado && moduloAtivo === 'Curadoria' && (
                 <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
                   <CuradoriaPage />
                 </div>
@@ -1370,6 +1319,7 @@ export default function SalaPage() {
           background: radial-gradient(circle at 70% 16%, rgba(0, 255, 136, 0.08), transparent 26%), #050505;
           color: #f5f7f8;
           padding: 18px;
+          overflow-x: hidden;
         }
         .sala-shell {
           min-height: calc(100vh - 36px);
@@ -1665,6 +1615,8 @@ export default function SalaPage() {
           border-radius: 20px;
           padding: 30px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+          box-sizing: border-box;
+          max-width: 100%;
         }
         .sala-footer {
           display: flex;
@@ -1711,6 +1663,16 @@ export default function SalaPage() {
         .sala-modal h2 {
           margin: 8px 0 10px;
           font-size: 28px;
+        }
+        .sala-modal-close {
+          background: #00ff88;
+          color: #050505;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 10px;
+          font-weight: 800;
+          cursor: pointer;
+          margin-top: 16px;
         }
         @keyframes fadeInOut {
           from { opacity: 0; transform: translateY(-10px); }
