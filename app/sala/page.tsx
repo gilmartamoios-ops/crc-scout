@@ -163,6 +163,35 @@ export default function SalaPage() {
     }
   };
 
+  const carregarLeadsScout = async () => {
+    setCarregandoLeads(true);
+    try {
+      const slugAtual = gestor?.slug || gestor?.id || 'master';
+      const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
+
+      let query = supabase
+        .from('scout_registros')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!isMaster && eUuidValido(gestor?.id)) {
+        query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Erro ao buscar dados reais:', error);
+      } else if (data) {
+        setLeads(data as ConvidadoRegistro[]);
+      }
+    } catch (err) {
+      console.error('Erro inesperado:', err);
+    } finally {
+      setCarregandoLeads(false);
+    }
+  };
+
   useEffect(() => {
     function verificarSessao() {
       const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
@@ -173,6 +202,7 @@ export default function SalaPage() {
         if (gestorSalvo?.id && gestorSalvo?.nome) {
           setGestor(gestorSalvo);
           setGestorDesbloqueado(true);
+          carregarLeadsScout(); // Carrega os leads assim que a sessão é verificada
         }
       } catch {
         localStorage.removeItem('scout_gestor');
@@ -246,35 +276,6 @@ export default function SalaPage() {
     }
   };
 
-  const carregarLeadsScout = async () => {
-    setCarregandoLeads(true);
-    try {
-      const slugAtual = gestor?.slug || gestor?.id || 'master';
-      const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
-
-      let query = supabase
-        .from('scout_registros')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!isMaster && eUuidValido(gestor?.id)) {
-        query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar dados reais:', error);
-      } else if (data) {
-        setLeads(data as ConvidadoRegistro[]);
-      }
-    } catch (err) {
-      console.error('Erro inesperado:', err);
-    } finally {
-      setCarregandoLeads(false);
-    }
-  };
-
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
@@ -316,7 +317,7 @@ export default function SalaPage() {
   }, [gestorDesbloqueado, gestor]);
 
   useEffect(() => {
-    if (gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && (subModuloAtivo === 'Feedback de Prospectos' || subModuloAtivo === 'Gestores Aprovados')) {
+    if (gestorDesbloqueado) {
       carregarLeadsScout();
     }
   }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
@@ -409,8 +410,9 @@ export default function SalaPage() {
     );
 
     carregarListaGestores();
+    carregarLeadsScout();
 
-    alert(`✅ Gestor promovido com sucesso!\n• Chave de acesso: ${chaveGerada}\n• Cadastrado em scout_gestores com slug: ${slugGerado}`);
+    alert(`✅ Gestor promovido com sucesso!\n• E-mail de acesso: ${emailConvidado}\n• Cadastrado em scout_gestores com slug: ${slugGerado}`);
   };
 
   const reprovarLead = async (id: string) => {
@@ -526,7 +528,7 @@ export default function SalaPage() {
                   className="sala-chave-btn"
                   onClick={() => { window.location.href = '/gestor'; }}
                 >
-                  🔑 Chave do gestor
+                  🔑 Acesso por E-mail
                 </button>
               )}
 
@@ -1046,11 +1048,11 @@ export default function SalaPage() {
                         CENTRAL REAL DE ATENDIMENTO
                       </span>
                       <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
-                        Gestão de Prospectos & Liberação de Chaves
+                        Gestão de Prospectos & Liberação de Acesso
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Gerencie a sua fila de atendimento X1. Você pode vincular um gestor diretamente pelo menu <strong>"Gestor Responsável"</strong>. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada, o gestor é promovido no banco e limpo da sua fila ativa.
+                      Gerencie a sua fila de atendimento X1. Ao clicar em <strong>"Aprovar"</strong>, o gestor é promovido automaticamente para a tabela oficial e fica pronto para entrar apenas com o e-mail.
                     </p>
                   </div>
 
@@ -1068,7 +1070,7 @@ export default function SalaPage() {
                       <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{acompanhamentoLeads}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,255,136,0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: '#00ff88', letterSpacing: '1px', display: 'block' }}>APROVADOS COM CHAVE</span>
+                      <span style={{ fontSize: '9px', color: '#00ff88', letterSpacing: '1px', display: 'block' }}>APROVADOS</span>
                       <strong style={{ fontSize: '20px', color: '#00ff88' }}>{aprovadosComChave}</strong>
                     </div>
                   </div>
@@ -1128,7 +1130,7 @@ export default function SalaPage() {
                       <option value="todos">Todos os Status</option>
                       <option value="pendente">Pendentes (Fila Ativa)</option>
                       <option value="acompanhamento">Em Acompanhamento</option>
-                      <option value="aprovado">Aprovados com Chave</option>
+                      <option value="aprovado">Aprovados</option>
                     </select>
                   </div>
 
@@ -1147,7 +1149,6 @@ export default function SalaPage() {
                         const convidado = item.dados?.convidado;
                         const whatsClean = convidado?.whatsapp?.replace(/\D/g, '') || '';
                         const statusAtual = item.dados?.status_aprovacao || 'pendente';
-                        const chaveCadastrada = item.dados?.codigo_lib || item.dados?.codigo_master;
                         
                         const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, recebi seu cadastro no Quiz do SCOUT.CRC! Podemos conversar sobre seu objetivo?`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
@@ -1183,7 +1184,7 @@ export default function SalaPage() {
                                   background: statusAtual === 'aprovado' ? 'rgba(0,255,136,0.2)' : statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : 'rgba(255,255,255,0.08)', 
                                   color: statusAtual === 'aprovado' ? '#00ff88' : statusAtual === 'acompanhamento' ? '#2bd9ff' : 'rgba(255,255,255,0.6)' 
                                 }}>
-                                  {statusAtual === 'aprovado' ? `✦ APROVADO | CHAVE: ${chaveCadastrada}` : statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
+                                  {statusAtual === 'aprovado' ? `✦ APROVADO (E-MAIL: ${convidado?.email || 'N/D'})` : statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
                                 </span>
                               </div>
 
@@ -1192,6 +1193,7 @@ export default function SalaPage() {
                                 <span style={{ color: '#00ff88', fontWeight: 'bold' }}>
                                   📍 {convidado?.cidade || 'Região não informada'}
                                 </span>
+                                <span>✉️ {convidado?.email || 'Sem e-mail'}</span>
                                 <span>📅 {new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
                               </div>
 
@@ -1304,7 +1306,6 @@ export default function SalaPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {leads.filter(l => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').map((item) => {
                         const conv = item.dados?.convidado;
-                        const chave = item.dados?.codigo_lib;
                         return (
                           <div key={item.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                             <div>
@@ -1312,7 +1313,7 @@ export default function SalaPage() {
                               <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {conv?.whatsapp || 'Sem WhatsApp'} | 📍 {conv?.cidade || 'Região não informada'}</span>
                             </div>
                             <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
-                              🔑 Chave Ativa: {chave || 'CRC-APROVADO'}
+                              ✉️ E-mail de Acesso: {conv?.email || 'Não informado'}
                             </div>
                           </div>
                         );
