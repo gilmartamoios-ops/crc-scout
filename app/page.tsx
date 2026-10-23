@@ -163,7 +163,7 @@ export default function LandingPage() {
       }
     }
 
-    const labels = dadosEtapas.map(item => `${item.etapa}ª Etapa\n(${item.plano})`);
+    const labels = dadosEtapas.map(item => `${item.etapa}ª Etapa (${item.plano})`);
     const valoresGanhos = dadosEtapas.map(item => item.total);
     const gcomsList = dadosEtapas.map(item => item.gcom);
 
@@ -200,7 +200,7 @@ export default function LandingPage() {
             data: dadosValores,
             backgroundColor: '#00ff88',
             borderRadius: 6,
-            barThickness: 22
+            barThickness: isMobile ? 18 : 22
           }]
         },
         options: {
@@ -209,7 +209,7 @@ export default function LandingPage() {
           indexAxis: 'y',
           layout: {
             padding: isMobile 
-              ? { top: 10, left: 10, right: 110, bottom: 10 } 
+              ? { top: 5, left: 2, right: 10, bottom: 5 } 
               : { top: 35, left: 5, right: 110, bottom: 5 }
           },
           plugins: {
@@ -218,9 +218,9 @@ export default function LandingPage() {
             datalabels: {
               anchor: 'end',
               align: 'end',
-              offset: 6,
+              offset: 4,
               color: '#00ff88',
-              font: { weight: 'bold', size: 10 },
+              font: { weight: 'bold', size: isMobile ? 9 : 10 },
               formatter: function(value: number, context: any) {
                 const index = context.dataIndex;
                 const gcomCount = dadosGcom[index];
@@ -240,7 +240,7 @@ export default function LandingPage() {
               grid: { display: false },
               ticks: { 
                 color: '#ffffff', 
-                font: { size: 10, weight: 'bold' },
+                font: { size: isMobile ? 9 : 10, weight: 'bold' },
                 autoSkip: false
               }
             }
@@ -309,7 +309,6 @@ export default function LandingPage() {
 
     const linkWhatsAppFinal = `https://wa.me/${numeroDestino}?text=${msgWhats}`;
 
-    // Disparo instantâneo do Alerta no Telegram
     const telegramToken = '8943733795:AAGALRSNsq-c9a3nwlpti7VLUI6Hk14LTQ4';
     const telegramChatId = '6327378053';
 
@@ -334,7 +333,6 @@ export default function LandingPage() {
     }).catch(err => console.error('Erro ao enviar para Telegram:', err));
 
     try {
-      // Validação rigorosa do UUID do gestor para evitar erro 22P02 no Supabase
       const uuidGestorValido = gestorId && gestorId !== 'master' && gestorId.length > 10 ? gestorId : null;
 
       const { error } = await supabase.from('scout_registros').insert({
@@ -379,13 +377,11 @@ export default function LandingPage() {
   };
   
   return (
-    <main className="scout-landing" style={{ position: 'relative', minHeight: '100vh', background: '#050505', color: '#fff' }}>
+    <main className="scout-landing" style={{ position: 'relative', minHeight: '100vh', background: '#050505', color: '#fff', overflowX: 'hidden' }}>
       
-      {/* Scripts Globais do Chart.js e Plugin DataLabels */}
       <Script src="https://cdn.jsdelivr.net/npm/chart.js" strategy="beforeInteractive" />
       <Script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0" strategy="beforeInteractive" />
 
-      {/* Camada Desfocada para a Etapa Final (Blur) */}
       <div style={etapa === 9 ? { filter: 'blur(16px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.35 } : undefined}>
         
         <div className="scout-shell">
@@ -548,9 +544,9 @@ export default function LandingPage() {
             </section>
           )}
 
-          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO ORIGINAL */}
+          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO ORIGINAL (AJUSTADO PARA MOBILE) */}
           {etapa === 2.4 && (
-            <section className="scout-content" style={{ padding: '12px' }}>
+            <section className="scout-content" style={{ padding: '12px', width: '100%', boxSizing: 'border-box' }}>
               <div className="card-simulador-original">
                 <div className="eyebrow-sim">CRC | Modelo de Comunidades</div>
                 <h1 className="title-sim">Simulação de Expansão da Comunidade</h1>
@@ -679,7 +675,7 @@ export default function LandingPage() {
                     value={nome}
                     onChange={(event) => setNome(event.target.value)}
                     required
-                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
 
@@ -691,7 +687,7 @@ export default function LandingPage() {
                     <select
                       value={estadoSelecionado}
                       onChange={(e) => setEstadoSelecionado(e.target.value)}
-                      style={{ width: '100%', background: '#080808', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '10px', padding: '12px 8px', color: '#00ff88', fontSize: '13px', fontWeight: 'bold' }}
+                      style={{ width: '100%', background: '#080808', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '10px', padding: '12px 8px', color: '#00ff88', fontSize: '13px', fontWeight: 'bold', boxSizing: 'border-box' }}
                     >
                       {estadosBrasil.map((uf) => (
                         <option key={uf} value={uf}>{uf}</option>
@@ -707,7 +703,7 @@ export default function LandingPage() {
                       value={municipioSelecionado}
                       onChange={(e) => setMunicipioSelecionado(e.target.value)}
                       disabled={carregandoCidades}
-                      style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px 8px', color: '#fff', fontSize: '13px' }}
+                      style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px 8px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                     >
                       {municipios.map((cidadeNome) => (
                         <option key={cidadeNome} value={cidadeNome}>{cidadeNome}</option>
@@ -726,7 +722,7 @@ export default function LandingPage() {
                     value={whatsapp}
                     onChange={(event) => setWhatsapp(event.target.value)}
                     required
-                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
 
@@ -740,7 +736,7 @@ export default function LandingPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
-                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px' }}
+                    style={{ width: '100%', background: '#080808', border: '1px solid #222', borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
 
@@ -806,6 +802,7 @@ export default function LandingPage() {
           box-shadow: 0 0 25px rgba(0, 255, 136, 0.35);
           transition: all 0.2s ease;
           text-align: center;
+          box-sizing: border-box;
         }
         .btn-destaque-neon:hover {
           background: #26ff97;
@@ -829,6 +826,7 @@ export default function LandingPage() {
           cursor: pointer;
           transition: all 0.2s ease;
           text-align: center;
+          box-sizing: border-box;
         }
         .btn-voltar-sutil:hover {
           color: #fff;
@@ -846,11 +844,12 @@ export default function LandingPage() {
           backdrop-filter: blur(16px);
           border: 1px solid rgba(255,255,255,.08);
           border-radius: 20px;
-          padding: 20px;
+          padding: 16px;
           box-shadow: 0 12px 40px rgba(0,0,0,.35);
           display: flex;
           flex-direction: column;
-          min-height: 80vh;
+          box-sizing: border-box;
+          overflow-x: hidden;
         }
 
         .eyebrow-sim {
@@ -903,34 +902,40 @@ export default function LandingPage() {
           font-weight: bold;
           font-size: 12px;
           outline: none;
+          box-sizing: border-box;
         }
 
         .sim-body-wrapper-original {
           display: flex;
+          flex-direction: row;
           gap: 16px;
           align-items: stretch;
-          flex: 1;
-          min-height: 320px;
+          width: 100%;
+          min-height: 300px;
           margin-bottom: 12px;
+          box-sizing: border-box;
         }
 
         .info-col-left-original {
           width: 32%;
-          min-width: 240px;
+          min-width: 220px;
           background: rgba(0, 255, 136, 0.06);
           border: 1px dashed rgba(0, 255, 136, 0.4);
           border-radius: 14px;
-          padding: 16px;
+          padding: 14px;
           display: flex;
           flex-direction: column;
           justify-content: center;
           box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.03);
+          box-sizing: border-box;
         }
 
         .chart-col-right-original {
           flex: 1;
           position: relative;
           min-height: 280px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .retorno-scout-original {
@@ -939,6 +944,8 @@ export default function LandingPage() {
           padding-top: 10px;
           border-top: 1px solid rgba(255,255,255,0.06);
           flex-shrink: 0;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .btn-avancar-simulador-oficial {
@@ -949,16 +956,18 @@ export default function LandingPage() {
           width: 100%;
           max-width: 520px;
           min-height: 44px;
-          padding: 10px 20px;
+          padding: 10px 16px;
           border: 1px solid rgba(0,255,136,.35);
           border-radius: 10px;
           background: rgba(0,255,136,.12);
           color: #00ff88;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
           cursor: pointer;
           box-shadow: 0 0 20px rgba(0,255,136,0.2);
           transition: all 0.2s ease;
+          text-align: center;
+          box-sizing: border-box;
         }
 
         .btn-avancar-simulador-oficial:hover {
@@ -967,12 +976,12 @@ export default function LandingPage() {
           box-shadow: 0 0 30px rgba(0,255,136,0.45);
         }
 
-        @media(max-width: 720px) {
-          .card-simulador-original { padding: 14px; }
-          .sim-grid-original { grid-template-columns: 1fr; gap: 6px; }
-          .sim-body-wrapper-original { flexDirection: column; gap: 10px; }
+        @media(max-width: 768px) {
+          .card-simulador-original { padding: 12px; }
+          .sim-grid-original { grid-template-columns: 1fr; gap: 8px; }
+          .sim-body-wrapper-original { flex-direction: column; gap: 12px; }
           .info-col-left-original { width: 100%; min-width: 100%; padding: 12px; }
-          .chart-col-right-original { min-height: 240px; }
+          .chart-col-right-original { min-height: 280px; width: 100%; }
         }
       `}</style>
     </main>
