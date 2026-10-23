@@ -71,7 +71,7 @@ const modulos: Modulo[] = [
     nome: 'Seu SCOUT',
     descricao: 'Sua operação de prospecção e gestão de convidados.',
     icone: '✧',
-    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Feedback de Prospectos'],
+    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Feedback de Prospectos', 'Gestores Aprovados'],
   },
 ];
 
@@ -123,7 +123,6 @@ export default function SalaPage() {
   
   const [novoLeadAlerta, setNovoLeadAlerta] = useState<string | null>(null);
 
-  // Função utilitária universal para validar se um ID é um UUID válido do Postgres
   const eUuidValido = (id: string | null | undefined): boolean => {
     if (!id) return false;
     const regexUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -194,11 +193,9 @@ export default function SalaPage() {
 
       if (!error && data) {
         setListaGestores(data as GestorItem[]);
-      } else if (error) {
-        console.error('Erro ao buscar lista de gestores no Supabase:', error);
       }
     } catch (err) {
-      console.error('Erro inesperado ao buscar gestores:', err);
+      console.error('Erro ao buscar lista de gestores:', err);
     }
   };
 
@@ -319,7 +316,7 @@ export default function SalaPage() {
   }, [gestorDesbloqueado, gestor]);
 
   useEffect(() => {
-    if (gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos') {
+    if (gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && (subModuloAtivo === 'Feedback de Prospectos' || subModuloAtivo === 'Gestores Aprovados')) {
       carregarLeadsScout();
     }
   }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
@@ -328,7 +325,6 @@ export default function SalaPage() {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
 
-    // Assegura que apenas UUIDs válidos sejam gravados na coluna UUID do banco
     const valorParaSalvar = eUuidValido(novoGestorId) ? novoGestorId : null;
 
     const { error } = await supabase
@@ -354,9 +350,19 @@ export default function SalaPage() {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
 
-    // Valida se o ID do gestor atual é um UUID válido, senão define como null com segurança
     const gestorIdAtual = eUuidValido(gestor?.id) ? gestor.id : null;
     const chaveGerada = `CRC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const nomeConvidado = leadAlvo.dados?.convidado?.nome || 'Novo Gestor';
+    const emailConvidado = leadAlvo.dados?.convidado?.email || '';
+    const whatsConvidado = leadAlvo.dados?.convidado?.whatsapp || '';
+    const cidadeConvidado = leadAlvo.dados?.convidado?.cidade || '';
+
+    const slugGerado = nomeConvidado
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
 
     const novosDados = {
       ...leadAlvo.dados,
@@ -367,7 +373,7 @@ export default function SalaPage() {
 
     const idFinalGestor = eUuidValido(leadAlvo.gestor_id) ? leadAlvo.gestor_id : gestorIdAtual;
 
-    const { error } = await supabase
+    const { error: erroUpdate } = await supabase
       .from('scout_registros')
       .update({
         gestor_id: idFinalGestor,
@@ -375,9 +381,25 @@ export default function SalaPage() {
       })
       .eq('id', id);
 
-    if (error) {
-      alert('Erro ao aprovar lead no Supabase: ' + error.message);
+    if (erroUpdate) {
+      alert('Erro ao aprovar lead no Supabase: ' + erroUpdate.message);
       return;
+    }
+
+    const { error: erroGestor } = await supabase
+      .from('scout_gestores')
+      .insert([
+        {
+          nome: nomeConvidado,
+          whatsapp: whatsConvidado,
+          email: emailConvidado,
+          cidade: cidadeConvidado,
+          slug: slugGerado,
+        }
+      ]);
+
+    if (erroGestor) {
+      console.error('Aviso ao registrar na tabela scout_gestores:', erroGestor.message);
     }
 
     setLeads((anterior) =>
@@ -386,7 +408,9 @@ export default function SalaPage() {
       )
     );
 
-    alert(`✅ Lead de ${leadAlvo.dados?.convidado?.nome || 'Convidado'} aprovado!\nChave gerada e salva no banco: ${chaveGerada}`);
+    carregarListaGestores();
+
+    alert(`✅ Gestor promovido com sucesso!\n• Chave de acesso: ${chaveGerada}\n• Cadastrado em scout_gestores com slug: ${slugGerado}`);
   };
 
   const reprovarLead = async (id: string) => {
@@ -764,14 +788,12 @@ export default function SalaPage() {
               {/* SUBLINK 1: PROSPECTO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
-                  
                   <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
                     Filtre sua busca para encontrar novos Gestores de Comunidade
                   </p>
 
                   <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
-
                     <div>
                       <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(0,0,0,0.5))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '14px', padding: '16px 18px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -969,9 +991,7 @@ export default function SalaPage() {
                           </div>
                         </div>
                       )}
-
                     </div>
-
                   </div>
                 </div>
               )}
@@ -1020,7 +1040,6 @@ export default function SalaPage() {
               {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
-                  
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                       <span style={{ background: '#00ff88', color: '#050505', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', letterSpacing: '1px' }}>
@@ -1031,7 +1050,7 @@ export default function SalaPage() {
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Gerencie a sua fila de atendimento X1. Você pode vincular um gestor diretamente pelo menu <strong>"Gestor Responsável"</strong>. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada e salva no banco. Ao clicar em <strong>"Reprovar"</strong>, o registo é ocultado da tela, mas preservado no Supabase.
+                      Gerencie a sua fila de atendimento X1. Você pode vincular um gestor diretamente pelo menu <strong>"Gestor Responsável"</strong>. Ao clicar em <strong>"Aprovar"</strong>, a chave é gerada, o gestor é promovido no banco e limpo da sua fila ativa.
                     </p>
                   </div>
 
@@ -1218,7 +1237,7 @@ export default function SalaPage() {
                                     onClick={() => aprovarLead(item.id)}
                                     style={{ background: 'rgba(0,255,136,0.18)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🟢 Aprovar & Gerar Chave
+                                    🟢 Aprovar & Promover
                                   </button>
 
                                   <button
@@ -1259,6 +1278,41 @@ export default function SalaPage() {
                                   </a>
                                 )}
                               </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUBLINK 4: GESTORES APROVADOS (REPOSITÓRIO) */}
+              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Aprovados' && (
+                <div className="sala-dynamic-card">
+                  <span className="sala-eyebrow" style={{ color: '#00ff88' }}>REPOSITÓRIO DA REDE · GESTORES ATIVOS</span>
+                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Gestores Aprovados pelo Patrocinador</h3>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>
+                    Lista oficial de operadores qualificados e integrados à sua rede de liderança.
+                  </p>
+
+                  {leads.filter(l => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').length === 0 ? (
+                    <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
+                      Nenhum gestor aprovado registrado na sua rede no momento.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {leads.filter(l => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').map((item) => {
+                        const conv = item.dados?.convidado;
+                        const chave = item.dados?.codigo_lib;
+                        return (
+                          <div key={item.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                            <div>
+                              <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{conv?.nome || 'Gestor CRC'}</strong>
+                              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {conv?.whatsapp || 'Sem WhatsApp'} | 📍 {conv?.cidade || 'Região não informada'}</span>
+                            </div>
+                            <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
+                              🔑 Chave Ativa: {chave || 'CRC-APROVADO'}
                             </div>
                           </div>
                         );
