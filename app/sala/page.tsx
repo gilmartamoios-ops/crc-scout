@@ -123,6 +123,13 @@ export default function SalaPage() {
   
   const [novoLeadAlerta, setNovoLeadAlerta] = useState<string | null>(null);
 
+  // Função utilitária universal para validar se um ID é um UUID válido do Postgres
+  const eUuidValido = (id: string | null | undefined): boolean => {
+    if (!id) return false;
+    const regexUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return regexUuid.test(id);
+  };
+
   const tocarAlertaSonoro = () => {
     try {
       // @ts-ignore
@@ -251,8 +258,8 @@ export default function SalaPage() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!isMaster) {
-        query = query.or(`gestor_id.eq.${slugAtual},gestor_id.is.null`);
+      if (!isMaster && eUuidValido(gestor?.id)) {
+        query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
       }
 
       const { data, error } = await query;
@@ -287,7 +294,7 @@ export default function SalaPage() {
         (payload) => {
           const novoRegistro = payload.new as ConvidadoRegistro;
 
-          if (!isMaster && novoRegistro.gestor_id !== slugAtual && novoRegistro.gestor_id !== null) {
+          if (!isMaster && eUuidValido(gestor?.id) && novoRegistro.gestor_id !== gestor?.id && novoRegistro.gestor_id !== null) {
             return;
           }
 
@@ -319,7 +326,8 @@ export default function SalaPage() {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
 
-    const valorParaSalvar = novoGestorId === '' ? null : novoGestorId;
+    // Assegura que apenas UUIDs válidos sejam gravados na coluna UUID do banco
+    const valorParaSalvar = eUuidValido(novoGestorId) ? novoGestorId : null;
 
     const { error } = await supabase
       .from('scout_registros')
@@ -344,7 +352,8 @@ export default function SalaPage() {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
 
-    const gestorIdAtual = gestor?.slug || gestor?.id || 'master';
+    // Valida se o ID do gestor atual é um UUID válido, senão define como null com segurança
+    const gestorIdAtual = eUuidValido(gestor?.id) ? gestor.id : null;
     const chaveGerada = `CRC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const novosDados = {
@@ -354,10 +363,12 @@ export default function SalaPage() {
       data_aprovacao: new Date().toISOString(),
     };
 
+    const idFinalGestor = eUuidValido(leadAlvo.gestor_id) ? leadAlvo.gestor_id : gestorIdAtual;
+
     const { error } = await supabase
       .from('scout_registros')
       .update({
-        gestor_id: leadAlvo.gestor_id || gestorIdAtual,
+        gestor_id: idFinalGestor,
         dados: novosDados,
       })
       .eq('id', id);
@@ -369,11 +380,11 @@ export default function SalaPage() {
 
     setLeads((anterior) =>
       anterior.map((item) =>
-        item.id === id ? { ...item, gestor_id: item.gestor_id || gestorIdAtual, dados: novosDados } : item
+        item.id === id ? { ...item, gestor_id: idFinalGestor, dados: novosDados } : item
       )
     );
 
-    alert(`✅ Lead aprovado! Chave gerada: ${chaveGerada}`);
+    alert(`✅ Lead de ${leadAlvo.dados?.convidado?.nome || 'Convidado'} aprovado! Chave gerada: ${chaveGerada}`);
   };
 
   const reprovarLead = async (id: string) => {
@@ -1189,16 +1200,11 @@ export default function SalaPage() {
                                   }}
                                 >
                                   <option value="">(Sem Gestor - Pool Geral)</option>
-                                  <option value="master">Master (Gilmar)</option>
-                                  {listaGestores.map((g) => {
-                                    const valorOption = g.slug || g.id;
-                                    if (valorOption === 'master') return null;
-                                    return (
-                                      <option key={g.id} value={valorOption}>
-                                        {g.nome}
-                                      </option>
-                                    );
-                                  })}
+                                  {listaGestores.map((g) => (
+                                    <option key={g.id} value={g.id}>
+                                      {g.nome}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
 
