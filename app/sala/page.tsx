@@ -241,12 +241,12 @@ export default function SalaPage() {
     }
   };
 
-  // Carrega os leads do banco (incluindo os leads sem gestor / Pool Geral)
+  // Carrega os leads do banco (Garante visibilidade total para o Master / Gilmar Aguiar)
   const carregarLeadsScout = async () => {
     setCarregandoLeads(true);
     try {
       const slugAtual = gestor?.slug || gestor?.id || 'master';
-      const isMaster = slugAtual === 'master';
+      const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
 
       let query = supabase
         .from('scout_registros')
@@ -276,7 +276,7 @@ export default function SalaPage() {
     if (!gestorDesbloqueado) return;
 
     const slugAtual = gestor?.slug || gestor?.id || 'master';
-    const isMaster = slugAtual === 'master';
+    const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
 
     const canal = supabase
       .channel('sala_operacoes_realtime')
