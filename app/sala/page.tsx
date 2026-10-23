@@ -1178,10 +1178,9 @@ export default function SalaPage() {
                               border: statusAtual === 'aprovado' ? '1px solid rgba(0,255,136,0.5)' : '1px solid rgba(255,255,255,0.1)',
                               borderRadius: '14px',
                               padding: '16px',
-                              display: 'grid',
-                              gridTemplateColumns: '1fr auto',
-                              gap: '14px',
-                              alignItems: 'center',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '12px',
                             }}
                           >
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1220,7 +1219,7 @@ export default function SalaPage() {
                               )}
 
                               {/* DROPDOWN DE SELEÇÃO E ATRIBUIÇÃO DE GESTOR */}
-                              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
                                   👤 Gestor Responsável:
                                 </span>
@@ -1253,54 +1252,56 @@ export default function SalaPage() {
                                 </select>
                               </div>
 
-                              {/* BOTOES DE AÇÃO DO GESTOR */}
-                              <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }} className="no-print">
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center', marginRight: '4px' }}>Acções:</span>
-                                
-                                <button
-                                  onClick={() => aprovarLead(item.id)}
-                                  style={{ background: 'rgba(0,255,136,0.18)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-                                >
-                                  🟢 Aprovar & Gerar Chave
-                                </button>
+                              {/* PAINEL DE AÇÕES DO GESTOR & BOTAO INICIAR X1 */}
+                              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }} className="no-print">
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Ações:</span>
+                                  
+                                  <button
+                                    onClick={() => aprovarLead(item.id)}
+                                    style={{ background: 'rgba(0,255,136,0.18)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  >
+                                    🟢 Aprovar & Gerar Chave
+                                  </button>
 
-                                <button
-                                  onClick={() => atualizarStatusGenerico(item.id, 'acompanhamento')}
-                                  style={{ background: 'rgba(43,217,255,0.12)', border: '1px solid rgba(43,217,255,0.3)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-                                >
-                                  🔵 Acompanhamento
-                                </button>
+                                  <button
+                                    onClick={() => atualizarStatusGenerico(item.id, 'acompanhamento')}
+                                    style={{ background: 'rgba(43,217,255,0.12)', border: '1px solid rgba(43,217,255,0.3)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  >
+                                    🔵 Acompanhamento
+                                  </button>
 
-                                <button
-                                  onClick={() => reprovarLead(item.id)}
-                                  style={{ background: 'rgba(255,100,100,0.12)', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6464', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-                                >
-                                  🔴 Reprovar / Deletar
-                                </button>
+                                  <button
+                                    onClick={() => reprovarLead(item.id)}
+                                    style={{ background: 'rgba(255,100,100,0.12)', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6464', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  >
+                                    🔴 Reprovar / Deletar
+                                  </button>
+                                </div>
+
+                                {whatsClean && (
+                                  <a
+                                    href={linkWhats}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      background: '#00ff88',
+                                      color: '#050505',
+                                      fontWeight: '900',
+                                      fontSize: '11px',
+                                      padding: '8px 16px',
+                                      borderRadius: '8px',
+                                      textAlign: 'center',
+                                      textDecoration: 'none',
+                                      whiteSpace: 'nowrap',
+                                      boxShadow: '0 2px 10px rgba(0,255,136,0.3)',
+                                      display: 'inline-block'
+                                    }}
+                                  >
+                                    💬 Iniciar X1
+                                  </a>
+                                )}
                               </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '130px' }} className="no-print">
-                              {whatsClean && (
-                                <a
-                                  href={linkWhats}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    background: '#00ff88',
-                                    color: '#050505',
-                                    fontWeight: 'bold',
-                                    fontSize: '11px',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    textAlign: 'center',
-                                    textDecoration: 'none',
-                                    display: 'block',
-                                  }}
-                                >
-                                  💬 Iniciar X1
-                                </a>
-                              )}
                             </div>
                           </div>
                         );
