@@ -202,7 +202,7 @@ export default function SalaPage() {
         if (gestorSalvo?.id && gestorSalvo?.nome) {
           setGestor(gestorSalvo);
           setGestorDesbloqueado(true);
-          carregarLeadsScout(); // Carrega os leads assim que a sessão é verificada
+          carregarLeadsScout();
         }
       } catch {
         localStorage.removeItem('scout_gestor');
@@ -347,6 +347,7 @@ export default function SalaPage() {
     alert(`✅ Lead atribuído ao gestor com sucesso!`);
   };
 
+  // FUNÇÃO DE APROVAÇÃO BLINDADA COM UPSERT EM SCOUT_GESTORES
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -355,9 +356,14 @@ export default function SalaPage() {
     const chaveGerada = `CRC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const nomeConvidado = leadAlvo.dados?.convidado?.nome || 'Novo Gestor';
-    const emailConvidado = leadAlvo.dados?.convidado?.email || '';
+    const emailConvidado = leadAlvo.dados?.convidado?.email?.trim().toLowerCase() || '';
     const whatsConvidado = leadAlvo.dados?.convidado?.whatsapp || '';
     const cidadeConvidado = leadAlvo.dados?.convidado?.cidade || '';
+
+    if (!emailConvidado) {
+      alert('⚠️ Este lead não possui e-mail cadastrado. Por favor, adicione o e-mail antes de aprovar para permitir o acesso.');
+      return;
+    }
 
     const slugGerado = nomeConvidado
       .toLowerCase()
@@ -374,6 +380,7 @@ export default function SalaPage() {
 
     const idFinalGestor = eUuidValido(leadAlvo.gestor_id) ? leadAlvo.gestor_id : gestorIdAtual;
 
+    // 1. Atualiza o status no scout_registros
     const { error: erroUpdate } = await supabase
       .from('scout_registros')
       .update({
@@ -387,9 +394,10 @@ export default function SalaPage() {
       return;
     }
 
+    // 2. Insere ou atualiza obrigatoriamente na tabela scout_gestores para garantir o login por e-mail
     const { error: erroGestor } = await supabase
       .from('scout_gestores')
-      .insert([
+      .upsert([
         {
           nome: nomeConvidado,
           whatsapp: whatsConvidado,
@@ -397,10 +405,12 @@ export default function SalaPage() {
           cidade: cidadeConvidado,
           slug: slugGerado,
         }
-      ]);
+      ], { onConflict: 'email' });
 
     if (erroGestor) {
-      console.error('Aviso ao registrar na tabela scout_gestores:', erroGestor.message);
+      console.error('Erro ao registrar na tabela scout_gestores:', erroGestor.message);
+      alert('⚠️ O lead foi aprovado, mas houve um erro ao registrar na tabela de gestores: ' + erroGestor.message);
+      return;
     }
 
     setLeads((anterior) =>
@@ -412,7 +422,7 @@ export default function SalaPage() {
     carregarListaGestores();
     carregarLeadsScout();
 
-    alert(`✅ Gestor promovido com sucesso!\n• E-mail de acesso: ${emailConvidado}\n• Cadastrado em scout_gestores com slug: ${slugGerado}`);
+    alert(`✅ Gestor aprovado e liberado com sucesso!\n• E-mail: ${emailConvidado}\n• Já pode acessar a plataforma digitando apenas o e-mail.`);
   };
 
   const reprovarLead = async (id: string) => {
