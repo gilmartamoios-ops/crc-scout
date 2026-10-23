@@ -117,7 +117,9 @@ export default function SalaPage() {
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
+  
+  // FILTRO PADRÃO ALTERADO PARA MOSTRAR APENAS PENDENTES NA FILA ATIVA
+  const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
   const [buscaNome, setBuscaNome] = useState<string>('');
   const [buscaRegiao, setBuscaRegiao] = useState<string>('');
   
@@ -347,7 +349,6 @@ export default function SalaPage() {
     alert(`✅ Lead atribuído ao gestor com sucesso!`);
   };
 
-  // FUNÇÃO DE APROVAÇÃO BLINDADA COM UPSERT EM SCOUT_GESTORES
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -394,7 +395,7 @@ export default function SalaPage() {
       return;
     }
 
-    // 2. Insere ou atualiza obrigatoriamente na tabela scout_gestores para garantir o login por e-mail
+    // 2. Insere ou atualiza obrigatoriamente na tabela scout_gestores
     const { error: erroGestor } = await supabase
       .from('scout_gestores')
       .upsert([
@@ -413,6 +414,7 @@ export default function SalaPage() {
       return;
     }
 
+    // 3. Atualiza o estado local para desapegar da fila
     setLeads((anterior) =>
       anterior.map((item) =>
         item.id === id ? { ...item, gestor_id: idFinalGestor, dados: novosDados } : item
@@ -420,7 +422,6 @@ export default function SalaPage() {
     );
 
     carregarListaGestores();
-    carregarLeadsScout();
 
     alert(`✅ Gestor aprovado e liberado com sucesso!\n• E-mail: ${emailConvidado}\n• Já pode acessar a plataforma digitando apenas o e-mail.`);
   };
@@ -492,7 +493,9 @@ export default function SalaPage() {
 
     const matchesNome = nome.includes(buscaNome.toLowerCase());
     const matchesRegiao = regiao.includes(buscaRegiao.toLowerCase());
-    const matchesStatus = filtroStatus === 'todos' || status === filtroStatus;
+    
+    // LÓGICA DE FILTRAGEM
+    const matchesStatus = filtroStatus === 'todos' ? true : status === filtroStatus;
 
     return matchesNome && matchesRegiao && matchesStatus;
   });
@@ -1137,8 +1140,8 @@ export default function SalaPage() {
                       onChange={(e) => setFiltroStatus(e.target.value)}
                       style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
                     >
-                      <option value="todos">Todos os Status</option>
                       <option value="pendente">Pendentes (Fila Ativa)</option>
+                      <option value="todos">Todos os Status</option>
                       <option value="acompanhamento">Em Acompanhamento</option>
                       <option value="aprovado">Aprovados</option>
                     </select>
