@@ -194,9 +194,11 @@ export default function SalaPage() {
 
       if (!error && data) {
         setListaGestores(data as GestorItem[]);
+      } else if (error) {
+        console.error('Erro ao buscar lista de gestores no Supabase:', error);
       }
     } catch (err) {
-      console.error('Erro ao buscar lista de gestores:', err);
+      console.error('Erro inesperado ao buscar gestores:', err);
     }
   };
 
@@ -374,7 +376,7 @@ export default function SalaPage() {
       .eq('id', id);
 
     if (error) {
-      alert('Erro ao aprovar lead: ' + error.message);
+      alert('Erro ao aprovar lead no Supabase: ' + error.message);
       return;
     }
 
@@ -384,7 +386,7 @@ export default function SalaPage() {
       )
     );
 
-    alert(`✅ Lead de ${leadAlvo.dados?.convidado?.nome || 'Convidado'} aprovado! Chave gerada: ${chaveGerada}`);
+    alert(`✅ Lead de ${leadAlvo.dados?.convidado?.nome || 'Convidado'} aprovado!\nChave gerada e salva no banco: ${chaveGerada}`);
   };
 
   const reprovarLead = async (id: string) => {
@@ -1008,7 +1010,7 @@ export default function SalaPage() {
                         </button>
                       </div>
                       <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                        ID do Gestor Registrado no Banco: <code style={{ color: '#00ff88' }}>{gestor?.slug || 'master'}</code>
+                        ID do Gestor Registrado no Banco: <code style={{ color: '#00ff88' }}>{gestor?.slug || gestor?.id || 'master'}</code>
                       </span>
                     </div>
                   </div>
