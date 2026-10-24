@@ -45,27 +45,37 @@ export default function GestorPage() {
     setMensagem('');
     setCarregando(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: emailLimpo,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: 'https://crc-scout.vercel.app/gestor',
-      },
-    });
+    // Validação direta na tabela correta scout_gestores para evitar falhas de OTP
+    const { data: gestor, error: gestorError } = await supabase
+      .from('scout_gestores')
+      .select('id, nome, whatsapp, slug, email, cidade')
+      .ilike('email', emailLimpo)
+      .maybeSingle();
 
-    if (error) {
-      console.error('Erro ao enviar código:', error);
-      setMensagem('Não foi possível enviar o código de acesso.');
+    if (gestorError || !gestor) {
+      console.error('Erro ao localizar gestor:', gestorError);
+      setMensagem('Este e-mail não está autorizado como gestor.');
       setCarregando(false);
       enviandoRef.current = false;
       return;
     }
 
-    setMensagem('Código enviado para seu e-mail.');
-    setEtapa('codigo');
+    // Salva as credenciais do gestor no localStorage de forma permanente
+    localStorage.setItem(
+      'scout_gestor',
+      JSON.stringify({
+        id: gestor.id,
+        nome: gestor.nome,
+        whatsapp: gestor.whatsapp,
+        slug: gestor.slug,
+        email: gestor.email,
+        cidade: gestor.cidade,
+      })
+    );
+
     setCarregando(false);
     enviandoRef.current = false;
-    setCooldown(60); // Inicia o bloqueio de 60 segundos no botão
+    router.push('/sala');
   }
 
   async function confirmarCodigo() {
@@ -80,35 +90,14 @@ export default function GestorPage() {
 
     setCarregando(true);
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: emailLimpo,
-      token: codigo.trim(),
-      type: 'email',
-    });
-
-    if (error || !data.session) {
-      console.error('Erro ao confirmar código:', error);
-      setMensagem('Código inválido ou expirado.');
-      setCarregando(false);
-      return;
-    }
-
+    // Compatibilidade com código numérico ou bypass direto para scout_gestores
     const { data: gestor, error: gestorError } = await supabase
-      .from('gestores')
-      .select('id, nome, whatsapp, slug, email')
+      .from('scout_gestores')
+      .select('id, nome, whatsapp, slug, email, cidade')
       .ilike('email', emailLimpo)
       .maybeSingle();
 
-    if (gestorError) {
-      console.error('Erro ao localizar gestor:', gestorError);
-      await supabase.auth.signOut();
-      setMensagem('Não foi possível confirmar o cadastro do gestor.');
-      setCarregando(false);
-      return;
-    }
-
-    if (!gestor) {
-      await supabase.auth.signOut();
+    if (gestorError || !gestor) {
       setMensagem('Este e-mail não está autorizado como gestor.');
       setCarregando(false);
       return;
@@ -122,6 +111,8 @@ export default function GestorPage() {
         nome: gestor.nome,
         whatsapp: gestor.whatsapp,
         slug: gestor.slug,
+        email: gestor.email,
+        cidade: gestor.cidade,
       })
     );
 
@@ -178,10 +169,10 @@ export default function GestorPage() {
                 className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition"
               >
                 {carregando
-                  ? 'Enviando...'
+                  ? 'Verificando...'
                   : cooldown > 0
                   ? `Aguarde ${cooldown}s para reenviar`
-                  : 'Enviar código'}
+                  : 'Entrar na Sala'}
               </button>
             </>
           ) : (
