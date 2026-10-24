@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import InformesPage from '@/app/informes/page';
 import MentoriaPage from '@/app/mentoria/page';
 import CuradoriaPage from '@/app/curadoria/page';
+import Script from 'next/script';
 
 type Modulo = {
   nome: string;
@@ -97,9 +98,12 @@ export default function SalaPage() {
   const [gestorDesbloqueado, setGestorDesbloqueado] = useState(false);
   const [modoVisitante, setModoVisitante] = useState(false);
 
-  // ESTADOS DO SIMULADOR DE NEGÓCIO
-  const [numGestoresSim, setNumGestoresSim] = useState<number>(5);
-  const [consumoMensalSim, setConsumoMensalSim] = useState<number>(300);
+  // ESTADOS DO SIMULADOR OFICIAL (EXATAMENTE IDÊNTICOS À JORNADA)
+  const [gestoresSelect, setGestoresSelect] = useState<string>('4');
+  const [consumoSelect, setConsumoSelect] = useState<string>('450');
+  const [infoContent, setInfoContent] = useState<string>('');
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const chartInstanceRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -266,6 +270,161 @@ export default function SalaPage() {
     carregarMunicipiosIBGE();
   }, [estadoSelecionado]);
 
+  // LOGICA E DADOS DO SIMULADOR EXATAMENTE IGUAIS À JORNADA
+  const simulacaoOficial: Record<string, Array<{ etapa: number; gcom: number; plano: string; total: number }>> = {
+    "4_450": [
+      { etapa: 1, gcom: 4, plano: "Executivo", total: 360.00 },
+      { etapa: 2, gcom: 24, plano: "Ônix", total: 1186.00 },
+      { etapa: 3, gcom: 108, plano: "Jaspe", total: 7038.00 },
+      { etapa: 4, gcom: 448, plano: "Jade", total: 21240.00 },
+      { etapa: 5, gcom: 1812, plano: "Dream Red", total: 68094.00 }
+    ],
+    "3_450": [
+      { etapa: 1, gcom: 3, plano: "Executivo", total: 270.00 },
+      { etapa: 2, gcom: 15, plano: "Topázio", total: 634.50 },
+      { etapa: 3, gcom: 54, plano: "Ametista", total: 3915.00 },
+      { etapa: 4, gcom: 174, plano: "Diamante Negro", total: 13392.00 },
+      { etapa: 5, gcom: 537, plano: "Jaspe", total: 41094.00 }
+    ],
+    "2_450": [
+      { etapa: 1, gcom: 2, plano: "Executivo", total: 180.00 },
+      { etapa: 2, gcom: 8, plano: "Topázio", total: 378.00 },
+      { etapa: 3, gcom: 22, plano: "Ônix", total: 1310.00 },
+      { etapa: 4, gcom: 52, plano: "Ametista", total: 2710.00 },
+      { etapa: 5, gcom: 114, plano: "Diamante Negro", total: 6552.00 }
+    ]
+  };
+
+  const textosExplicativos: Record<string, string> = {
+    "2": "<strong>🌱 Modo Iniciante (2 Gestores)</strong><p>Entrada com alta facilidade de duplicação. A partir da 3ª etapa, o bônus cobre integralmente o cartão de crédito da compra inicial e gera lucro líquido crescente com baixo esforço.</p>",
+    "3": "<strong>🚀 Modo Expansão (3 Gestores)</strong><p>Equilíbrio ideal entre duplicação e velocidade. Acelera os ganhos de Unilevel e alcança a faixa de R$ 3.900 a R$ 13.000 já entre a 3ª e 4ª etapa.</p>",
+    "4": "<strong>💼 Modo Executivo (4 Gestores)</strong><p>O padrão de máxima performance. Otimiza a pontuação por linha (VML), garante Bônus Evolution e PLR acelerados, atingindo graduações de elite (Jaspe e Jade) com solidez.</p>"
+  };
+
+  const simular = () => {
+    const d = parseInt(gestoresSelect);
+    const c = parseFloat(consumoSelect);
+
+    const key = `${d}_${c}`;
+    let dadosEtapas = [];
+
+    if (simulacaoOficial[key]) {
+      dadosEtapas = simulacaoOficial[key];
+    } else {
+      let gcomAcum = 0;
+      for (let e = 1; e <= 5; e++) {
+        let novos = Math.pow(d, e);
+        gcomAcum += novos;
+        let fator = (c / 450) * (d / 4);
+        let baseTotal = 0;
+        if (e === 1) baseTotal = 360 * fator;
+        else if (e === 2) baseTotal = 1186 * fator;
+        else if (e === 3) baseTotal = 7038 * fator;
+        else if (e === 4) baseTotal = 21240 * fator;
+        else if (e === 5) baseTotal = 68094 * fator;
+
+        let planoNome = e === 1 ? "Executivo" : (e === 2 ? "Topázio" : (e === 3 ? "Jaspe" : (e === 4 ? "Jade" : "Dream Red")));
+
+        dadosEtapas.push({ etapa: e, gcom: gcomAcum, plano: planoNome, total: baseTotal });
+      }
+    }
+
+    const labels = dadosEtapas.map(item => `${item.etapa}ª Etapa (${item.plano})`);
+    const valoresGanhos = dadosEtapas.map(item => item.total);
+    const gcomsList = dadosEtapas.map(item => item.gcom);
+
+    setInfoContent(textosExplicativos[d.toString()] || "");
+    renderizarGrafico(labels, valoresGanhos, gcomsList);
+  };
+
+  const renderizarGrafico = (labels: string[], dadosValores: number[], dadosGcom: number[]) => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
+    // @ts-ignore
+    if (typeof Chart !== 'undefined') {
+      // @ts-ignore
+      if (typeof ChartDataLabels !== 'undefined') {
+        // @ts-ignore
+        Chart.register(ChartDataLabels);
+      }
+
+      // @ts-ignore
+      chartInstanceRef.current = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ganhos (R$)',
+            data: dadosValores,
+            backgroundColor: '#00ff88',
+            borderRadius: 6,
+            barThickness: isMobile ? 18 : 22
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          layout: {
+            padding: isMobile 
+              ? { top: 5, left: 2, right: 10, bottom: 5 } 
+              : { top: 35, left: 5, right: 110, bottom: 5 }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              offset: 4,
+              color: '#00ff88',
+              font: { weight: 'bold', size: isMobile ? 9 : 10 },
+              formatter: function(value: number, context: any) {
+                const index = context.dataIndex;
+                const gcomCount = dadosGcom[index];
+                const valorFormatado = 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return `${gcomCount} GCom • ${valorFormatado}`;
+              },
+              textAlign: 'left'
+            }
+          },
+          scales: {
+            x: { 
+              display: false, 
+              grid: { display: false } 
+            },
+            y: {
+              display: true,
+              grid: { display: false },
+              ticks: { 
+                color: '#ffffff', 
+                font: { size: isMobile ? 9 : 10, weight: 'bold' },
+                autoSkip: false
+              }
+            }
+          }
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Simulador de Negócio') {
+      const timer = setTimeout(() => {
+        simular();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
+
   const executarGarimpoTerritorial = () => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     setExecutouGarimpo(true);
@@ -360,7 +519,6 @@ export default function SalaPage() {
     alert(`✅ Lead reatribuído com sucesso!`);
   };
 
-  // APROVAR LEAD: CADASTRA EM scout_gestores E DELETA DE scout_registros
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
@@ -381,7 +539,6 @@ export default function SalaPage() {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
 
-    // 1. Inserir ou atualizar na tabela oficial scout_gestores
     const { error: erroGestor } = await supabase
       .from('scout_gestores')
       .upsert([
@@ -400,7 +557,6 @@ export default function SalaPage() {
       return;
     }
 
-    // 2. Deletar permanentemente da tabela scout_registros (sai da fila de prospectos)
     const { error: erroDelete } = await supabase
       .from('scout_registros')
       .delete()
@@ -411,7 +567,6 @@ export default function SalaPage() {
       return;
     }
 
-    // 3. Atualizar estado local tirando da lista de leads
     setLeads((anterior) => anterior.filter((item) => item.id !== id));
     carregarListaGestores();
 
@@ -549,16 +704,11 @@ export default function SalaPage() {
     return matchesNome && matchesRegiao && matchesStatus && matchesGestor;
   });
 
-  // CÁLCULOS DO SIMULADOR DE NEGÓCIO
-  const nivel1 = numGestoresSim;
-  const nivel2 = numGestoresSim * numGestoresSim;
-  const nivel3 = nivel2 * numGestoresSim;
-  const totalRedeSim = nivel1 + nivel2 + nivel3;
-  const faturamentoRedeSim = totalRedeSim * consumoMensalSim;
-  const comissaoEstimadaSim = faturamentoRedeSim * 0.05;
-
   return (
     <main className="sala-page">
+      <Script src="https://cdn.jsdelivr.net/npm/chart.js" strategy="beforeInteractive" />
+      <Script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0" strategy="beforeInteractive" />
+
       <div className="sala-shell">
         <header className="sala-header">
           <div className="sala-brand">
@@ -805,15 +955,17 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SIMULADOR */}
+              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SIMULADOR OFICIAL IDÊNTICO À JORNADA COM ÁUDIO */}
               {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Simulador de Negócio' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+                  
+                  {/* CABEÇALHO DO SIMULADOR E PLAYER DE ÁUDIO DO NARRADOR */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>APN ONLINE · APRESENTAÇÃO CASEIRA</span>
-                      <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>📊 Simulador de Duplicação & Recorrência</h3>
-                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                        Demonstre visualmente ao seu convidado a força da duplicação matemática da rede.
+                      <span className="eyebrow-sim">CRC | Modelo de Comunidades</span>
+                      <h3 className="title-sim" style={{ fontSize: '22px', color: '#fff', margin: '4px 0 2px' }}>Simulação de Expansão da Comunidade</h3>
+                      <p className="subtitle-sim" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                        Projeção baseada em GCom - gestores de comunidade e consumo recorrente.
                       </p>
                     </div>
 
@@ -826,73 +978,53 @@ export default function SalaPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <label style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px' }}>
-                        👥 Quantidade de Gestores Diretos (Sua 1ª Linha):
+                  <div className="sim-grid-original" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div>
+                      <label className="sim-label-original" style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '6px' }}>
+                        Novos GCom (Gestores de Comunidade) por etapa
                       </label>
-                      <input
-                        type="range"
-                        min="2"
-                        max="10"
-                        value={numGestoresSim}
-                        onChange={(e) => setNumGestoresSim(Number(e.target.value))}
-                        style={{ width: '100%', accentColor: '#00ff88', cursor: 'pointer', marginBottom: '8px' }}
-                      />
-                      <div style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>
-                        {numGestoresSim} Gestores por Líder
-                      </div>
+                      <select
+                        value={gestoresSelect}
+                        onChange={(e) => {
+                          setGestoresSelect(e.target.value);
+                          setTimeout(simular, 50);
+                        }}
+                        className="sim-select-original"
+                        style={{ width: '100%', background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 12px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
+                      >
+                        <option value="2">2 Novos Gestores / Etapa (Modo Iniciante)</option>
+                        <option value="3">3 Novos Gestores / Etapa (Modo Expansão)</option>
+                        <option value="4">4 Novos Gestores / Etapa (Modo Executivo)</option>
+                      </select>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <label style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px' }}>
-                        🛒 Consumo Médio Mensal por Gestor (R$):
+                    <div>
+                      <label className="sim-label-original" style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '6px' }}>
+                        Consumo Recorrente Mensal da Comunidade
                       </label>
-                      <input
-                        type="range"
-                        min="100"
-                        max="1000"
-                        step="50"
-                        value={consumoMensalSim}
-                        onChange={(e) => setConsumoMensalSim(Number(e.target.value))}
-                        style={{ width: '100%', accentColor: '#00ff88', cursor: 'pointer', marginBottom: '8px' }}
-                      />
-                      <div style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>
-                        R$ {consumoMensalSim},00 / mês
-                      </div>
+                      <select
+                        value={consumoSelect}
+                        onChange={(e) => {
+                          setConsumoSelect(e.target.value);
+                          setTimeout(simular, 50);
+                        }}
+                        className="sim-select-original"
+                        style={{ width: '100%', background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 12px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
+                      >
+                        <option value="300">R$ 300,00</option>
+                        <option value="450">R$ 450,00 (Padrão Executivo - Recomendado)</option>
+                        <option value="500">R$ 500,00</option>
+                      </select>
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
-                    <h4 style={{ fontSize: '14px', color: '#fff', margin: '0 0 14px', letterSpacing: '0.5px' }}>
-                      🌐 ESTRUTURA DE DUPLICAÇÃO DA SUA COMUNIDADE (3 NÍVEIS)
-                    </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', textAlign: 'center' }}>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>1º NÍVEL (DIRETOS)</span>
-                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel1} Gestores</strong>
-                      </div>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>2º NÍVEL (DUPLICAÇÃO)</span>
-                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel2} Gestores</strong>
-                      </div>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>3º NÍVEL (EXPANSÃO)</span>
-                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel3} Gestores</strong>
-                      </div>
+                  <div className="sim-body-wrapper-original" style={{ display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'stretch', width: '100%', minHeight: '320px', marginBottom: '16px' }}>
+                    <div className="info-col-left-original" style={{ width: '32%', minWidth: '220px', background: 'rgba(0, 255, 136, 0.06)', border: '1px dashed rgba(0, 255, 136, 0.4)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div dangerouslySetInnerHTML={{ __html: infoContent }} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', lineHeight: '1.6' }} />
                     </div>
-                  </div>
-
-                  <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,0,0,0.8))', border: '1px solid rgba(0,255,136,0.5)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '11px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                      PROJEÇÃO ESTIMADA DE RENDA RECORRENTE MENSAL
-                    </span>
-                    <div style={{ fontSize: '32px', color: '#fff', fontWeight: '900', margin: '8px 0' }}>
-                      R$ {comissaoEstimadaSim.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mês
+                    <div className="chart-col-right-original" style={{ flex: 1, position: 'relative', minHeight: '300px', width: '100%' }}>
+                      <canvas ref={canvasRef} id="meuGraficoCanvas"></canvas>
                     </div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: '1.4' }}>
-                      Baseado no consumo ativo de <strong>{totalRedeSim} Gestores</strong> movimentando <strong>R$ {faturamentoRedeSim.toLocaleString('pt-BR')}</strong> em produtos de saúde integrativa na rede.
-                    </p>
                   </div>
                 </div>
               )}
@@ -1570,7 +1702,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 4: GESTORES APROVADOS (BUSCANDO DIRETAMENTE DA TABELA scout_gestores) */}
+              {/* GESTORES APROVADOS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Aprovados' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>REPOSITÓRIO DA REDE · GESTORES ATIVOS</span>
