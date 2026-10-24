@@ -378,7 +378,7 @@ export default function SalaPage() {
           indexAxis: 'y',
           layout: {
             padding: isMobile 
-              ? { top: 5, left: 2, right: 10, bottom: 5 } 
+              ? { top: 5, left: 2, right: 65, bottom: 5 } 
               : { top: 35, left: 5, right: 110, bottom: 5 }
           },
           plugins: {
@@ -389,10 +389,16 @@ export default function SalaPage() {
               align: 'end',
               offset: 4,
               color: '#00ff88',
-              font: { weight: 'bold', size: isMobile ? 9 : 10 },
+              font: { weight: 'bold', size: isMobile ? 8.5 : 10 },
               formatter: function(value: number, context: any) {
                 const index = context.dataIndex;
                 const gcomCount = dadosGcom[index];
+                if (isMobile) {
+                  const valFormatado = value >= 1000 
+                    ? 'R$ ' + (value / 1000).toFixed(1).replace('.', ',') + 'k'
+                    : 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                  return `${gcomCount} GCom • ${valFormatado}`;
+                }
                 const valorFormatado = 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 return `${gcomCount} GCom • ${valorFormatado}`;
               },
