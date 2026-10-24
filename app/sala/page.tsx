@@ -2256,6 +2256,19 @@ export default function SalaPage() {
           .sala-dynamic-card {
             padding: 16px;
           }
+
+          /* CORREÇÃO DO SIMULADOR NO CELULAR (EMPILHA TEXTO E GRÁFICO) */
+          .sim-body-wrapper-original {
+            flex-direction: column !important;
+          }
+          .info-col-left-original {
+            width: 100% !important;
+            min-width: 100% !important;
+          }
+          .chart-col-right-original {
+            width: 100% !important;
+            min-height: 320px !important;
+          }
         }
 
         @keyframes fadeInOut {
