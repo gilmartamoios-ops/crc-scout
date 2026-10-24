@@ -97,6 +97,7 @@ export default function SalaPage() {
   const [moduloRestrito, setModuloRestrito] = useState<Modulo | null>(null);
   const [gestorDesbloqueado, setGestorDesbloqueado] = useState(false);
   const [modoVisitante, setModoVisitante] = useState(false);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
   // ESTADOS DO SIMULADOR OFICIAL (EXATAMENTE IDÊNTICOS À JORNADA)
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
@@ -174,6 +175,7 @@ export default function SalaPage() {
   const lidarComCliqueModulo = (modulo: Modulo) => {
     if (!gestorDesbloqueado) {
       setModuloRestrito(modulo);
+      setMenuMobileAberto(false);
       return;
     }
     setModuloAtivo(modulo.nome);
@@ -182,6 +184,7 @@ export default function SalaPage() {
     } else {
       setSubModuloAtivo(null);
     }
+    setMenuMobileAberto(false);
   };
 
   const carregarLeadsScout = async () => {
@@ -741,7 +744,7 @@ export default function SalaPage() {
 
             <div className="sala-header-status">
               {gestor ? (
-                <span>GESTOR · {gestor.nome} {isMasterUser && '👑'}</span>
+                <span className="mobile-hide">GESTOR · {gestor.nome} {isMasterUser && '👑'}</span>
               ) : (
                 <button
                   type="button"
@@ -752,11 +755,26 @@ export default function SalaPage() {
                 </button>
               )}
 
-              <span className="sala-status-dot" />
-              AMBIENTE CRC
+              <span className="sala-status-dot mobile-hide" />
+              <span className="mobile-hide">AMBIENTE CRC</span>
             </div>
           </div>
         </header>
+
+        {/* BARRA FIXA DE NAVEGAÇÃO APENAS PARA MOBILE */}
+        <div className="mobile-nav-bar">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: 'bold' }}>MÓDULO ATIVO</span>
+            <strong style={{ fontSize: '13px', color: '#fff' }}>{moduloAtivo} {subModuloAtivo ? `› ${subModuloAtivo}` : ''}</strong>
+          </div>
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMenuMobileAberto(!menuMobileAberto)}
+          >
+            ☰ Módulos
+          </button>
+        </div>
 
         {novoLeadAlerta && (
           <div style={{
@@ -782,8 +800,9 @@ export default function SalaPage() {
         )}
 
         <div className="sala-layout">
+          {/* SIDEBAR COM SUPORTE A MENU RETRÁTIL NO MOBILE */}
           <aside
-            className="sala-sidebar"
+            className={`sala-sidebar ${menuMobileAberto ? 'mobile-open' : ''}`}
             style={{
               pointerEvents: !gestorDesbloqueado ? 'none' : 'auto',
               opacity: !gestorDesbloqueado ? 0.5 : 1,
@@ -792,8 +811,13 @@ export default function SalaPage() {
             }}
           >
             <div className="sala-sidebar-heading">
-              <span>AMBIENTES</span>
-              <small>ACESSOS</small>
+              <span>AMBIENTES E MÓDULOS</span>
+              <button 
+                className="mobile-close-btn"
+                onClick={() => setMenuMobileAberto(false)}
+              >
+                ✕ Fechar
+              </button>
             </div>
 
             <nav className="sala-menu">
@@ -835,7 +859,10 @@ export default function SalaPage() {
                           key={sub}
                           type="button"
                           className={`sala-sublink-btn ${subModuloAtivo === sub ? 'active' : ''}`}
-                          onClick={() => setSubModuloAtivo(sub)}
+                          onClick={() => {
+                            setSubModuloAtivo(sub);
+                            setMenuMobileAberto(false);
+                          }}
                         >
                           ↳ {sub}
                         </button>
@@ -867,18 +894,18 @@ export default function SalaPage() {
           </aside>
 
           <section className="sala-main">
-            <div className="sala-welcome">
+            <div className="sala-welcome mobile-compact-welcome">
               <div>
                 <div className="sala-eyebrow">MÓDULO DE INTELIGÊNCIA</div>
                 <h1>
                   Sua Central <span>SCOUT.</span>
                 </h1>
-                <p>
+                <p className="mobile-hide">
                   Prospecção, atração visual e inteligência de qualificação para o modelo CRC.
                 </p>
               </div>
 
-              <div className="sala-welcome-mark">
+              <div className="sala-welcome-mark mobile-hide">
                 <span>CRC</span>
                 <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
               </div>
@@ -1885,15 +1912,41 @@ export default function SalaPage() {
           background: #00ff88;
           box-shadow: 0 0 14px rgba(0, 255, 136, 0.75);
         }
+
+        /* BARRA MOBILE COMPACTA */
+        .mobile-nav-bar {
+          display: none;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 16px;
+          background: rgba(0, 255, 136, 0.08);
+          border-bottom: 1px solid rgba(0, 255, 136, 0.25);
+        }
+        .mobile-menu-toggle {
+          background: #00ff88;
+          color: #050505;
+          border: none;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-weight: 900;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .mobile-close-btn {
+          display: none;
+          background: rgba(255,68,68,0.2);
+          border: 1px solid rgba(255,68,68,0.4);
+          color: #ff4444;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 10px;
+          cursor: pointer;
+        }
+
         .sala-layout {
           display: grid;
           grid-template-columns: 280px minmax(0, 1fr);
           min-height: calc(100vh - 112px);
-        }
-        @media (max-width: 768px) {
-          .sala-layout {
-            grid-template-columns: 1fr;
-          }
         }
         .sala-sidebar {
           display: flex;
@@ -2165,6 +2218,46 @@ export default function SalaPage() {
           cursor: pointer;
           margin-top: 16px;
         }
+
+        /* REGRAS DE LAYOUT EXCLUSIVAS PARA MOBILE */
+        @media (max-width: 768px) {
+          .sala-layout {
+            grid-template-columns: 1fr;
+          }
+          .mobile-nav-bar {
+            display: flex;
+          }
+          .mobile-hide {
+            display: none;
+          }
+          .mobile-close-btn {
+            display: block;
+          }
+          .mobile-compact-welcome {
+            padding-bottom: 8px;
+          }
+          .mobile-compact-welcome h1 {
+            font-size: 20px;
+          }
+
+          /* MENU RETRÁTIL SOBREPOSTO (DRAWER) NO MOBILE */
+          .sala-sidebar {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: #080a0a;
+            padding: 16px;
+            display: none;
+            overflow-y: auto;
+          }
+          .sala-sidebar.mobile-open {
+            display: flex;
+          }
+          .sala-dynamic-card {
+            padding: 16px;
+          }
+        }
+
         @keyframes fadeInOut {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
