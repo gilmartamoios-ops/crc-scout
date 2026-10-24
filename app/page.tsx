@@ -544,13 +544,26 @@ export default function LandingPage() {
             </section>
           )}
 
-          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO ORIGINAL (AJUSTADO PARA MOBILE) */}
+          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO COM PLAYER DE NARRADOR */}
           {etapa === 2.4 && (
             <section className="scout-content" style={{ padding: '12px', width: '100%', boxSizing: 'border-box' }}>
               <div className="card-simulador-original">
-                <div className="eyebrow-sim">CRC | Modelo de Comunidades</div>
-                <h1 className="title-sim">Simulação de Expansão da Comunidade</h1>
-                <p className="subtitle-sim">Projeção baseada em GCom - gestores de comunidade e consumo recorrente.</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+                  <div>
+                    <div className="eyebrow-sim">CRC | Modelo de Comunidades</div>
+                    <h1 className="title-sim">Simulação de Expansão da Comunidade</h1>
+                    <p className="subtitle-sim" style={{ margin: 0 }}>Projeção baseada em GCom - gestores de comunidade e consumo recorrente.</p>
+                  </div>
+
+                  <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px' }}>🔊</span>
+                    <div>
+                      <strong style={{ fontSize: '9px', color: '#00ff88', display: 'block', letterSpacing: '0.5px' }}>EXPLICAÇÃO DO SIMULADOR (26s)</strong>
+                      <audio src="/assets/narrador do simulador.mp3" controls style={{ height: '26px', maxWidth: '180px', marginTop: '2px' }} />
+                    </div>
+                  </div>
+                </div>
 
                 <div className="sim-grid-original">
                   <div>
