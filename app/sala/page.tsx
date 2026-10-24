@@ -39,6 +39,9 @@ interface GestorItem {
   id: string;
   nome: string;
   slug: string | null;
+  email?: string;
+  whatsapp?: string;
+  cidade?: string;
 }
 
 const modulos: Modulo[] = [
@@ -51,6 +54,12 @@ const modulos: Modulo[] = [
     nome: 'O Oleiro e a Argila',
     descricao: 'A base conceitual e filosófica do Gestor de Comunidades no modelo CRC.',
     icone: '📖',
+  },
+  {
+    nome: 'Apresentação do Negócio',
+    descricao: 'Sua ferramenta para reuniões caseiras e apresentações online ao vivo.',
+    icone: '🚀',
+    sublinks: ['Simulador de Negócio', 'Slides do Negócio'],
   },
   {
     nome: 'Informativos',
@@ -88,6 +97,10 @@ export default function SalaPage() {
   const [gestorDesbloqueado, setGestorDesbloqueado] = useState(false);
   const [modoVisitante, setModoVisitante] = useState(false);
 
+  // ESTADOS DO SIMULADOR DE NEGÓCIO
+  const [numGestoresSim, setNumGestoresSim] = useState<number>(5);
+  const [consumoMensalSim, setConsumoMensalSim] = useState<number>(300);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -117,9 +130,9 @@ export default function SalaPage() {
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
-  
-  // FILTRO PADRÃO ALTERADO PARA MOSTRAR APENAS PENDENTES NA FILA ATIVA
   const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
+  const [filtroGestorId, setFiltroGestorId] = useState<string>('todos');
+  const [modoVisaoMaster, setModoVisaoMaster] = useState<'global' | 'pessoal'>('global');
   const [buscaNome, setBuscaNome] = useState<string>('');
   const [buscaRegiao, setBuscaRegiao] = useState<string>('');
   
@@ -130,6 +143,8 @@ export default function SalaPage() {
     const regexUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return regexUuid.test(id);
   };
+
+  const isMasterUser = gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
 
   const tocarAlertaSonoro = () => {
     try {
@@ -168,16 +183,15 @@ export default function SalaPage() {
   const carregarLeadsScout = async () => {
     setCarregandoLeads(true);
     try {
-      const slugAtual = gestor?.slug || gestor?.id || 'master';
-      const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
-
       let query = supabase
         .from('scout_registros')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!isMaster && eUuidValido(gestor?.id)) {
-        query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
+      if (!isMasterUser || modoVisaoMaster === 'pessoal') {
+        if (eUuidValido(gestor?.id)) {
+          query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
+        }
       }
 
       const { data, error } = await query;
@@ -220,7 +234,7 @@ export default function SalaPage() {
     try {
       const { data, error } = await supabase
         .from('scout_gestores')
-        .select('id, nome, slug')
+        .select('id, nome, slug, email, whatsapp, cidade')
         .order('nome', { ascending: true });
 
       if (!error && data) {
@@ -281,9 +295,6 @@ export default function SalaPage() {
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
-    const slugAtual = gestor?.slug || gestor?.id || 'master';
-    const isMaster = slugAtual === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
-
     const canal = supabase
       .channel('sala_operacoes_realtime')
       .on(
@@ -296,7 +307,7 @@ export default function SalaPage() {
         (payload) => {
           const novoRegistro = payload.new as ConvidadoRegistro;
 
-          if (!isMaster && eUuidValido(gestor?.id) && novoRegistro.gestor_id !== gestor?.id && novoRegistro.gestor_id !== null) {
+          if (!isMasterUser && eUuidValido(gestor?.id) && novoRegistro.gestor_id !== gestor?.id && novoRegistro.gestor_id !== null) {
             return;
           }
 
@@ -316,13 +327,13 @@ export default function SalaPage() {
     return () => {
       supabase.removeChannel(canal);
     };
-  }, [gestorDesbloqueado, gestor]);
+  }, [gestorDesbloqueado, gestor, modoVisaoMaster]);
 
   useEffect(() => {
     if (gestorDesbloqueado) {
       carregarLeadsScout();
     }
-  }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
+  }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo, modoVisaoMaster]);
 
   const atribuirGestorLead = async (id: string, novoGestorId: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
@@ -346,15 +357,13 @@ export default function SalaPage() {
       )
     );
 
-    alert(`✅ Lead atribuído ao gestor com sucesso!`);
+    alert(`✅ Lead reatribuído com sucesso!`);
   };
 
+  // APROVAR LEAD: CADASTRA EM scout_gestores E DELETA DE scout_registros
   const aprovarLead = async (id: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
     if (!leadAlvo) return;
-
-    const gestorIdAtual = eUuidValido(gestor?.id) ? gestor.id : null;
-    const chaveGerada = `CRC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const nomeConvidado = leadAlvo.dados?.convidado?.nome || 'Novo Gestor';
     const emailConvidado = leadAlvo.dados?.convidado?.email?.trim().toLowerCase() || '';
@@ -362,7 +371,7 @@ export default function SalaPage() {
     const cidadeConvidado = leadAlvo.dados?.convidado?.cidade || '';
 
     if (!emailConvidado) {
-      alert('⚠️ Este lead não possui e-mail cadastrado. Por favor, adicione o e-mail antes de aprovar para permitir o acesso.');
+      alert('⚠️ Este lead não possui e-mail cadastrado. Por favor, adicione o e-mail antes de aprovar.');
       return;
     }
 
@@ -372,30 +381,7 @@ export default function SalaPage() {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
 
-    const novosDados = {
-      ...leadAlvo.dados,
-      status_aprovacao: 'aprovado' as const,
-      codigo_lib: chaveGerada,
-      data_aprovacao: new Date().toISOString(),
-    };
-
-    const idFinalGestor = eUuidValido(leadAlvo.gestor_id) ? leadAlvo.gestor_id : gestorIdAtual;
-
-    // 1. Atualiza o status no scout_registros
-    const { error: erroUpdate } = await supabase
-      .from('scout_registros')
-      .update({
-        gestor_id: idFinalGestor,
-        dados: novosDados,
-      })
-      .eq('id', id);
-
-    if (erroUpdate) {
-      alert('Erro ao aprovar lead no Supabase: ' + erroUpdate.message);
-      return;
-    }
-
-    // 2. Insere ou atualiza obrigatoriamente na tabela scout_gestores
+    // 1. Inserir ou atualizar na tabela oficial scout_gestores
     const { error: erroGestor } = await supabase
       .from('scout_gestores')
       .upsert([
@@ -410,45 +396,99 @@ export default function SalaPage() {
 
     if (erroGestor) {
       console.error('Erro ao registrar na tabela scout_gestores:', erroGestor.message);
-      alert('⚠️ O lead foi aprovado, mas houve um erro ao registrar na tabela de gestores: ' + erroGestor.message);
+      alert('⚠️ Erro ao registrar na tabela de gestores: ' + erroGestor.message);
       return;
     }
 
-    // 3. Atualiza o estado local para desapegar da fila
-    setLeads((anterior) =>
-      anterior.map((item) =>
-        item.id === id ? { ...item, gestor_id: idFinalGestor, dados: novosDados } : item
-      )
-    );
+    // 2. Deletar permanentemente da tabela scout_registros (sai da fila de prospectos)
+    const { error: erroDelete } = await supabase
+      .from('scout_registros')
+      .delete()
+      .eq('id', id);
 
+    if (erroDelete) {
+      alert('Gestor criado, mas houve erro ao remover da fila de registros: ' + erroDelete.message);
+      return;
+    }
+
+    // 3. Atualizar estado local tirando da lista de leads
+    setLeads((anterior) => anterior.filter((item) => item.id !== id));
     carregarListaGestores();
 
-    alert(`✅ Gestor aprovado e liberado com sucesso!\n• E-mail: ${emailConvidado}\n• Já pode acessar a plataforma digitando apenas o e-mail.`);
+    alert(`✅ Gestor aprovado com sucesso!\n• E-mail: ${emailConvidado}\n• Movido para a aba Gestores Aprovados.`);
   };
 
-  const reprovarLead = async (id: string) => {
-    if (!confirm('Deseja remover este lead da sua lista de operações? (O registo permanecerá salvo no Supabase)')) return;
+  const aprovarTodosPendentes = async () => {
+    const pendentes = leadsFiltrados.filter(l => (l.dados?.status_aprovacao || 'pendente') === 'pendente');
+    if (pendentes.length === 0) {
+      alert('Nenhum prospecto pendente na fila filtrada para aprovação.');
+      return;
+    }
 
-    const leadAlvo = leads.find((l) => l.id === id);
-    if (!leadAlvo) return;
+    if (!confirm(`👑 DESEJA APROVAR TODOS OS ${pendentes.length} PENDENTES?\nEles serão cadastrados em scout_gestores e removidos da fila de prospectos.`)) {
+      return;
+    }
 
-    const novosDados = {
-      ...leadAlvo.dados,
-      status_aprovacao: 'reprovado' as const,
-      data_reprovacao: new Date().toISOString(),
-    };
+    let aprovados = 0;
+    for (const item of pendentes) {
+      const emailConvidado = item.dados?.convidado?.email?.trim().toLowerCase();
+      if (!emailConvidado) continue;
+
+      const nomeConvidado = item.dados?.convidado?.nome || 'Novo Gestor';
+      const whatsConvidado = item.dados?.convidado?.whatsapp || '';
+      const cidadeConvidado = item.dados?.convidado?.cidade || '';
+
+      const slugGerado = nomeConvidado
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
+
+      await supabase.from('scout_gestores').upsert([{
+        nome: nomeConvidado,
+        whatsapp: whatsConvidado,
+        email: emailConvidado,
+        cidade: cidadeConvidado,
+        slug: slugGerado,
+      }], { onConflict: 'email' });
+
+      await supabase.from('scout_registros').delete().eq('id', item.id);
+
+      aprovados++;
+    }
+
+    carregarListaGestores();
+    carregarLeadsScout();
+    alert(`🚀 SUCESSO! ${aprovados} gestores foram aprovados em lote e removidos da fila.`);
+  };
+
+  const deletarLeadDefinitivo = async (id: string) => {
+    if (!confirm('🛑 ATENÇÃO (PODER MASTER): Deseja DELETAR DEFINITIVAMENTE este registro do banco de dados?')) return;
 
     const { error } = await supabase
       .from('scout_registros')
-      .update({ dados: novosDados })
+      .delete()
       .eq('id', id);
 
     if (error) {
-      alert('Erro ao reprovar lead: ' + error.message);
+      alert('Erro ao deletar registro do Supabase: ' + error.message);
       return;
     }
 
     setLeads((anterior) => anterior.filter((item) => item.id !== id));
+    alert('🗑️ Registro deletado com sucesso do banco de dados.');
+  };
+
+  const deletarGestorAprovado = async (email: string | undefined, gestorId: string) => {
+    if (!confirm(`🛑 ATENÇÃO (PODER MASTER): Deseja revogar e DELETAR o acesso deste Gestor (${email})?\nIsso removerá a conta dele da tabela oficial scout_gestores.`)) return;
+
+    if (email) {
+      await supabase.from('scout_gestores').delete().eq('email', email);
+    }
+
+    carregarListaGestores();
+    carregarLeadsScout();
+    alert('🗑️ Acesso do gestor revogado com sucesso!');
   };
 
   const atualizarStatusGenerico = async (id: string, novoStatus: 'pendente' | 'acompanhamento') => {
@@ -484,21 +524,38 @@ export default function SalaPage() {
   const totalLeads = leadsAtivosGestor.length;
   const pendentesFila = leadsAtivosGestor.filter((l) => (l.dados?.status_aprovacao || 'pendente') === 'pendente').length;
   const acompanhamentoLeads = leadsAtivosGestor.filter((l) => l.dados?.status_aprovacao === 'acompanhamento').length;
-  const aprovadosComChave = leadsAtivosGestor.filter((l) => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').length;
 
   const leadsFiltrados = leadsAtivosGestor.filter((item) => {
     const nome = item.dados?.convidado?.nome?.toLowerCase() || '';
     const regiao = item.dados?.convidado?.cidade?.toLowerCase() || '';
+    const email = item.dados?.convidado?.email?.toLowerCase() || '';
+    const whats = item.dados?.convidado?.whatsapp || '';
     const status = item.dados?.status_aprovacao || 'pendente';
 
-    const matchesNome = nome.includes(buscaNome.toLowerCase());
+    const buscaLower = buscaNome.toLowerCase();
+    const matchesNome = nome.includes(buscaLower) || email.includes(buscaLower) || whats.includes(buscaLower);
     const matchesRegiao = regiao.includes(buscaRegiao.toLowerCase());
-    
-    // LÓGICA DE FILTRAGEM
     const matchesStatus = filtroStatus === 'todos' ? true : status === filtroStatus;
 
-    return matchesNome && matchesRegiao && matchesStatus;
+    let matchesGestor = true;
+    if (filtroGestorId !== 'todos') {
+      if (filtroGestorId === 'sem_gestor') {
+        matchesGestor = item.gestor_id === null;
+      } else {
+        matchesGestor = item.gestor_id === filtroGestorId;
+      }
+    }
+
+    return matchesNome && matchesRegiao && matchesStatus && matchesGestor;
   });
+
+  // CÁLCULOS DO SIMULADOR DE NEGÓCIO
+  const nivel1 = numGestoresSim;
+  const nivel2 = numGestoresSim * numGestoresSim;
+  const nivel3 = nivel2 * numGestoresSim;
+  const totalRedeSim = nivel1 + nivel2 + nivel3;
+  const faturamentoRedeSim = totalRedeSim * consumoMensalSim;
+  const comissaoEstimadaSim = faturamentoRedeSim * 0.05;
 
   return (
     <main className="sala-page">
@@ -509,7 +566,7 @@ export default function SalaPage() {
             <div>
               <div className="sala-brand-name">SCOUT.CRC</div>
               <div className="sala-brand-subtitle">
-                sala de operações · ambiente operacional
+                sala de operações · ambiente operacional {isMasterUser && '👑 [MASTER]'}
               </div>
             </div>
           </div>
@@ -534,7 +591,7 @@ export default function SalaPage() {
 
             <div className="sala-header-status">
               {gestor ? (
-                <span>GESTOR · {gestor.nome}</span>
+                <span>GESTOR · {gestor.nome} {isMasterUser && '👑'}</span>
               ) : (
                 <button
                   type="button"
@@ -643,7 +700,9 @@ export default function SalaPage() {
               <div className="sala-sidebar-footer">
                 {gestor ? (
                   <>
-                    <span className="sala-visitor-tag">GESTOR DE COMUNIDADE</span>
+                    <span className="sala-visitor-tag">
+                      {isMasterUser ? '👑 GESTOR MASTER (GLOBAL)' : 'GESTOR DE COMUNIDADE'}
+                    </span>
                     <strong className="sala-gestor-name">{gestor.nome}</strong>
                     <p>Operação SCOUT ativa com rastreio direto no Supabase.</p>
                   </>
@@ -746,6 +805,143 @@ export default function SalaPage() {
                 </div>
               )}
 
+              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SIMULADOR */}
+              {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Simulador de Negócio' && (
+                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+                    <div>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>APN ONLINE · APRESENTAÇÃO CASEIRA</span>
+                      <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>📊 Simulador de Duplicação & Recorrência</h3>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                        Demonstre visualmente ao seu convidado a força da duplicação matemática da rede.
+                      </p>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '18px' }}>🔊</span>
+                      <div>
+                        <strong style={{ fontSize: '10px', color: '#00ff88', display: 'block', letterSpacing: '0.5px' }}>EXPLICAÇÃO DO SIMULADOR (26s)</strong>
+                        <audio src="/assets/narrador do simulador.mp3" controls style={{ height: '28px', maxWidth: '200px', marginTop: '4px' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px' }}>
+                        👥 Quantidade de Gestores Diretos (Sua 1ª Linha):
+                      </label>
+                      <input
+                        type="range"
+                        min="2"
+                        max="10"
+                        value={numGestoresSim}
+                        onChange={(e) => setNumGestoresSim(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: '#00ff88', cursor: 'pointer', marginBottom: '8px' }}
+                      />
+                      <div style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>
+                        {numGestoresSim} Gestores por Líder
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px' }}>
+                        🛒 Consumo Médio Mensal por Gestor (R$):
+                      </label>
+                      <input
+                        type="range"
+                        min="100"
+                        max="1000"
+                        step="50"
+                        value={consumoMensalSim}
+                        onChange={(e) => setConsumoMensalSim(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: '#00ff88', cursor: 'pointer', marginBottom: '8px' }}
+                      />
+                      <div style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>
+                        R$ {consumoMensalSim},00 / mês
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '14px', color: '#fff', margin: '0 0 14px', letterSpacing: '0.5px' }}>
+                      🌐 ESTRUTURA DE DUPLICAÇÃO DA SUA COMUNIDADE (3 NÍVEIS)
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', textAlign: 'center' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>1º NÍVEL (DIRETOS)</span>
+                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel1} Gestores</strong>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>2º NÍVEL (DUPLICAÇÃO)</span>
+                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel2} Gestores</strong>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'block' }}>3º NÍVEL (EXPANSÃO)</span>
+                        <strong style={{ fontSize: '18px', color: '#00ff88' }}>{nivel3} Gestores</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,0,0,0.8))', border: '1px solid rgba(0,255,136,0.5)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#00ff88', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                      PROJEÇÃO ESTIMADA DE RENDA RECORRENTE MENSAL
+                    </span>
+                    <div style={{ fontSize: '32px', color: '#fff', fontWeight: '900', margin: '8px 0' }}>
+                      R$ {comissaoEstimadaSim.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mês
+                    </div>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: '1.4' }}>
+                      Baseado no consumo ativo de <strong>{totalRedeSim} Gestores</strong> movimentando <strong>R$ {faturamentoRedeSim.toLocaleString('pt-BR')}</strong> em produtos de saúde integrativa na rede.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SLIDES */}
+              {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Slides do Negócio' && (
+                <div className="sala-dynamic-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                    <div>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>APN INSTITUCIONAL · OZONTECK</span>
+                      <h3 style={{ fontSize: '20px', margin: '4px 0 2px', color: '#fff' }}>🖼️ Slides da Apresentação do Negócio</h3>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                        Material visual em alta definição para reuniões caseiras ou conferências via Zoom/Google Meet.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <a
+                        href="/assets/apn-ozonteck.pdf"
+                        download="APN_Ozonteck_Oficial.pdf"
+                        style={{
+                          background: 'rgba(0,255,136,0.15)',
+                          border: '1px solid rgba(0,255,136,0.4)',
+                          color: '#00ff88',
+                          padding: '8px 14px',
+                          borderRadius: '10px',
+                          fontWeight: 'bold',
+                          fontSize: '11px',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        📥 Baixar PDF Oficial
+                      </a>
+                    </div>
+                  </div>
+
+                  <div style={{ width: '100%', height: '70vh', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', overflow: 'hidden', background: '#000' }}>
+                    <iframe
+                      src="/assets/apn-ozonteck.pdf#toolbar=1&navpanes=0&scrollbar=1"
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      title="Apresentação de Negócio Ozonteck"
+                    />
+                  </div>
+                </div>
+              )}
+
               {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
@@ -800,7 +996,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 1: PROSPECTO DIGITAL */}
+              {/* PROSPECTO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
                   <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital</h3>
@@ -1011,7 +1207,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 2: SANTINHO DIGITAL */}
+              {/* SANTINHO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>SEU SCOUT · LINK 2</span>
@@ -1052,22 +1248,81 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 3: FEEDBACK DE PROSPECTOS REAIS */}
+              {/* FEEDBACK DE PROSPECTOS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ background: '#00ff88', color: '#050505', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', letterSpacing: '1px' }}>
-                        CENTRAL REAL DE ATENDIMENTO
-                      </span>
-                      <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
-                        Gestão de Prospectos & Liberação de Acesso
-                      </h4>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ background: '#00ff88', color: '#050505', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', letterSpacing: '1px' }}>
+                          CENTRAL DE ATENDIMENTO {isMasterUser && '👑 [MASTER]'}
+                        </span>
+                        <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
+                          Gestão de Prospectos & Julgamento Individual
+                        </h4>
+                      </div>
+
+                      {isMasterUser && (
+                        <button
+                          onClick={aprovarTodosPendentes}
+                          style={{
+                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                            color: '#050505',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            fontWeight: '900',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            boxShadow: '0 0 15px rgba(0,255,136,0.4)',
+                            letterSpacing: '0.5px'
+                          }}
+                        >
+                          ⚡ APROVAR LISTA EXIBIDA EM LOTE
+                        </button>
+                      )}
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Gerencie a sua fila de atendimento X1. Ao clicar em <strong>"Aprovar"</strong>, o gestor é promovido automaticamente para a tabela oficial e fica pronto para entrar apenas com o e-mail.
+                      Analise as respostas do Quiz. Ao aprovar, o lead sai automaticamente desta fila e é promovido para a tabela de gestores ativos.
                     </p>
                   </div>
+
+                  {isMasterUser && (
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(0,255,136,0.2)' }}>
+                      <button
+                        onClick={() => setModoVisaoMaster('global')}
+                        style={{
+                          flex: 1,
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: modoVisaoMaster === 'global' ? '#00ff88' : 'transparent',
+                          color: modoVisaoMaster === 'global' ? '#050505' : 'rgba(255,255,255,0.6)',
+                          fontWeight: 'bold',
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🌐 Visão Global da Rede (Toda a Base)
+                      </button>
+                      <button
+                        onClick={() => setModoVisaoMaster('pessoal')}
+                        style={{
+                          flex: 1,
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: modoVisaoMaster === 'pessoal' ? '#00ff88' : 'transparent',
+                          color: modoVisaoMaster === 'pessoal' ? '#050505' : 'rgba(255,255,255,0.6)',
+                          fontWeight: 'bold',
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        👤 Meus Leads Diretos
+                      </button>
+                    </div>
+                  )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '22px' }}>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
@@ -1081,10 +1336,6 @@ export default function SalaPage() {
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
                       <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>ACOMPANHAMENTO</span>
                       <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{acompanhamentoLeads}</strong>
-                    </div>
-                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,255,136,0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: '#00ff88', letterSpacing: '1px', display: 'block' }}>APROVADOS</span>
-                      <strong style={{ fontSize: '20px', color: '#00ff88' }}>{aprovadosComChave}</strong>
                     </div>
                   </div>
 
@@ -1120,21 +1371,39 @@ export default function SalaPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '20px' }} className="no-print">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '20px' }} className="no-print">
                     <input
                       type="text"
-                      placeholder="Buscar por nome..."
+                      placeholder="🔍 Nome, E-mail ou Whats..."
                       value={buscaNome}
                       onChange={(e) => setBuscaNome(e.target.value)}
                       style={{ background: '#050505', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 14px', borderRadius: '10px', color: '#fff', fontSize: '12px' }}
                     />
+
+                    {isMasterUser && (
+                      <select
+                        value={filtroGestorId}
+                        onChange={(e) => setFiltroGestorId(e.target.value)}
+                        style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.4)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
+                      >
+                        <option value="todos">👤 Todos os Gestores da Rede</option>
+                        <option value="sem_gestor">❓ (Sem Gestor - Pool Geral)</option>
+                        {listaGestores.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            👤 Fila de: {g.nome}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
                     <input
                       type="text"
-                      placeholder="📍 Filtrar por Cidade / Estado..."
+                      placeholder="📍 Cidade / Estado..."
                       value={buscaRegiao}
                       onChange={(e) => setBuscaRegiao(e.target.value)}
                       style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px' }}
                     />
+
                     <select
                       value={filtroStatus}
                       onChange={(e) => setFiltroStatus(e.target.value)}
@@ -1143,7 +1412,6 @@ export default function SalaPage() {
                       <option value="pendente">Pendentes (Fila Ativa)</option>
                       <option value="todos">Todos os Status</option>
                       <option value="acompanhamento">Em Acompanhamento</option>
-                      <option value="aprovado">Aprovados</option>
                     </select>
                   </div>
 
@@ -1153,8 +1421,8 @@ export default function SalaPage() {
                     </div>
                   ) : leadsFiltrados.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px', background: 'rgba(0,0,0,0.3)' }}>
-                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Sua fila de prospectos ativos está limpa.</strong>
-                      Divulgue seu link exclusivo ou Santinho Digital para capturar novos cadastros diretamente no Quiz.
+                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Nenhum prospecto encontrado para esse filtro.</strong>
+                      Ajuste a busca por nome ou selecione outro Gestor Patrocinador.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1172,7 +1440,7 @@ export default function SalaPage() {
                             className="lead-card-printable"
                             style={{
                               background: 'rgba(0,0,0,0.5)',
-                              border: statusAtual === 'aprovado' ? '1px solid rgba(0,255,136,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                              border: '1px solid rgba(255,255,255,0.1)',
                               borderRadius: '14px',
                               padding: '16px',
                               display: 'flex',
@@ -1194,10 +1462,10 @@ export default function SalaPage() {
                                   padding: '2px 8px', 
                                   borderRadius: '10px', 
                                   fontWeight: 'bold', 
-                                  background: statusAtual === 'aprovado' ? 'rgba(0,255,136,0.2)' : statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : 'rgba(255,255,255,0.08)', 
-                                  color: statusAtual === 'aprovado' ? '#00ff88' : statusAtual === 'acompanhamento' ? '#2bd9ff' : 'rgba(255,255,255,0.6)' 
+                                  background: statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : 'rgba(255,255,255,0.08)', 
+                                  color: statusAtual === 'acompanhamento' ? '#2bd9ff' : 'rgba(255,255,255,0.6)' 
                                 }}>
-                                  {statusAtual === 'aprovado' ? `✦ APROVADO (E-MAIL: ${convidado?.email || 'N/D'})` : statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
+                                  {statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
                                 </span>
                               </div>
 
@@ -1218,7 +1486,7 @@ export default function SalaPage() {
 
                               <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
-                                  👤 Gestor Responsável:
+                                  👤 Gestor Patrocinador:
                                 </span>
                                 <select
                                   value={item.gestor_id || ''}
@@ -1235,7 +1503,7 @@ export default function SalaPage() {
                                     outline: 'none',
                                   }}
                                 >
-                                  <option value="">(Sem Gestor - Pool Geral)</option>
+                                  <option value="">(Sem Gestor - Pool Geral / Master)</option>
                                   {listaGestores.map((g) => (
                                     <option key={g.id} value={g.id}>
                                       {g.nome}
@@ -1263,10 +1531,10 @@ export default function SalaPage() {
                                   </button>
 
                                   <button
-                                    onClick={() => reprovarLead(item.id)}
-                                    style={{ background: 'rgba(255,100,100,0.12)', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6464', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    onClick={() => deletarLeadDefinitivo(item.id)}
+                                    style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🔴 Reprovar / Deletar
+                                    🗑️ Deletar do Banco
                                   </button>
                                 </div>
 
@@ -1302,35 +1570,50 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SUBLINK 4: GESTORES APROVADOS (REPOSITÓRIO) */}
+              {/* SUBLINK 4: GESTORES APROVADOS (BUSCANDO DIRETAMENTE DA TABELA scout_gestores) */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Aprovados' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>REPOSITÓRIO DA REDE · GESTORES ATIVOS</span>
-                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Gestores Aprovados pelo Patrocinador</h3>
+                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Gestores Aprovados e Cadastrados</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>
-                    Lista oficial de operadores qualificados e integrados à sua rede de liderança.
+                    Lista oficial de operadores cadastrados na tabela <code>scout_gestores</code>.
                   </p>
 
-                  {leads.filter(l => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').length === 0 ? (
+                  {listaGestores.length === 0 ? (
                     <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
-                      Nenhum gestor aprovado registrado na sua rede no momento.
+                      Nenhum gestor cadastrado na rede no momento.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {leads.filter(l => l.dados?.status_aprovacao === 'aprovado' || l.dados?.status_aprovacao === 'codigo_liberado').map((item) => {
-                        const conv = item.dados?.convidado;
-                        return (
-                          <div key={item.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                            <div>
-                              <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{conv?.nome || 'Gestor CRC'}</strong>
-                              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {conv?.whatsapp || 'Sem WhatsApp'} | 📍 {conv?.cidade || 'Região não informada'}</span>
-                            </div>
-                            <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
-                              ✉️ E-mail de Acesso: {conv?.email || 'Não informado'}
-                            </div>
+                      {listaGestores.map((gItem) => (
+                        <div key={gItem.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                          <div>
+                            <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{gItem.nome}</strong>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {gItem.whatsapp || 'Sem WhatsApp'} | 📍 {gItem.cidade || 'Região não informada'} | 🔗 Slug: <code style={{ color: '#00ff88' }}>{gItem.slug || 'N/D'}</code></span>
                           </div>
-                        );
-                      })}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
+                              ✉️ E-mail: {gItem.email || 'Não informado'}
+                            </div>
+
+                            <button
+                              onClick={() => deletarGestorAprovado(gItem.email, gItem.id)}
+                              style={{
+                                background: 'rgba(255,68,68,0.18)',
+                                border: '1px solid rgba(255,68,68,0.4)',
+                                color: '#ff4444',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              🗑️ Revogar / Deletar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
