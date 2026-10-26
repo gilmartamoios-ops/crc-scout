@@ -130,8 +130,24 @@ export default function SalaPage() {
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
   const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo'>('transicao');
-  const [perfisGarimpados, setPerfisGarimpados] = useState<Array<{ nome: string; perfil: string; regiao: string; whats: string }>>([]);
-  const [executouGarimpo, setExecutouGarimpo] = useState<boolean>(false);
+  
+  // PERFIS GARIMPADOS E STATUS SALVOS NA SESSÃO DO NAVEGADOR (NÃO SOMEM AO MUDAR DE ABA)
+  const [perfisGarimpados, setPerfisGarimpados] = useState<Array<{ nome: string; perfil: string; regiao: string; whats: string }>>(() => {
+    if (typeof window !== 'undefined') {
+      const salvo = sessionStorage.getItem('scout_perfis_garimpados');
+      if (salvo) {
+        try { return JSON.parse(salvo); } catch (e) {}
+      }
+    }
+    return [];
+  });
+
+  const [executouGarimpo, setExecutouGarimpo] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('scout_executou_garimpo') === 'true';
+    }
+    return false;
+  });
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
@@ -148,7 +164,6 @@ export default function SalaPage() {
     const regexUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return regexUuid.test(id);
   };
-
   const isMasterUser = gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
 
   const tocarAlertaSonoro = () => {
@@ -438,6 +453,9 @@ export default function SalaPage() {
   const executarGarimpo = (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     setExecutouGarimpo(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scout_executou_garimpo', 'true');
+    }
 
     const novosPerfis = Array.from({ length: 20 }, (_, index) => {
       const idNum = index + 1;
@@ -471,8 +489,10 @@ export default function SalaPage() {
     });
 
     setPerfisGarimpados(novosPerfis);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novosPerfis));
+    }
   };
-
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
