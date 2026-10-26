@@ -149,6 +149,15 @@ export default function SalaPage() {
     return false;
   });
 
+  // FUNÇÃO DE DESCARTE INDIVIDUAL DE PROSPECTO GARIMPADO
+  const descartarPerfilIndividual = (indexParaRemover: number) => {
+    const novaLista = perfisGarimpados.filter((_, idx) => idx !== indexParaRemover);
+    setPerfisGarimpados(novaLista);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novaLista));
+    }
+  };
+
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
@@ -461,7 +470,6 @@ export default function SalaPage() {
       const idNum = index + 1;
       
       if (modo === 'redes_sociais') {
-        // Redes Sociais Filtradas (com indicação explícita da rede social do prospecto)
         const redesSociaisAlvo = [
           'LinkedIn (Open to Work / Profissional Ativo)',
           'Instagram (Perfil Profissional / Autônomo)',
@@ -478,7 +486,6 @@ export default function SalaPage() {
           whats: `2299${Math.floor(100000 + Math.random() * 900000)}`
         };
       } else {
-        // WhatsApp Filtrado (Direto ao Titular)
         return {
           nome: `Contato WhatsApp #${idNum}`,
           perfil: `WhatsApp Direto / Foco em Titular (${nichoPfSelecionado.toUpperCase()}) — ${regiaoStr}`,
@@ -493,6 +500,7 @@ export default function SalaPage() {
       sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novosPerfis));
     }
   };
+
   useEffect(() => {
     if (!gestorDesbloqueado) return;
 
@@ -1286,44 +1294,44 @@ export default function SalaPage() {
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-  <button
-    type="button"
-    onClick={() => executarGarimpo('whatsapp')}
-    style={{
-      background: 'rgba(255,255,255,0.06)',
-      border: '1px solid rgba(0,255,136,0.3)',
-      color: '#00ff88',
-      padding: '12px 18px',
-      borderRadius: '12px',
-      fontWeight: 'bold',
-      fontSize: '11px',
-      cursor: 'pointer',
-      textAlign: 'center',
-    }}
-  >
-    📱 WHATSAPP FILTRADO (20 CONTATOS)
-  </button>
+                        <button
+                          type="button"
+                          onClick={() => executarGarimpo('whatsapp')}
+                          style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(0,255,136,0.3)',
+                            color: '#00ff88',
+                            padding: '12px 18px',
+                            borderRadius: '12px',
+                            fontWeight: 'bold',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                          }}
+                        >
+                          📱 WHATSAPP FILTRADO (20 CONTATOS)
+                        </button>
 
-  <button
-    type="button"
-    onClick={() => executarGarimpo('redes_sociais')}
-    style={{
-      background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-      color: '#050505',
-      border: 'none',
-      padding: '12px 18px',
-      borderRadius: '12px',
-      fontWeight: '900',
-      fontSize: '11px',
-      cursor: 'pointer',
-      letterSpacing: '0.5px',
-      boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
-      textAlign: 'center',
-    }}
-  >
-    🌐 REDES SOCIAIS FILTRADAS (20 PERFIS)
-  </button>
-</div>
+                        <button
+                          type="button"
+                          onClick={() => executarGarimpo('redes_sociais')}
+                          style={{
+                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                            color: '#050505',
+                            border: 'none',
+                            padding: '12px 18px',
+                            borderRadius: '12px',
+                            fontWeight: '900',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+                            textAlign: 'center',
+                          }}
+                        >
+                          🌐 REDES SOCIAIS FILTRADAS (20 PERFIS)
+                        </button>
+                      </div>
 
                       {executouGarimpo && (
                         <div>
@@ -1411,6 +1419,24 @@ export default function SalaPage() {
                                     >
                                       📨 Enviar Santinho Digital
                                     </a>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => descartarPerfilIndividual(index)}
+                                      style={{
+                                        background: 'rgba(255,68,68,0.18)',
+                                        border: '1px solid rgba(255,68,68,0.4)',
+                                        color: '#ff4444',
+                                        fontWeight: 'bold',
+                                        fontSize: '11px',
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        textAlign: 'center',
+                                      }}
+                                    >
+                                      🗑️ Descartar
+                                    </button>
                                   </div>
                                 </div>
                               );
