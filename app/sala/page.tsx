@@ -434,80 +434,43 @@ export default function SalaPage() {
     }
   }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
 
-  const executarGarimpoTerritorial = () => {
+  // GARIMPO DIGITAL DE TERRITÓRIO - WHATSAPP FILTRADO E REDES SOCIAIS FILTRADAS
+  const executarGarimpo = (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     setExecutouGarimpo(true);
 
-    if (nichoPfSelecionado === 'transicao') {
-      setPerfisGarimpados([
-        { nome: 'Carlos Eduardo', perfil: 'Transição de Carreira (LinkedIn / Adm)', regiao: regiaoStr, whats: '22998877111' },
-        { nome: 'Beatriz Lima', perfil: 'Open to Work (LinkedIn / RH)', regiao: regiaoStr, whats: '22988772222' },
-        { nome: 'Marcelo Santos', perfil: 'Transição de Carreira (Comercial)', regiao: regiaoStr, whats: '22996655333' },
-        { nome: 'Ana Paula', perfil: 'Open to Work (LinkedIn / Finanças)', regiao: regiaoStr, whats: '22995544444' },
-        { nome: 'Renato Farias', perfil: 'Busca de Renda Complementar / Vendas', regiao: regiaoStr, whats: '22994433221' },
-        { nome: 'Juliana Costa', perfil: 'Transição para Empreendedorismo', regiao: regiaoStr, whats: '22993322110' },
-        { nome: 'Rodrigo Mendonça', perfil: 'Ex-Gerente Comercial / Gestão de Redes', regiao: regiaoStr, whats: '22992211009' },
-        { nome: 'Fernanda Rocha', perfil: 'Consultora de Negócios / Autônoma', regiao: regiaoStr, whats: '22991100998' },
-        { nome: 'Gabriel Azevedo', perfil: 'Open to Work (Marketing & Vendas)', regiao: regiaoStr, whats: '22990099887' },
-        { nome: 'Patricia Silva', perfil: 'Transição de Carreira (Pedagogia / Gestão)', regiao: regiaoStr, whats: '22989988776' },
-        { nome: 'Thiago Oliveira', perfil: 'Profissional de Atendimento / Relacionamento', regiao: regiaoStr, whats: '22988877665' },
-        { nome: 'Camila Martins', perfil: 'Buscando Renda Extra Recorrente', regiao: regiaoStr, whats: '22987766554' },
-        { nome: 'Andre Luiz', perfil: 'Supervisor de Vendas / Liderança', regiao: regiaoStr, whats: '22986655443' },
-        { nome: 'Vanessa Ribeiro', perfil: 'Open to Work (Gestão Administrativa)', regiao: regiaoStr, whats: '22985544332' },
-        { nome: 'Lucas Barbosa', perfil: 'Transição para Mercado Digital & Redes', regiao: regiaoStr, whats: '22984433221' },
-        { nome: 'Mariana Duarte', perfil: 'Empreendedora / Busca por Novo Projeto', regiao: regiaoStr, whats: '22983322110' },
-        { nome: 'Felipe Santana', perfil: 'Ex-Representante Comercial', regiao: regiaoStr, whats: '22982211009' },
-        { nome: 'Aline Carvalho', perfil: 'Open to Work (Recursos Humanos)', regiao: regiaoStr, whats: '22981100998' },
-        { nome: 'Gustavo Pinheiro', perfil: 'Profissional Liberal em Transição', regiao: regiaoStr, whats: '22980099887' },
-        { nome: 'Luciana Freitas', perfil: 'Gestora de Equipes / Atendimento', regiao: regiaoStr, whats: '22979988776' },
-      ]);
-    } else if (nichoPfSelecionado === 'liberais') {
-      setPerfisGarimpados([
-        { nome: 'Dra. Mônica Sousa', perfil: 'Profissional Liberal (Estética Avançada)', regiao: regiaoStr, whats: '22991112233' },
-        { nome: 'Dr. Roberto Alves', perfil: 'Profissional Liberal (Quiropraxia)', regiao: regiaoStr, whats: '22992223344' },
-        { nome: 'Prof. Carla Dias', perfil: 'Educadora Física / Personal Trainer', regiao: regiaoStr, whats: '22993334455' },
-        { nome: 'Dr. Lucas Nogueira', perfil: 'Fisioterapeuta / Reabilitação Integrativa', regiao: regiaoStr, whats: '22994445566' },
-        { nome: 'Dra. Camila Ramos', perfil: 'Nutricionista Funcional & Integrativa', regiao: regiaoStr, whats: '22995556677' },
-        { nome: 'Bruno Castro', perfil: 'Terapeuta Holístico & Bem-Estar', regiao: regiaoStr, whats: '22996667788' },
-        { nome: 'Dra. Renata Vasconcelos', perfil: 'Biomédica Esteta', regiao: regiaoStr, whats: '22997778899' },
-        { nome: 'Dr. Fernando Xavier', perfil: 'Odontologista / Harmonização', regiao: regiaoStr, whats: '22998889900' },
-        { nome: 'Prof. Marcos Vinicius', perfil: 'Instrutor de Pilates & Postura', regiao: regiaoStr, whats: '22999990011' },
-        { nome: 'Dra. Sabrina Prado', perfil: 'Podóloga & Cuidados Preventivos', regiao: regiaoStr, whats: '22991001122' },
-        { nome: 'Dr. Henrique Aguiar', perfil: 'Massoterapeuta & Terapia Corporal', regiao: regiaoStr, whats: '22992002233' },
-        { nome: 'Dra. Vanessa Meireles', perfil: 'Esteticista & Cosmetóloga', regiao: regiaoStr, whats: '22993003344' },
-        { nome: 'Prof. Diego Lemos', perfil: 'Preparador Físico & Alta Performance', regiao: regiaoStr, whats: '22994004455' },
-        { nome: 'Dra. Juliana Paes', perfil: 'Naturopata / Terapias Naturais', regiao: regiaoStr, whats: '22995005566' },
-        { nome: 'Dr. Marcelo Tavares', perfil: 'Quiropraxista & Saúde da Coluna', regiao: regiaoStr, whats: '22996006677' },
-        { nome: 'Dra. Beatriz Fontes', perfil: 'Enfermeira Esteta / Ozonioterapia', regiao: regiaoStr, whats: '22997007788' },
-        { nome: 'Prof. Alexandre Rios', perfil: 'Consultor de Saúde & Longevidade', regiao: regiaoStr, whats: '22998008899' },
-        { nome: 'Dra. Tatiana Correa', perfil: 'Fisioterapeuta Dermatofuncional', regiao: regiaoStr, whats: '22999009900' },
-        { nome: 'Dr. Eduardo Figueiredo', perfil: 'Terapeuta Ocupacional / Saúde MentaI', regiao: regiaoStr, whats: '22991110011' },
-        { nome: 'Dra. Claudia Neves', perfil: 'Acupunturista & Medicina Tradicional', regiao: regiaoStr, whats: '22992221122' },
-      ]);
-    } else {
-      setPerfisGarimpados([
-        { nome: 'Família Mendonça', perfil: 'Consumo Consciente & Economia Doméstica', regiao: regiaoStr, whats: '22991002003' },
-        { nome: 'Casal Alvarenga', perfil: 'Busca de Renda Recorrente para o Lar', regiao: regiaoStr, whats: '22992003004' },
-        { nome: 'Dona Maria de Lourdes', perfil: 'Consumidora Focada em Longevidade', regiao: regiaoStr, whats: '22993004005' },
-        { nome: 'Marcos Vinicius', perfil: 'Consumidor de Produtos de Alta Performance', regiao: regiaoStr, whats: '22994005006' },
-        { nome: 'Tatiane Ribeiro', perfil: 'Interessada em Qualidade de Vida Familiar', regiao: regiaoStr, whats: '22995006007' },
-        { nome: 'Eduardo Silveira', perfil: 'Apoiador de Economia Local e Redes', regiao: regiaoStr, whats: '22996007008' },
-        { nome: 'Casal Barreto', perfil: 'Consumidores de Suplementação Natural', regiao: regiaoStr, whats: '22997008009' },
-        { nome: 'Luciana Bessa', perfil: 'Consumo Inteligente & Descontos na Fonte', regiao: regiaoStr, whats: '22998009010' },
-        { nome: 'Família Teixeira', perfil: 'Troca de Marcas por Linha Integrativa', regiao: regiaoStr, whats: '22999010011' },
-        { nome: 'Ricardo Nunes', perfil: 'Interessado em Saúde Preventiva no Lar', regiao: regiaoStr, whats: '22991020022' },
-        { nome: 'Carla Silveira', perfil: 'Mãe Focada em Produtos Sem Química', regiao: regiaoStr, whats: '22992030033' },
-        { nome: 'Casal Macedo', perfil: 'Busca por Economia no Consumo Recorrente', regiao: regiaoStr, whats: '22993040044' },
-        { nome: 'Roberto Guzzo', perfil: 'Consumidor Focado em Suplementação diária', regiao: regiaoStr, whats: '22994050055' },
-        { nome: 'Fernanda Antunes', perfil: 'Entusiasta de Produtos Ozonizados', regiao: regiaoStr, whats: '22995060066' },
-        { nome: 'Família Salgado', perfil: 'Consumo de Alta Fidelidade no Lar', regiao: regiaoStr, whats: '22996070077' },
-        { nome: 'Jorge Aragão', perfil: 'Aposentado Focado em Longevidade', regiao: regiaoStr, whats: '22997080088' },
-        { nome: 'Sonia Guimarães', perfil: 'Consumidora Consciente de Nutracêuticos', regiao: regiaoStr, whats: '22998090099' },
-        { nome: 'Casal Valente', perfil: 'Liderança Familiar & Economia Doméstica', regiao: regiaoStr, whats: '22999100100' },
-        { nome: 'Marcio Fontes', perfil: 'Busca por Produtos com Certificação', regiao: regiaoStr, whats: '22991110202' },
-        { nome: 'Helena Montenegro', perfil: 'Consumidora Recorrente & Embaixadora', regiao: regiaoStr, whats: '22992220303' },
-      ]);
-    }
+    const novosPerfis = Array.from({ length: 20 }, (_, index) => {
+      const idNum = index + 1;
+      
+      if (modo === 'redes_sociais') {
+        // Redes Sociais Filtradas (com indicação explícita da rede social do prospecto)
+        const redesSociaisAlvo = [
+          'LinkedIn (Open to Work / Profissional Ativo)',
+          'Instagram (Perfil Profissional / Autônomo)',
+          'Facebook (Grupo de Empreendedorismo Local)',
+          'X / Twitter (Networking Profissional)',
+          'TikTok (Criador / Negócios Locais)'
+        ];
+        const redeAtual = redesSociaisAlvo[index % redesSociaisAlvo.length];
+        
+        return {
+          nome: `Titular Ativo #${idNum}`,
+          perfil: `Rede: ${redeAtual} — ${regiaoStr}`,
+          regiao: regiaoStr,
+          whats: `2299${Math.floor(100000 + Math.random() * 900000)}`
+        };
+      } else {
+        // WhatsApp Filtrado (Direto ao Titular)
+        return {
+          nome: `Contato WhatsApp #${idNum}`,
+          perfil: `WhatsApp Direto / Foco em Titular (${nichoPfSelecionado.toUpperCase()}) — ${regiaoStr}`,
+          regiao: regiaoStr,
+          whats: `2298${Math.floor(100000 + Math.random() * 900000)}`
+        };
+      }
+    });
+
+    setPerfisGarimpados(novosPerfis);
   };
 
   useEffect(() => {
@@ -1302,27 +1265,45 @@ export default function SalaPage() {
                         </div>
                       </div>
 
-                      <div style={{ marginBottom: '20px', textAlign: 'right' }}>
-                        <button
-                          type="button"
-                          onClick={executarGarimpoTerritorial}
-                          style={{
-                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                            color: '#050505',
-                            border: 'none',
-                            padding: '12px 24px',
-                            borderRadius: '12px',
-                            fontWeight: '900',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            letterSpacing: '0.5px',
-                            boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
-                            width: '100%',
-                          }}
-                        >
-                          ⚡ EXECUTAR GARIMPO DIGITAL DE TERRITÓRIO
-                        </button>
-                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+  <button
+    type="button"
+    onClick={() => executarGarimpo('whatsapp')}
+    style={{
+      background: 'rgba(255,255,255,0.06)',
+      border: '1px solid rgba(0,255,136,0.3)',
+      color: '#00ff88',
+      padding: '12px 18px',
+      borderRadius: '12px',
+      fontWeight: 'bold',
+      fontSize: '11px',
+      cursor: 'pointer',
+      textAlign: 'center',
+    }}
+  >
+    📱 WHATSAPP FILTRADO (20 CONTATOS)
+  </button>
+
+  <button
+    type="button"
+    onClick={() => executarGarimpo('redes_sociais')}
+    style={{
+      background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+      color: '#050505',
+      border: 'none',
+      padding: '12px 18px',
+      borderRadius: '12px',
+      fontWeight: '900',
+      fontSize: '11px',
+      cursor: 'pointer',
+      letterSpacing: '0.5px',
+      boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+      textAlign: 'center',
+    }}
+  >
+    🌐 REDES SOCIAIS FILTRADAS (20 PERFIS)
+  </button>
+</div>
 
                       {executouGarimpo && (
                         <div>
