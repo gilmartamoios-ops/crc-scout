@@ -1349,7 +1349,8 @@ export default function SalaPage() {
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                             {perfisGarimpados.map((lead, index) => {
-                              const msgSantinho = encodeURIComponent(`Olá ${lead.nome}! Notei seu perfil em ${lead.regiao} (${lead.perfil}). Convidamos você a conhecer o ecossistema CRC. Assista ao vídeo e conheça nossa comunidade: ${linkBaseGestor}`);
+                              // NOVO CTA HUMANOIZADO SOLICITADO PELO GILMAR
+                              const msgSantinho = encodeURIComponent(`Olá, ${lead.nome}. Este é o seu convite para conhecer a Comunidade de Consumo, Economia e Renda. Assista o vídeo e acesse a Comunidade: ${linkBaseGestor}`);
                               const linkWhatsSantinho = `https://wa.me/55${lead.whats}?text=${msgSantinho}`;
 
                               return (
