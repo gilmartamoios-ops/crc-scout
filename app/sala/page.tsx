@@ -124,6 +124,7 @@ export default function SalaPage() {
   } | null>(null);
 
   const [listaGestores, setListaGestores] = useState<GestorItem[]>([]);
+  const [carregandoGestores, setCarregandoGestores] = useState<boolean>(true);
 
   const [estadoSelecionado, setEstadoSelecionado] = useState<string>('RJ');
   const [municipiosDoEstado, setMunicipiosDoEstado] = useState<string[]>([]);
@@ -131,7 +132,7 @@ export default function SalaPage() {
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
   const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo'>('transicao');
   
-  // PERFIS GARIMPADOS E STATUS SALVOS NA SESSÃO DO NAVEGADOR (NÃO SOMEM AO MUDAR DE ABA)
+  // PERFIS GARIMPADOS E STATUS SALVOS NA SESSÃO DO NAVEGADOR
   const [perfisGarimpados, setPerfisGarimpados] = useState<Array<{ nome: string; perfil: string; regiao: string; whats: string }>>(() => {
     if (typeof window !== 'undefined') {
       const salvo = sessionStorage.getItem('scout_perfis_garimpados');
@@ -262,6 +263,7 @@ export default function SalaPage() {
   }, []);
 
   const carregarListaGestores = async () => {
+    setCarregandoGestores(true);
     try {
       const { data, error } = await supabase
         .from('scout_gestores')
@@ -273,6 +275,8 @@ export default function SalaPage() {
       }
     } catch (err) {
       console.error('Erro ao buscar lista de gestores:', err);
+    } finally {
+      setCarregandoGestores(false);
     }
   };
 
@@ -297,7 +301,7 @@ export default function SalaPage() {
     carregarMunicipiosIBGE();
   }, [estadoSelecionado]);
 
-  // LOGICA E DADOS DO SIMULADOR EXATAMENTE IGUAIS À JORNADA
+  // LOGICA E DADOS DO SIMULADOR OFICIAL
   const simulacaoOficial: Record<string, Array<{ etapa: number; gcom: number; plano: string; total: number }>> = {
     "4_450": [
       { etapa: 1, gcom: 4, plano: "Executivo", total: 360.00 },
@@ -458,7 +462,6 @@ export default function SalaPage() {
     }
   }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
 
-  // GARIMPO DIGITAL DE TERRITÓRIO - WHATSAPP FILTRADO E REDES SOCIAIS FILTRADAS
   const executarGarimpo = (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     setExecutouGarimpo(true);
@@ -1821,7 +1824,11 @@ export default function SalaPage() {
                     Lista oficial de operadores cadastrados na tabela <code>scout_gestores</code>.
                   </p>
 
-                  {listaGestores.length === 0 ? (
+                  {carregandoGestores ? (
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#00ff88', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '14px', border: '1px dashed rgba(0,255,136,0.3)' }}>
+                      ⚙️ Sincronizando com a base de gestores do Supabase... Aguarde um instante.
+                    </div>
+                  ) : listaGestores.length === 0 ? (
                     <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
                       Nenhum gestor cadastrado na rede no momento.
                     </div>
