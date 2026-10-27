@@ -151,11 +151,23 @@ export default function SalaPage() {
   });
 
   // FUNÇÃO DE DESCARTE INDIVIDUAL DE PROSPECTO GARIMPADO
-  const descartarPerfilIndividual = (indexParaRemover: number) => {
+  const descartarPerfilIndividual = async (indexParaRemover: number, perfilAlvo?: { nome: string; whats: string }) => {
     const novaLista = perfisGarimpados.filter((_, idx) => idx !== indexParaRemover);
     setPerfisGarimpados(novaLista);
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novaLista));
+    }
+
+    if (perfilAlvo && gestor?.id) {
+      try {
+        await supabase
+          .from('scout_registros')
+          .delete()
+          .eq('gestor_id', gestor.id)
+          .ilike('dados->>convidado->>nome', `%${perfilAlvo.nome}%`);
+      } catch (err) {
+        console.error('Erro ao deletar do Supabase:', err);
+      }
     }
   };
 
@@ -462,7 +474,7 @@ export default function SalaPage() {
     }
   }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
 
-  const executarGarimpo = (modo: 'whatsapp' | 'redes_sociais') => {
+  const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     setExecutouGarimpo(true);
     if (typeof window !== 'undefined') {
@@ -501,6 +513,32 @@ export default function SalaPage() {
     setPerfisGarimpados(novosPerfis);
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novosPerfis));
+    }
+
+    // Gravar no Supabase (scout_registros) para persistir e aparecer na aba de Feedback/Fila
+    if (gestor?.id) {
+      try {
+        const registrosParaInserir = novosPerfis.map(p => ({
+          gestor_id: gestor.id,
+          tipo: 'garimpo',
+          titulo: `Garimpo ${modo} - ${municipioSelecionado}`,
+          dados: {
+            convidado: {
+              nome: p.nome,
+              whatsapp: p.whats,
+              cidade: p.regiao,
+              email: `${p.whats}@garimpo.scout`
+            },
+            perfil: p.perfil,
+            status_aprovacao: 'pendente'
+          }
+        }));
+
+        await supabase.from('scout_registros').insert(registrosParaInserir);
+        carregarLeadsScout();
+      } catch (err) {
+        console.error('Erro ao salvar garimpo no Supabase:', err);
+      }
     }
   };
 
@@ -1426,7 +1464,7 @@ export default function SalaPage() {
 
                                     <button
                                       type="button"
-                                      onClick={() => descartarPerfilIndividual(index)}
+                                      onClick={() => descartarPerfilIndividual(index, lead)}
                                       style={{
                                         background: 'rgba(255,68,68,0.18)',
                                         border: '1px solid rgba(255,68,68,0.4)',
