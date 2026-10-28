@@ -33,6 +33,7 @@ interface ConvidadoRegistro {
     codigo_lib?: string;
     codigo_master?: string;
     origem?: string;
+    gestor_nome?: string;
   };
 }
 
@@ -99,7 +100,7 @@ export default function SalaPage() {
   const [modoVisitante, setModoVisitante] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
-  // ESTADOS DO SIMULADOR OFICIAL (EXATAMENTE IDÊNTICOS À JORNADA)
+  // ESTADOS DO SIMULADOR OFICIAL
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
   const [consumoSelect, setConsumoSelect] = useState<string>('450');
   const [infoContent, setInfoContent] = useState<string>('');
@@ -131,45 +132,6 @@ export default function SalaPage() {
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
   const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo'>('transicao');
-  
-  // PERFIS GARIMPADOS E STATUS SALVOS NA SESSÃO DO NAVEGADOR
-  const [perfisGarimpados, setPerfisGarimpados] = useState<Array<{ nome: string; perfil: string; regiao: string; whats: string }>>(() => {
-    if (typeof window !== 'undefined') {
-      const salvo = sessionStorage.getItem('scout_perfis_garimpados');
-      if (salvo) {
-        try { return JSON.parse(salvo); } catch (e) {}
-      }
-    }
-    return [];
-  });
-
-  const [executouGarimpo, setExecutouGarimpo] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('scout_executou_garimpo') === 'true';
-    }
-    return false;
-  });
-
-  // FUNÇÃO DE DESCARTE INDIVIDUAL DE PROSPECTO GARIMPADO
-  const descartarPerfilIndividual = async (indexParaRemover: number, perfilAlvo?: { nome: string; whats: string }) => {
-    const novaLista = perfisGarimpados.filter((_, idx) => idx !== indexParaRemover);
-    setPerfisGarimpados(novaLista);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novaLista));
-    }
-
-    if (perfilAlvo && gestor?.id) {
-      try {
-        await supabase
-          .from('scout_registros')
-          .delete()
-          .eq('gestor_id', gestor.id)
-          .ilike('dados->>convidado->>nome', `%${perfilAlvo.nome}%`);
-      } catch (err) {
-        console.error('Erro ao deletar do Supabase:', err);
-      }
-    }
-  };
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
@@ -474,12 +436,24 @@ export default function SalaPage() {
     }
   }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
 
+  // CARREGAMENTO DOS PERFIS GARIMPADOS DIRETAMENTE DO SUPABASE (PERSISTÊNCIA TOTAL)
+  const perfisGarimpados = useMemo(() => {
+    return leads
+      .filter((l) => l.tipo === 'garimpo' && (!gestor?.id || l.gestor_id === gestor.id || isMasterUser))
+      .map((item) => ({
+        idRegistro: item.id,
+        nome: item.dados?.convidado?.nome || 'Contato',
+        whats: item.dados?.convidado?.whatsapp || '',
+        regiao: item.dados?.convidado?.cidade || '',
+        perfil: item.dados?.perfil || '',
+        gestorNome: item.dados?.gestor_nome || 'Master/Geral'
+      }));
+  }, [leads, gestor, isMasterUser]);
+
+  // FUNÇÃO DE GARIMPO QUE GRAVA NO SUPABASE COM O NOME DO GESTOR
   const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
-    setExecutouGarimpo(true);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('scout_executou_garimpo', 'true');
-    }
+    const nomeGestorAtual = gestor?.nome || 'Master';
 
     const novosPerfis = Array.from({ length: 20 }, (_, index) => {
       const idNum = index + 1;
@@ -510,12 +484,6 @@ export default function SalaPage() {
       }
     });
 
-    setPerfisGarimpados(novosPerfis);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('scout_perfis_garimpados', JSON.stringify(novosPerfis));
-    }
-
-    // Gravar no Supabase (scout_registros) para persistir e aparecer na aba de Feedback/Fila
     if (gestor?.id) {
       try {
         const registrosParaInserir = novosPerfis.map(p => ({
@@ -530,7 +498,8 @@ export default function SalaPage() {
               email: `${p.whats}@garimpo.scout`
             },
             perfil: p.perfil,
-            status_aprovacao: 'pendente'
+            status_aprovacao: 'pendente',
+            gestor_nome: nomeGestorAtual
           }
         }));
 
@@ -539,6 +508,21 @@ export default function SalaPage() {
       } catch (err) {
         console.error('Erro ao salvar garimpo no Supabase:', err);
       }
+    }
+  };
+
+  // FUNÇÃO DE DESCARTE INDIVIDUAL DE PROSPECTO GARIMPADO (DELETA DO SUPABASE)
+  const descartarPerfilIndividual = async (idRegistro: string) => {
+    if (!idRegistro) return;
+    try {
+      await supabase
+        .from('scout_registros')
+        .delete()
+        .eq('id', idRegistro);
+
+      setLeads((anterior) => anterior.filter((item) => item.id !== idRegistro));
+    } catch (err) {
+      console.error('Erro ao deletar do Supabase:', err);
     }
   };
 
@@ -765,7 +749,7 @@ export default function SalaPage() {
 
   const linkBaseGestor = `https://crc-scout.vercel.app/?gestor_id=${gestor?.slug || 'master'}`;
 
-  const leadsAtivosGestor = leads.filter((l) => l.dados?.status_aprovacao !== 'reprovado');
+  const leadsAtivosGestor = leads.filter((l) => l.dados?.status_aprovacao !== 'reprovado' && l.tipo !== 'garimpo');
 
   const totalLeads = leadsAtivosGestor.length;
   const pendentesFila = leadsAtivosGestor.filter((l) => (l.dados?.status_aprovacao || 'pendente') === 'pendente').length;
@@ -1374,26 +1358,29 @@ export default function SalaPage() {
                         </button>
                       </div>
 
-                      {executouGarimpo && (
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                            <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                              ⚡ Lote Ativo para {municipioSelecionado} / {estadoSelecionado} ({perfisGarimpados.length} Perfis Alvo Prontos)
-                            </h4>
-                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                              💡 Copie o link ou envie o Santinho Digital diretamente
-                            </span>
-                          </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                          <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
+                            ⚡ Lote Ativo no Supabase ({perfisGarimpados.length} Perfis Persistidos)
+                          </h4>
+                          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
+                            💡 Copie o link ou envie o Santinho Digital diretamente
+                          </span>
+                        </div>
 
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
-                            {perfisGarimpados.map((lead, index) => {
-                              // NOVO CTA HUMANOIZADO SOLICITADO PELO GILMAR
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
+                          {perfisGarimpados.length === 0 ? (
+                            <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px dashed rgba(0,255,136,0.2)' }}>
+                              Nenhum lote garimpado ativo. Clique em um dos botões acima para gerar e persistir sua lista.
+                            </div>
+                          ) : (
+                            perfisGarimpados.map((lead) => {
                               const msgSantinho = encodeURIComponent(`Olá! Este é o seu convite para conhecer a Comunidade de Consumo, Economia e Renda. Assista o vídeo e acesse a Comunidade: ${linkBaseGestor}`);
                               const linkWhatsSantinho = `https://wa.me/55${lead.whats}?text=${msgSantinho}`;
 
                               return (
                                 <div
-                                  key={index}
+                                  key={lead.idRegistro}
                                   style={{
                                     background: 'rgba(0,0,0,0.4)',
                                     border: '1px solid rgba(0,255,136,0.2)',
@@ -1411,6 +1398,9 @@ export default function SalaPage() {
                                       <strong style={{ color: '#fff', fontSize: '13px' }}>{lead.nome}</strong>
                                       <span style={{ fontSize: '9px', background: 'rgba(0,255,136,0.15)', color: '#00ff88', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
                                         {lead.regiao}
+                                      </span>
+                                      <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.08)', color: '#2bd9ff', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
+                                        Garimpeiro: {lead.gestorNome}
                                       </span>
                                     </div>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0', wordBreak: 'break-word' }}>
@@ -1464,7 +1454,7 @@ export default function SalaPage() {
 
                                     <button
                                       type="button"
-                                      onClick={() => descartarPerfilIndividual(index, lead)}
+                                      onClick={() => descartarPerfilIndividual(lead.idRegistro)}
                                       style={{
                                         background: 'rgba(255,68,68,0.18)',
                                         border: '1px solid rgba(255,68,68,0.4)',
@@ -1482,10 +1472,10 @@ export default function SalaPage() {
                                   </div>
                                 </div>
                               );
-                            })}
-                          </div>
+                            })
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2386,7 +2376,7 @@ export default function SalaPage() {
             padding: 16px;
           }
 
-          /* CORREÇÃO DO SIMULADOR NO CELULAR (EMPILHA TEXTO E GRÁFICO) */
+          /* CORREÇÃO DO SIMULADOR NO CELULAR */
           .sim-body-wrapper-original {
             flex-direction: column !important;
           }
