@@ -20,6 +20,8 @@ interface ConvidadoRegistro {
   gestor_id: string | null;
   tipo: string;
   titulo: string;
+  gestor_nome?: string;
+  categoria_origem?: string;
   dados: {
     convidado?: {
       nome: string;
@@ -439,21 +441,24 @@ export default function SalaPage() {
   // CARREGAMENTO DOS PERFIS GARIMPADOS DIRETAMENTE DO SUPABASE (PERSISTÊNCIA TOTAL)
   const perfisGarimpados = useMemo(() => {
     return leads
-      .filter((l) => l.tipo === 'garimpo' && (!gestor?.id || l.gestor_id === gestor.id || isMasterUser))
+      .filter((l) => (l.tipo === 'garimpo' || !l.tipo) && (!gestor?.id || l.gestor_id === gestor.id || isMasterUser))
       .map((item) => ({
         idRegistro: item.id,
         nome: item.dados?.convidado?.nome || 'Contato',
         whats: item.dados?.convidado?.whatsapp || '',
         regiao: item.dados?.convidado?.cidade || '',
         perfil: item.dados?.perfil || '',
-        gestorNome: item.dados?.gestor_nome || 'Master/Geral'
+        gestorNome: item.gestor_nome || item.dados?.gestor_nome || 'Master/Geral',
+        categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral'
       }));
   }, [leads, gestor, isMasterUser]);
 
-  // FUNÇÃO DE GARIMPO QUE GRAVA NO SUPABASE COM O NOME DO GESTOR
+  // FUNÇÃO DE GARIMPO QUE GRAVA NO SUPABASE COM O NOME DO GESTOR E CATEGORIA AUTOMÁTICA
   const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     const nomeGestorAtual = gestor?.nome || 'Master';
+    const categoriaDefinida = modo === 'redes_sociais' ? 'Redes Sociais' : 'WhatsApp / Direto';
+    const tituloGarimpo = `Garimpo ${modo} - ${municipioSelecionado}`;
 
     const novosPerfis = Array.from({ length: 20 }, (_, index) => {
       const idNum = index + 1;
@@ -489,7 +494,9 @@ export default function SalaPage() {
         const registrosParaInserir = novosPerfis.map(p => ({
           gestor_id: gestor.id,
           tipo: 'garimpo',
-          titulo: `Garimpo ${modo} - ${municipioSelecionado}`,
+          titulo: tituloGarimpo,
+          gestor_nome: nomeGestorAtual,
+          categoria_origem: categoriaDefinida,
           dados: {
             convidado: {
               nome: p.nome,
@@ -1400,7 +1407,10 @@ export default function SalaPage() {
                                         {lead.regiao}
                                       </span>
                                       <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.08)', color: '#2bd9ff', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
-                                        Garimpeiro: {lead.gestorNome}
+                                        Gestor: {lead.gestorNome}
+                                      </span>
+                                      <span style={{ fontSize: '9px', background: 'rgba(255,215,0,0.15)', color: '#ffd700', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
+                                        Categoria: {lead.categoriaOrigem}
                                       </span>
                                     </div>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0', wordBreak: 'break-word' }}>
