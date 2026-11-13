@@ -216,19 +216,38 @@ export default function SalaPage() {
     }
   };
 
+  // VERIFICAÇÃO DE SESSÃO BLINDADA (VALIDAÇÃO AUTOMÁTICA DE UUID NO SUPABASE)
   useEffect(() => {
-    function verificarSessao() {
+    async function verificarSessao() {
       const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
       if (!dados) return;
 
       try {
         const gestorSalvo = JSON.parse(dados);
-        if (gestorSalvo?.id && gestorSalvo?.nome) {
-          setGestor(gestorSalvo);
-          setGestorDesbloqueado(true);
-          carregarLeadsScout();
+        
+        if (gestorSalvo?.email || gestorSalvo?.slug || gestorSalvo?.id) {
+          let query = supabase.from('scout_gestores').select('*');
+          
+          if (gestorSalvo?.email) {
+            query = query.eq('email', gestorSalvo.email);
+          } else if (gestorSalvo?.slug) {
+            query = query.eq('slug', gestorSalvo.slug);
+          } else {
+            query = query.eq('id', gestorSalvo.id);
+          }
+
+          const { data: gestorBanco, error } = await query.single();
+
+          if (!error && gestorBanco) {
+            setGestor(gestorBanco);
+            setGestorDesbloqueado(true);
+            localStorage.setItem('scout_gestor', JSON.stringify(gestorBanco));
+            carregarLeadsScout();
+            return;
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error('Erro ao verificar sessão:', err);
         localStorage.removeItem('scout_gestor');
         sessionStorage.removeItem('scout_gestor');
       }
