@@ -153,7 +153,16 @@ export default function SalaPage() {
     const regexUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return regexUuid.test(id);
   };
-  const isMasterUser = gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
+  
+  // VALIDAÇÃO MASTER APRIMORADA (VERIFICA ESTADO E LOCALSTORAGE DIRETAMENTE)
+  const isMasterUser = useMemo(() => {
+    if (gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar')) return true;
+    if (typeof window !== 'undefined') {
+      const local = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
+      if (local && (local.toLowerCase().includes('gilmar') || local.toLowerCase().includes('master'))) return true;
+    }
+    return false;
+  }, [gestor]);
 
   // VERIFICAÇÃO DO STATUS DE MANUTENÇÃO NO SUPABASE
   useEffect(() => {
