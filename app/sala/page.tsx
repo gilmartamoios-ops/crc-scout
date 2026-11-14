@@ -1277,7 +1277,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS REESTRUTURADOS COM ALTO PADRÃO DE APRESENTAÇÃO */}
+              {/* CATÁLOGOS & VENDAS COM TEXTOS AJUSTADOS E SUPORTE A CAPAS */}
 {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
   <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
@@ -1285,7 +1285,7 @@ export default function SalaPage() {
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
         <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos Oficiais</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Apresente os produtos com sofisticação. Envie mensagens prontas e formatadas diretamente para o WhatsApp dos seus clientes.
+          Envie o catálogo ideal diretamente para o WhatsApp dos seus clientes com alta apresentação profissional.
         </p>
       </div>
     </div>
@@ -1303,7 +1303,7 @@ export default function SalaPage() {
           </div>
           <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo Oficial - Cliente Final</h4>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
-            Tecnologia ozonizada, suplementos de alta performance e cuidados diários para o bem-estar da família.
+            Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
           </p>
         </div>
 
@@ -1321,7 +1321,7 @@ export default function SalaPage() {
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nPreparámos uma curadoria especial com a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿 (Atendimento via Gestor: ${gestor?.nome || 'Master'})`
+                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
@@ -1343,7 +1343,7 @@ export default function SalaPage() {
           </div>
           <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo de Perfumes 2026</h4>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
-            Fragrâncias marcantes, linhas masculinas, femininas e coleções árabes inspiradas nas maiores grifes mundiais.
+            Conheça a nossa linha de perfumes para o seu bem-estar e sofisticação.
           </p>
         </div>
 
@@ -1361,7 +1361,7 @@ export default function SalaPage() {
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! Tudo bem?*\n\nSeparamos a nossa coleção exclusiva de perfumaria fina e fragrâncias inspiradas nas maiores referências internacionais.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição para te orientar! 🌟 (Atendimento via Gestor: ${gestor?.nome || 'Master'})`
+                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
