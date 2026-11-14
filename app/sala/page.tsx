@@ -1287,12 +1287,12 @@ export default function SalaPage() {
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
         <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo geral completo em PDF com capa ou selecione o card do produto (1 a 40) para inspecionar e compartilhar.
+          Envie o catálogo geral completo em PDF com capa ou clique em qualquer produto (1 a 40) para inspecionar os detalhes e compartilhar.
         </p>
       </div>
     </div>
 
-    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA NO TOPO */}
+    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA */}
     <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         
@@ -1337,11 +1337,11 @@ export default function SalaPage() {
       </div>
     </div>
 
-    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM CLIQUE PARA ZOOM */}
+    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM ZOOM MODAL */}
     <div style={{ marginBottom: '16px' }}>
       <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
       <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique na imagem de qualquer item para abri-la ampliada (zoom) ou utilize o botão abaixo para compartilhar no WhatsApp.
+        Clique na imagem de qualquer item para abrir a janela de inspeção detalhada ou utilize o botão abaixo para compartilhar no WhatsApp.
       </p>
     </div>
 
@@ -1355,14 +1355,31 @@ export default function SalaPage() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Clique para Zoom</span>
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Inspecionar</span>
               </div>
               
-              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR AMPLIADA EM NOVA ABA / ZOOM) */}
+              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL CONTROLADO) */}
               <div 
-                onClick={() => window.open(imagemSrc, '_blank')}
+                onClick={() => {
+                  const modalEl = document.getElementById('modal-zoom-produto');
+                  const imgEl = document.getElementById('img-zoom-preview') as HTMLImageElement;
+                  const btnEl = document.getElementById('btn-whatsapp-modal') as HTMLButtonElement;
+                  
+                  if (modalEl && imgEl && btnEl) {
+                    imgEl.src = imagemSrc;
+                    modalEl.style.display = 'flex';
+                    
+                    // Configura o botão de WhatsApp dentro do modal para este item exato
+                    btnEl.onclick = () => {
+                      const textoMensagem = encodeURIComponent(
+                        `✨ *Olá! Veja este destaque exclusivo do nosso catálogo:* \n\nReferência do Item: *#${num}*\n\nConheça os detalhes e benefícios deste produto incrível para o seu bem-estar.\n\nQualquer dúvida estou à disposição para ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                      );
+                      window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+                    };
+                  }
+                }}
                 style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative' }}
-                title="Clique para abrir a imagem em tamanho real"
+                title="Clique para inspecionar os detalhes"
               >
                 <img 
                   src={imagemSrc} 
@@ -1405,6 +1422,57 @@ export default function SalaPage() {
           </div>
         );
       })}
+    </div>
+
+    {/* MODAL DE INSPEÇÃO / ZOOM COM BOTÃO DE WHATSAPP INTEGRADO (NATIVO E SEM CONFLITO DE ESTADO) */}
+    <div 
+      id="modal-zoom-produto"
+      onClick={(e) => {
+        // Fecha apenas se clicar no fundo escuro fora da caixa
+        if (e.target === e.currentTarget) {
+          e.currentTarget.style.display = 'none';
+        }
+      }}
+      style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)', zIndex: 9999, alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+    >
+      <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '92vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,255,136,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
+        
+        {/* BOTÃO DE FECHAR (X) */}
+        <button 
+          onClick={() => {
+            const modalEl = document.getElementById('modal-zoom-produto');
+            if (modalEl) modalEl.style.display = 'none';
+          }}
+          style={{ position: 'absolute', top: '12px', right: '12px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(255,68,68,0.4)' }}
+          title="Fechar janela"
+        >
+          ✕
+        </button>
+
+        {/* IMAGEM AMPLIADA PROPORCIONALMENTE (SEM CORTES) */}
+        <div style={{ maxWidth: '80vw', maxHeight: '68vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <img 
+            id="img-zoom-preview"
+            src="" 
+            alt="Produto Detalhado" 
+            style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '6px', display: 'block' }} 
+          />
+        </div>
+
+        {/* BARRA DE AÇÕES DENTRO DO MODAL */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', alignItems: 'center' }}>
+          <button
+            id="btn-whatsapp-modal"
+            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,255,136,0.4)', width: '100%', maxWidth: '350px', textAlign: 'center' }}
+          >
+            💬 Enviar Este Item no WhatsApp
+          </button>
+          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', textAlign: 'center' }}>
+            💡 Dica: Você também pode clicar com o botão direito na imagem ampliada e escolher <b>"Copiar imagem"</b> para colar no chat.
+          </span>
+        </div>
+
+      </div>
     </div>
 
   </div>
