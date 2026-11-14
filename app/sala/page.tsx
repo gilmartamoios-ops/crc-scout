@@ -1277,7 +1277,7 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS COM TEXTOS AJUSTADOS E SUPORTE A CAPAS */}
+              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS NO CARD E WHATSAPP LIMPO */}
 {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
   <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
@@ -1295,6 +1295,11 @@ export default function SalaPage() {
       {/* CARD 1: CATÁLOGO GERAL / CLIENTE FINAL */}
       <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
         <div>
+          {/* IMAGEM DE CAPA VISUAL NO CARD */}
+          <div style={{ width: '100%', height: '180px', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', border: '1px solid rgba(0,255,136,0.2)', background: '#111' }}>
+            <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
               LINHA COMPLETA
@@ -1320,9 +1325,8 @@ export default function SalaPage() {
           <button
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
-              const urlCapa = `${window.location.origin}/assets/capa-catalogo-geral.jpg`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n🖼️ *Capa do Catálogo:* \n${urlCapa}\n\n📖 *Confira o Catálogo Oficial em PDF:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
@@ -1336,6 +1340,11 @@ export default function SalaPage() {
       {/* CARD 2: CATÁLOGO DE PERFUMARIA */}
       <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(43,217,255,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
         <div>
+          {/* IMAGEM DE CAPA VISUAL NO CARD */}
+          <div style={{ width: '100%', height: '180px', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', border: '1px solid rgba(43,217,255,0.2)', background: '#111' }}>
+            <img src="/assets/capa-catalogo-perfume.jpg" alt="Capa Catálogo Perfumaria" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <span style={{ background: 'rgba(43,217,255,0.2)', color: '#2bd9ff', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(43,217,255,0.4)' }}>
               COLEÇÃO EXCLUSIVA
@@ -1361,9 +1370,8 @@ export default function SalaPage() {
           <button
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
-              const urlCapa = `${window.location.origin}/assets/capa-catalogo-perfume.jpg`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n🖼️ *Capa do Catálogo:* \n${urlCapa}\n\n💎 *Confira o Catálogo de Perfumes 2026 em PDF:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
