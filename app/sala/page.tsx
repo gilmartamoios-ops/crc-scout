@@ -1287,12 +1287,12 @@ export default function SalaPage() {
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
         <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo geral completo em PDF com capa ou selecione o card do produto específico (1 a 40) para inspecionar e compartilhar.
+          Envie o catálogo geral completo em PDF com capa ou selecione o card do produto (1 a 40) para inspecionar e compartilhar.
         </p>
       </div>
     </div>
 
-    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA (RETORNANDO AO TOPO) */}
+    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA NO TOPO */}
     <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         
@@ -1337,11 +1337,11 @@ export default function SalaPage() {
       </div>
     </div>
 
-    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM ZOOM */}
+    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM CLIQUE PARA ZOOM */}
     <div style={{ marginBottom: '16px' }}>
       <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
       <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique na imagem de qualquer item para abri-la ampliada em alta resolução ou utilize o botão abaixo para compartilhar no WhatsApp.
+        Clique na imagem de qualquer item para abri-la ampliada (zoom) ou utilize o botão abaixo para compartilhar no WhatsApp.
       </p>
     </div>
 
@@ -1355,14 +1355,14 @@ export default function SalaPage() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Clique para ampliar</span>
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Clique para Zoom</span>
               </div>
               
-              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR EM TELA CHEIA) */}
+              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR AMPLIADA EM NOVA ABA / ZOOM) */}
               <div 
-                onClick={() => setImagemModal(imagemSrc)}
+                onClick={() => window.open(imagemSrc, '_blank')}
                 style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative' }}
-                title="Clique para ampliar a imagem"
+                title="Clique para abrir a imagem em tamanho real"
               >
                 <img 
                   src={imagemSrc} 
@@ -1407,43 +1407,8 @@ export default function SalaPage() {
       })}
     </div>
 
-    {/* MODAL / JANELA FLUTUANTE PARA AMPLIAR A IMAGEM */}
-    {typeof window !== 'undefined' && (function() {
-      // Criação dinâmica do estado do modal se ainda não existir no componente pai
-      if (typeof imagemModal === 'undefined') {
-        // Se precisar declarar a variável de estado no topo do componente principal, 
-        // adicione: const [imagemModal, setImagemModal] = useState<string | null>(null);
-      }
-      return null;
-    })()}
-
-    {imagemModal && (
-      <div 
-        onClick={() => setImagemModal(null)}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      >
-        <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '16px', boxShadow: '0 10px 40px rgba(0,255,136,0.2)' }} onClick={(e) => e.stopPropagation()}>
-          <button 
-            onClick={() => setImagemModal(null)}
-            style={{ position: 'absolute', top: '10px', right: '10px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            ✕
-          </button>
-          <img 
-            src={imagemModal} 
-            alt="Produto Ampliado" 
-            style={{ maxWidth: '85vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: '8px', display: 'block' }} 
-          />
-          <div style={{ textAlign: 'center', marginTop: '12px', color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
-            💡 Dica: Clique com o botão direito na imagem acima e escolha <b>"Copiar imagem"</b> para enviá-la colada diretamente no chat do WhatsApp com o cliente.
-          </div>
-        </div>
-      </div>
-    )}
-
   </div>
 )}
-
               {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
