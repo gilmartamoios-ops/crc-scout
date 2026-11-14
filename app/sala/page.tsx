@@ -28,6 +28,8 @@ interface ConvidadoRegistro {
       whatsapp: string;
       email?: string;
       cidade?: string;
+      perfil_social_url?: string;
+      rede_social_origem?: string;
     };
     perfil?: string;
     respostas?: Record<string, string>;
@@ -492,7 +494,9 @@ export default function SalaPage() {
         regiao: item.dados?.convidado?.cidade || '',
         perfil: item.dados?.perfil || '',
         gestorNome: item.gestor_nome || item.dados?.gestor_nome || 'Master/Geral',
-        categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral'
+        categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral',
+        perfilSocialUrl: item.dados?.convidado?.perfil_social_url || '',
+        redeSocialOrigem: item.dados?.convidado?.rede_social_origem || ''
       }));
   }, [leads, gestor, isMasterUser]);
 
@@ -507,26 +511,28 @@ export default function SalaPage() {
       
       if (modo === 'redes_sociais') {
         const redesSociaisAlvo = [
-          'LinkedIn (Open to Work / Profissional Ativo)',
-          'Instagram (Perfil Profissional / Autônomo)',
-          'Facebook (Grupo de Empreendedorismo Local)',
-          'X / Twitter (Networking Profissional)',
-          'TikTok (Criador / Negócios Locais)'
+          { nomeRede: 'LinkedIn', urlBase: 'https://linkedin.com/in/perfil-ativo-' },
+          { nomeRede: 'Instagram', urlBase: 'https://instagram.com/perfil.profissional.' },
+          { nomeRede: 'Facebook', urlBase: 'https://facebook.com/empreendedor.local.' }
         ];
-        const redeAtual = redesSociaisAlvo[index % redesSociaisAlvo.length];
+        const redeEscolhida = redesSociaisAlvo[index % redesSociaisAlvo.length];
         
         return {
           nome: `Titular Ativo #${idNum}`,
-          perfil: `Rede: ${redeAtual} — ${regiaoStr}`,
+          perfil: `Rede: ${redeEscolhida.nomeRede} — ${regiaoStr}`,
           regiao: regiaoStr,
-          whats: `2299${Math.floor(100000 + Math.random() * 900000)}`
+          whats: `2299${Math.floor(100000 + Math.random() * 900000)}`,
+          perfilSocialUrl: `${redeEscolhida.urlBase}${idNum}-${Math.floor(Math.random() * 1000)}`,
+          redeSocialOrigem: redeEscolhida.nomeRede
         };
       } else {
         return {
           nome: `Contato WhatsApp #${idNum}`,
           perfil: `WhatsApp Direto / Foco em Titular (${nichoPfSelecionado.toUpperCase()}) — ${regiaoStr}`,
           regiao: regiaoStr,
-          whats: `2298${Math.floor(100000 + Math.random() * 900000)}`
+          whats: `2298${Math.floor(100000 + Math.random() * 900000)}`,
+          perfilSocialUrl: `https://wa.me/552298${Math.floor(100000 + Math.random() * 900000)}`,
+          redeSocialOrigem: 'WhatsApp / Direto'
         };
       }
     });
@@ -544,7 +550,9 @@ export default function SalaPage() {
               nome: p.nome,
               whatsapp: p.whats,
               cidade: p.regiao,
-              email: `${p.whats}@garimpo.scout`
+              email: `${p.whats}@garimpo.scout`,
+              perfil_social_url: p.perfilSocialUrl,
+              rede_social_origem: p.redeSocialOrigem
             },
             perfil: p.perfil,
             status_aprovacao: 'pendente',
@@ -1658,10 +1666,10 @@ export default function SalaPage() {
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                           <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                            ⚡ Lote Ativo no Supabase ({perfisGarimpados.length} Perfis Persistidos)
+                            ⚡ Lote Ativo no Supabase ({perfisGarimpados.length} Perfis Persistidos com WhatsApp + Rede Social)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Copie o link ou envie o Santinho Digital diretamente
+                            💡 Utilize o WhatsApp (inegociável) ou visite o perfil social de origem
                           </span>
                         </div>
 
@@ -1700,12 +1708,18 @@ export default function SalaPage() {
                                         Gestor: {lead.gestorNome}
                                       </span>
                                       <span style={{ fontSize: '9px', background: 'rgba(255,215,0,0.15)', color: '#ffd700', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
-                                        Categoria: {lead.categoriaOrigem}
+                                        Origem: {lead.categoriaOrigem}
                                       </span>
                                     </div>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0', wordBreak: 'break-word' }}>
                                       🎯 <strong>Perfil Alvo:</strong> {lead.perfil}
                                     </p>
+                                    
+                                    {lead.perfilSocialUrl && (
+                                      <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '4px 0 0', wordBreak: 'break-word' }}>
+                                        🌐 <strong>Perfil de Origem ({lead.redeSocialOrigem || 'Rede Social'}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
+                                      </p>
+                                    )}
                                   </div>
 
                                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
@@ -1749,8 +1763,31 @@ export default function SalaPage() {
                                         minWidth: '140px',
                                       }}
                                     >
-                                      📨 Enviar Santinho Digital
+                                      📱 WhatsApp (Inegociável)
                                     </a>
+
+                                    {lead.perfilSocialUrl && (
+                                      <a
+                                        href={lead.perfilSocialUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          background: 'rgba(43,217,255,0.15)',
+                                          border: '1px solid rgba(43,217,255,0.4)',
+                                          color: '#2bd9ff',
+                                          fontWeight: 'bold',
+                                          fontSize: '11px',
+                                          padding: '8px 12px',
+                                          borderRadius: '8px',
+                                          textDecoration: 'none',
+                                          textAlign: 'center',
+                                          flex: 1,
+                                          minWidth: '130px',
+                                        }}
+                                      >
+                                        🔗 Acessar {lead.redeSocialOrigem || 'Perfil'}
+                                      </a>
+                                    )}
 
                                     <button
                                       type="button"
@@ -2002,6 +2039,8 @@ export default function SalaPage() {
                         const convidado = item.dados?.convidado;
                         const whatsClean = convidado?.whatsapp?.replace(/\D/g, '') || '';
                         const statusAtual = item.dados?.status_aprovacao || 'pendente';
+                        const perfilSocialUrl = convidado?.perfil_social_url || '';
+                        const redeSocialOrigem = convidado?.rede_social_origem || 'Rede Social';
                         
                         const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, recebi seu cadastro no Quiz do SCOUT.CRC! Podemos conversar sobre seu objetivo?`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
@@ -2042,13 +2081,19 @@ export default function SalaPage() {
                               </div>
 
                               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '12px', marginTop: '2px', flexWrap: 'wrap' }}>
-                                <span>📱 {convidado?.whatsapp || 'Sem WhatsApp'}</span>
+                                <span>📱 WhatsApp: <strong style={{ color: '#00ff88' }}>{convidado?.whatsapp || 'Sem WhatsApp'}</strong></span>
                                 <span style={{ color: '#00ff88', fontWeight: 'bold' }}>
                                   📍 {convidado?.cidade || 'Região não informada'}
                                 </span>
                                 <span>✉️ {convidado?.email || 'Sem e-mail'}</span>
                                 <span>📅 {new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
                               </div>
+
+                              {perfilSocialUrl && (
+                                <div style={{ fontSize: '11px', color: '#2bd9ff', marginTop: '4px' }}>
+                                  🌐 <strong>Perfil de Origem ({redeSocialOrigem}):</strong> <a href={perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{perfilSocialUrl}</a>
+                                </div>
+                              )}
 
                               {item.dados?.respostas && (
                                 <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>
@@ -2110,28 +2155,53 @@ export default function SalaPage() {
                                   </button>
                                 </div>
 
-                                {whatsClean && (
-                                  <a
-                                    href={linkWhats}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                      background: '#00ff88',
-                                      color: '#050505',
-                                      fontWeight: '900',
-                                      fontSize: '11px',
-                                      padding: '8px 16px',
-                                      borderRadius: '8px',
-                                      textAlign: 'center',
-                                      textDecoration: 'none',
-                                      whiteSpace: 'nowrap',
-                                      boxShadow: '0 2px 10px rgba(0,255,136,0.3)',
-                                      display: 'inline-block'
-                                    }}
-                                  >
-                                    💬 Iniciar X1
-                                  </a>
-                                )}
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                  {perfilSocialUrl && (
+                                    <a
+                                      href={perfilSocialUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        background: 'rgba(43,217,255,0.15)',
+                                        color: '#2bd9ff',
+                                        fontWeight: '900',
+                                        fontSize: '11px',
+                                        padding: '8px 14px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        textDecoration: 'none',
+                                        whiteSpace: 'nowrap',
+                                        border: '1px solid rgba(43,217,255,0.4)',
+                                        display: 'inline-block'
+                                      }}
+                                    >
+                                      🔗 Visitar {redeSocialOrigem}
+                                    </a>
+                                  )}
+
+                                  {whatsClean && (
+                                    <a
+                                      href={linkWhats}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        background: '#00ff88',
+                                        color: '#050505',
+                                        fontWeight: '900',
+                                        fontSize: '11px',
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        textDecoration: 'none',
+                                        whiteSpace: 'nowrap',
+                                        boxShadow: '0 2px 10px rgba(0,255,136,0.3)',
+                                        display: 'inline-block'
+                                      }}
+                                    >
+                                      💬 Iniciar X1 (WhatsApp)
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
