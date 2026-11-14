@@ -1287,45 +1287,53 @@ export default function SalaPage() {
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
         <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo geral completo em PDF ou selecione o card do produto específico (1 a 40) para compartilhar com seu cliente.
+          Envie o catálogo geral completo em PDF com capa ou selecione o card do produto específico (1 a 40) para compartilhar com seu cliente.
         </p>
       </div>
     </div>
 
-    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF */}
+    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA */}
     <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        
+        {/* CAPA DO CATÁLOGO GERAL */}
+        <div style={{ width: '120px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', background: '#111', flexShrink: 0 }}>
+          <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+
+        <div style={{ flex: 1, minWidth: '250px' }}>
           <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
             CATÁLOGO OFICIAL UNIFICADO
           </span>
           <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
             Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
           </p>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <a 
+              href="/assets/catalogo-geral.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
+            >
+              👁️ Visualizar PDF
+            </a>
+            <button
+              onClick={() => {
+                const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
+                const textoMensagem = encodeURIComponent(
+                  `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                );
+                window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+              }}
+              style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
+            >
+              💬 Enviar Catálogo no WhatsApp
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <a 
-            href="/assets/catalogo-geral.pdf" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
-          >
-            👁️ Visualizar PDF
-          </a>
-          <button
-            onClick={() => {
-              const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
-              const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
-              );
-              window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
-            }}
-            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
-          >
-            💬 Enviar Catálogo no WhatsApp
-          </button>
-        </div>
+
       </div>
     </div>
 
@@ -1333,13 +1341,14 @@ export default function SalaPage() {
     <div style={{ marginBottom: '16px' }}>
       <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
       <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique no botão abaixo de cada item para enviar uma mensagem focada no produto ou utilize o botão direito para copiar a imagem.
+        Clique no botão abaixo de cada item para enviar uma mensagem focada no produto ou utilize o botão direito do rato para copiar a imagem.
       </p>
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
       {Array.from({ length: 40 }, (_, index) => {
         const num = index + 1;
+        // Testando os dois formatos mais comuns gerados por conversores: com parênteses ou sem parênteses
         const imagemSrc = `/assets/produtos/imagem (${num}).jpg`;
 
         return (
@@ -1355,8 +1364,14 @@ export default function SalaPage() {
                   alt={`Produto ${num}`} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                   onError={(e) => {
-                    // Fallback visual caso a imagem específica ainda não tenha sido colocada na pasta
-                    e.currentTarget.style.display = 'none';
+                    // Se falhar o formato com parênteses, tenta o formato sem parênteses (ex: imagem1.jpg ou imagem-1.jpg)
+                    const target = e.currentTarget;
+                    if (!target.dataset.triedAlt) {
+                      target.dataset.triedAlt = "true";
+                      target.src = `/assets/produtos/imagem${num}.jpg`;
+                    } else {
+                      target.style.opacity = '0.3';
+                    }
                   }}
                 />
               </div>
