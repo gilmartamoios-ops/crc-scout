@@ -1277,114 +1277,108 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS E LINKS OTIMIZADOS PARA WHATSAPP */}
+              {/* CATÁLOGO UNIFICADO & VITRINE DE PRODUTOS INDIVIDUAIS (1 A 40) */}
 {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
   <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+    
+    {/* CABEÇALHO DO MÓDULO */}
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
       <div>
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
-        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos Oficiais</h3>
+        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo ideal diretamente para o WhatsApp dos seus clientes com alta apresentação profissional e capa em destaque.
+          Envie o catálogo geral completo em PDF ou selecione o card do produto específico (1 a 40) para compartilhar com seu cliente.
         </p>
       </div>
     </div>
 
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-      
-      {/* CARD 1: CATÁLOGO GERAL / CLIENTE FINAL */}
-      <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF */}
+    <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          {/* IMAGEM DE CAPA VISUAL NO CARD */}
-          <div style={{ width: '100%', height: '180px', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', border: '1px solid rgba(0,255,136,0.2)', background: '#111' }}>
-            <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
-              LINHA COMPLETA
-            </span>
-            <span style={{ fontSize: '18px' }}>📖</span>
-          </div>
-          <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo Oficial - Cliente Final</h4>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
+          <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
+            CATÁLOGO OFICIAL UNIFICADO
+          </span>
+          <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>
             Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
           </p>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <a 
             href="/assets/catalogo-geral.pdf" 
             target="_blank" 
             rel="noopener noreferrer"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'block' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
           >
-            👁️ Visualizar PDF no Navegador
+            👁️ Visualizar PDF
           </a>
-
           <button
             onClick={() => {
-              const urlCapa = `${window.location.origin}/assets/capa-catalogo-geral.jpg`;
               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n🖼️ *Capa Oficial:* \n${urlCapa}\n\n📖 *Acesse o Catálogo Completo em PDF:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
-            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)', textAlign: 'center' }}
+            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
           >
-            💬 Enviar Catálogo Geral (WhatsApp)
+            💬 Enviar Catálogo no WhatsApp
           </button>
         </div>
       </div>
-
-      {/* CARD 2: CATÁLOGO DE PERFUMARIA */}
-      <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(43,217,255,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
-        <div>
-          {/* IMAGEM DE CAPA VISUAL NO CARD */}
-          <div style={{ width: '100%', height: '180px', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px', border: '1px solid rgba(43,217,255,0.2)', background: '#111' }}>
-            <img src="/assets/capa-catalogo-perfume.jpg" alt="Capa Catálogo Perfumaria" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ background: 'rgba(43,217,255,0.2)', color: '#2bd9ff', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(43,217,255,0.4)' }}>
-              COLEÇÃO EXCLUSIVA
-            </span>
-            <span style={{ fontSize: '18px' }}>✨</span>
-          </div>
-          <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo de Perfumes 2026</h4>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
-            Conheça a nossa linha de perfumes para o seu bem-estar e sofisticação.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <a 
-            href="/assets/catalogo-perfumes.pdf" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'block' }}
-          >
-            👁️ Visualizar PDF no Navegador
-          </a>
-
-          <button
-            onClick={() => {
-              const urlCapa = `${window.location.origin}/assets/capa-catalogo-perfume.jpg`;
-              const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
-              const textoMensagem = encodeURIComponent(
-                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n🖼️ *Capa Oficial:* \n${urlCapa}\n\n💎 *Acesse o Catálogo de Perfumes 2026 em PDF:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
-              );
-              window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
-            }}
-            style={{ background: 'linear-gradient(135deg, #2bd9ff, #0099cc)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(43,217,255,0.3)', textAlign: 'center' }}
-          >
-            💬 Enviar Perfumaria (WhatsApp)
-          </button>
-        </div>
-      </div>
-
     </div>
+
+    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) */}
+    <div style={{ marginBottom: '16px' }}>
+      <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
+      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
+        Clique no botão abaixo de cada item para enviar uma mensagem focada no produto ou utilize o botão direito para copiar a imagem.
+      </p>
+    </div>
+
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+      {Array.from({ length: 40 }, (_, index) => {
+        const num = index + 1;
+        const imagemSrc = `/assets/produtos/imagem (${num}).jpg`;
+
+        return (
+          <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
+              </div>
+              {/* IMAGEM DO PRODUTO */}
+              <div style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <img 
+                  src={imagemSrc} 
+                  alt={`Produto ${num}`} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  onError={(e) => {
+                    // Fallback visual caso a imagem específica ainda não tenha sido colocada na pasta
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* BOTÃO DE COMPARTILHAMENTO RÁPIDO NO WHATSAPP */}
+            <button
+              onClick={() => {
+                const textoMensagem = encodeURIComponent(
+                  `✨ *Olá! Veja este destaque exclusivo do nosso catálogo:* \n\nReferência do Item: *#${num}*\n\nConheça os detalhes e benefícios deste produto incrível para o seu bem-estar.\n\nQualquer dúvida estou à disposição para ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                );
+                window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+              }}
+              style={{ background: 'rgba(0,255,136,0.15)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
+            >
+              💬 Compartilhar Item #{num}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+
   </div>
 )}
 
