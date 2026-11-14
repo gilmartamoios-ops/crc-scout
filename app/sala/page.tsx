@@ -102,6 +102,9 @@ export default function SalaPage() {
   const [modoVisitante, setModoVisitante] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
+  // ESTADO DA MANUTENÇÃO DINÂMICA VIA SUPABASE
+  const [manutencaoAtiva, setManutencaoAtiva] = useState(false);
+
   // ESTADOS DO SIMULADOR OFICIAL
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
   const [consumoSelect, setConsumoSelect] = useState<string>('450');
@@ -151,6 +154,25 @@ export default function SalaPage() {
     return regexUuid.test(id);
   };
   const isMasterUser = gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar');
+
+  // VERIFICAÇÃO DO STATUS DE MANUTENÇÃO NO SUPABASE
+  useEffect(() => {
+    async function verificarManutencao() {
+      try {
+        const { data, error } = await supabase
+          .from('configuracoes')
+          .select('ativo')
+          .eq('chave', 'modo_manutencao')
+          .single();
+        if (!error && data) {
+          setManutencaoAtiva(data.ativo);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar manutenção:', err);
+      }
+    }
+    verificarManutencao();
+  }, []);
 
   const tocarAlertaSonoro = () => {
     try {
@@ -216,7 +238,6 @@ export default function SalaPage() {
     }
   };
 
-  // VERIFICAÇÃO DE SESSÃO BLINDADA (VALIDAÇÃO AUTOMÁTICA DE UUID NO SUPABASE)
   useEffect(() => {
     async function verificarSessao() {
       const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
@@ -296,7 +317,6 @@ export default function SalaPage() {
     carregarMunicipiosIBGE();
   }, [estadoSelecionado]);
 
-  // LOGICA E DADOS DO SIMULADOR OFICIAL
   const simulacaoOficial: Record<string, Array<{ etapa: number; gcom: number; plano: string; total: number }>> = {
     "4_450": [
       { etapa: 1, gcom: 4, plano: "Executivo", total: 360.00 },
@@ -457,7 +477,6 @@ export default function SalaPage() {
     }
   }, [moduloAtivo, subModuloAtivo, gestoresSelect, consumoSelect]);
 
-  // CARREGAMENTO DOS PERFIS GARIMPADOS DIRETAMENTE DO SUPABASE (PERSISTÊNCIA TOTAL)
   const perfisGarimpados = useMemo(() => {
     return leads
       .filter((l) => (l.tipo === 'garimpo' || !l.tipo) && (!gestor?.id || l.gestor_id === gestor.id || isMasterUser))
@@ -472,7 +491,6 @@ export default function SalaPage() {
       }));
   }, [leads, gestor, isMasterUser]);
 
-  // FUNÇÃO DE GARIMPO QUE GRAVA NO SUPABASE COM O NOME DO GESTOR E CATEGORIA AUTOMÁTICA
   const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
     const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     const nomeGestorAtual = gestor?.nome || 'Master';
@@ -537,7 +555,6 @@ export default function SalaPage() {
     }
   };
 
-  // FUNÇÃO DE DESCARTE INDIVIDUAL DE PROSPECTO GARIMPADO (DELETA DO SUPABASE)
   const descartarPerfilIndividual = async (idRegistro: string) => {
     if (!idRegistro) return;
     try {
@@ -674,6 +691,23 @@ export default function SalaPage() {
     alert(`✅ Gestor aprovado com sucesso!\n• E-mail: ${emailConvidado}\n• Movido para a aba Gestores Aprovados.`);
   };
 
+  // FUNÇÃO DE REPROVAÇÃO COM EXCLUSÃO DEFINITIVA IMEDIATA (SEM ARQUIVO MORTO)
+  const reprovarEDeletarLead = async (id: string) => {
+    if (!confirm('🛑 Deseja excluir definitivamente este lead reprovado do banco de dados?')) return;
+
+    const { error } = await supabase
+      .from('scout_registros')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao excluir lead do Supabase: ' + error.message);
+      return;
+    }
+
+    setLeads((anterior) => anterior.filter((item) => item.id !== id));
+  };
+
   const aprovarTodosPendentes = async () => {
     const pendentes = leadsFiltrados.filter(l => (l.dados?.status_aprovacao || 'pendente') === 'pendente');
     if (pendentes.length === 0) {
@@ -805,6 +839,36 @@ export default function SalaPage() {
     return matchesNome && matchesRegiao && matchesStatus && matchesGestor;
   });
 
+  if (manutencaoAtiva && !isMasterUser) {
+    return (
+      <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+        <div style={{ maxWidth: '480px', background: 'rgba(255,68,68,0.05)', border: '1px solid rgba(255,68,68,0.3)', borderRadius: '20px', padding: '40px', boxShadow: '0 10px 40px rgba(255,68,68,0.15)' }}>
+          <div style={{ fontSize: '42px', marginBottom: '16px' }}>🛠️</div>
+          <h1 style={{ color: '#ff4444', fontSize: '24px', margin: '0 0 12px' }}>Sistema em Manutenção Programada</h1>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: '1.6', margin: '0 0 24px' }}>
+            Estamos atualizando os recursos operacionais da Sala de Operações. Retornaremos em breve com melhorias na rede. Apenas o Master possui acesso operacional no momento.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: '10px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            🔄 Verificar Novamente
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="sala-page">
       <Script src="https://cdn.jsdelivr.net/npm/chart.js" strategy="beforeInteractive" />
@@ -821,7 +885,40 @@ export default function SalaPage() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            
+            {isMasterUser && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const novoEstado = !manutencaoAtiva;
+                  const { error } = await supabase
+                    .from('configuracoes')
+                    .update({ ativo: novoEstado })
+                    .eq('chave', 'modo_manutencao');
+
+                  if (error) {
+                    alert('Erro ao alterar status de manutenção: ' + error.message);
+                  } else {
+                    setManutencaoAtiva(novoEstado);
+                  }
+                }}
+                style={{
+                  background: manutencaoAtiva ? 'rgba(255,68,68,0.2)' : 'rgba(0,255,136,0.15)',
+                  border: `1px solid ${manutencaoAtiva ? '#ff4444' : '#00ff88'}`,
+                  color: manutencaoAtiva ? '#ff4444' : '#00ff88',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontWeight: 'bold',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                {manutencaoAtiva ? '🔴 Desativar Manutenção' : '🟢 Ativar Manutenção'}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => { window.location.href = '/'; }}
@@ -859,7 +956,6 @@ export default function SalaPage() {
           </div>
         </header>
 
-        {/* BARRA FIXA DE NAVEGAÇÃO APENAS PARA MOBILE */}
         <div className="mobile-nav-bar">
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: 'bold' }}>MÓDULO ATIVO</span>
@@ -898,7 +994,6 @@ export default function SalaPage() {
         )}
 
         <div className="sala-layout">
-          {/* SIDEBAR COM SUPORTE A MENU RETRÁTIL NO MOBILE */}
           <aside
             className={`sala-sidebar ${menuMobileAberto ? 'mobile-open' : ''}`}
             style={{
@@ -1080,11 +1175,8 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SIMULADOR OFICIAL IDÊNTICO À JORNADA COM ÁUDIO */}
               {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Simulador de Negócio' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
-                  
-                  {/* CABEÇALHO DO SIMULADOR E PLAYER DE ÁUDIO DO NARRADOR */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
                     <div>
                       <span className="eyebrow-sim">CRC | Modelo de Comunidades</span>
@@ -1154,7 +1246,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* APRESENTAÇÃO DO NEGÓCIO (APN ONLINE) - SLIDES */}
               {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Slides do Negócio' && (
                 <div className="sala-dynamic-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
@@ -1253,7 +1344,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* PROSPECTO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
                   <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital</h3>
@@ -1510,7 +1600,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* SANTINHO DIGITAL */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>SEU SCOUT · LINK 2</span>
@@ -1551,7 +1640,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* FEEDBACK DE PROSPECTOS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
                 <div className="sala-dynamic-card">
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
@@ -1834,10 +1922,10 @@ export default function SalaPage() {
                                   </button>
 
                                   <button
-                                    onClick={() => deletarLeadDefinitivo(item.id)}
+                                    onClick={() => reprovarEDeletarLead(item.id)}
                                     style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🗑️ Deletar do Banco
+                                    🗑️ Excluir Definitivo (Reprovado)
                                   </button>
                                 </div>
 
@@ -1873,55 +1961,74 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* GESTORES APROVADOS */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Aprovados' && (
                 <div className="sala-dynamic-card">
-                  <span className="sala-eyebrow" style={{ color: '#00ff88' }}>REPOSITÓRIO DA REDE · GESTORES ATIVOS</span>
-                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Gestores Aprovados e Cadastrados</h3>
+                  <span className="sala-eyebrow" style={{ color: '#00ff88' }}>
+                    {isMasterUser ? 'REPOSITÓRIO DA REDE · GESTORES ATIVOS' : 'MEU PERFIL DE GESTOR'}
+                  </span>
+                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>
+                    {isMasterUser ? 'Gestores Aprovados e Cadastrados' : 'Seu Cadastro Oficial'}
+                  </h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>
-                    Lista oficial de operadores cadastrados na tabela <code>scout_gestores</code>.
+                    {isMasterUser 
+                      ? 'Lista oficial de operadores cadastrados na tabela scout_gestores.' 
+                      : 'Suas informações de cadastro na rede SCOUT.CRC.'}
                   </p>
 
                   {carregandoGestores ? (
                     <div style={{ padding: '40px', textAlign: 'center', color: '#00ff88', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '14px', border: '1px dashed rgba(0,255,136,0.3)' }}>
                       ⚙️ Sincronizando com a base de gestores do Supabase... Aguarde um instante.
                     </div>
-                  ) : listaGestores.length === 0 ? (
-                    <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
-                      Nenhum gestor cadastrado na rede no momento.
-                    </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {listaGestores.map((gItem) => (
-                        <div key={gItem.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                          <div>
-                            <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{gItem.nome}</strong>
-                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {gItem.whatsapp || 'Sem WhatsApp'} | 📍 {gItem.cidade || 'Região não informada'} | 🔗 Slug: <code style={{ color: '#00ff88' }}>{gItem.slug || 'N/D'}</code></span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                            <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
-                              ✉️ E-mail: {gItem.email || 'Não informado'}
-                            </div>
+                    (() => {
+                      const gestoresParaExibir = isMasterUser 
+                        ? listaGestores 
+                        : listaGestores.filter(g => g.email === gestor?.email || g.id === gestor?.id);
 
-                            <button
-                              onClick={() => deletarGestorAprovado(gItem.email, gItem.id)}
-                              style={{
-                                background: 'rgba(255,68,68,0.18)',
-                                border: '1px solid rgba(255,68,68,0.4)',
-                                color: '#ff4444',
-                                padding: '6px 12px',
-                                borderRadius: '8px',
-                                fontSize: '11px',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              🗑️ Revogar / Deletar
-                            </button>
+                      if (gestoresParaExibir.length === 0) {
+                        return (
+                          <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
+                            Nenhum registro de gestor encontrado para o seu usuário.
                           </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {gestoresParaExibir.map((gItem) => (
+                            <div key={gItem.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                              <div>
+                                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{gItem.nome}</strong>
+                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {gItem.whatsapp || 'Sem WhatsApp'} | 📍 {gItem.cidade || 'Região não informada'} | 🔗 Slug: <code style={{ color: '#00ff88' }}>{gItem.slug || 'N/D'}</code></span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
+                                  ✉️ E-mail: {gItem.email || 'Não informado'}
+                                </div>
+
+                                {isMasterUser && (
+                                  <button
+                                    onClick={() => deletarGestorAprovado(gItem.email, gItem.id)}
+                                    style={{
+                                      background: 'rgba(255,68,68,0.18)',
+                                      border: '1px solid rgba(255,68,68,0.4)',
+                                      color: '#ff4444',
+                                      padding: '6px 12px',
+                                      borderRadius: '8px',
+                                      fontSize: '11px',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    🗑️ Revogar / Deletar
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()
                   )}
                 </div>
               )}
@@ -2061,7 +2168,6 @@ export default function SalaPage() {
           box-shadow: 0 0 14px rgba(0, 255, 136, 0.75);
         }
 
-        /* BARRA MOBILE COMPACTA */
         .mobile-nav-bar {
           display: none;
           justify-content: space-between;
@@ -2367,7 +2473,6 @@ export default function SalaPage() {
           margin-top: 16px;
         }
 
-        /* REGRAS DE LAYOUT EXCLUSIVAS PARA MOBILE */
         @media (max-width: 768px) {
           .sala-layout {
             grid-template-columns: 1fr;
@@ -2388,7 +2493,6 @@ export default function SalaPage() {
             font-size: 20px;
           }
 
-          /* MENU RETRÁTIL SOBREPOSTO (DRAWER) NO MOBILE */
           .sala-sidebar {
             position: fixed;
             inset: 0;
@@ -2405,7 +2509,6 @@ export default function SalaPage() {
             padding: 16px;
           }
 
-          /* CORREÇÃO DO SIMULADOR NO CELULAR */
           .sim-body-wrapper-original {
             flex-direction: column !important;
           }
