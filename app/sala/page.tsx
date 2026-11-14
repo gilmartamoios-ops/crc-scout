@@ -1277,90 +1277,104 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS (DOIS CATÁLOGOS: GERAL E PERFUMARIA) */}
-              {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
-                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-                    <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
-                      <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Catálogos Oficiais de Produtos</h3>
-                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                        Envie o catálogo completo (linha geral) ou o catálogo exclusivo de perfumaria para seus clientes e prospectos.
-                      </p>
-                    </div>
-                  </div>
+              {/* CATÁLOGOS & VENDAS REESTRUTURADOS COM ALTO PADRÃO DE APRESENTAÇÃO */}
+{gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
+  <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+      <div>
+        <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
+        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos Oficiais</h3>
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+          Apresente os produtos com sofisticação. Envie mensagens prontas e formatadas diretamente para o WhatsApp dos seus clientes.
+        </p>
+      </div>
+    </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    
-                    {/* CATÁLOGO 1: GERAL / CLIENTE FINAL */}
-                    <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                      <div>
-                        <span style={{ background: '#00ff88', color: '#050505', padding: '2px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase' }}>
-                          CATÁLOGO PRINCIPAL
-                        </span>
-                        <h4 style={{ color: '#fff', fontSize: '16px', margin: '8px 0 4px' }}>📖 Catálogo Cliente Final (Linha Completa)</h4>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, maxWidth: '480px' }}>
-                          Contém todos os produtos ozonizados, suplementos e cuidados diários com preços e especificações.
-                        </p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <a 
-                          href="/assets/Catalogo cliente final _ CS _ 2026 V.3.0.0 (1).pdf" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ background: 'rgba(0,255,136,0.2)', border: '1px solid rgba(0,255,136,0.5)', color: '#00ff88', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
-                        >
-                          👁️ Visualizar PDF
-                        </a>
-                        <button
-                          onClick={() => {
-                            const linkGeral = `${window.location.origin}/assets/Catalogo%20cliente%20final%20_%20CS%20_%202026%20V.3.0.0%20(1).pdf?gestor=${gestor?.slug || 'master'}`;
-                            navigator.clipboard.writeText(linkGeral);
-                            alert('📋 Link independente do Catálogo Geral copiado com sucesso!');
-                          }}
-                          style={{ background: '#00ff88', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 15px rgba(0,255,136,0.3)' }}
-                        >
-                          🔗 Copiar Link (WhatsApp)
-                        </button>
-                      </div>
-                    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      
+      {/* CARD 1: CATÁLOGO GERAL / CLIENTE FINAL */}
+      <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
+              LINHA COMPLETA
+            </span>
+            <span style={{ fontSize: '18px' }}>📖</span>
+          </div>
+          <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo Oficial - Cliente Final</h4>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
+            Tecnologia ozonizada, suplementos de alta performance e cuidados diários para o bem-estar da família.
+          </p>
+        </div>
 
-                    {/* CATÁLOGO 2: PERFUMARIA */}
-                    <div style={{ background: 'rgba(43,217,255,0.06)', border: '1px solid rgba(43,217,255,0.35)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                      <div>
-                        <span style={{ background: '#2bd9ff', color: '#050505', padding: '2px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase' }}>
-                          CATÁLOGO EXCLUSIVO
-                        </span>
-                        <h4 style={{ color: '#fff', fontSize: '16px', margin: '8px 0 4px' }}>✨ Catálogo dos Perfumes Ozonteck 2026</h4>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, maxWidth: '480px' }}>
-                          Coleção completa de perfumaria masculina, feminina e linha árabe inspirada nas maiores grifes internacionais.
-                        </p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <a 
-                          href="/assets/Catálogo dos Perfumes Ozonteck 2026.pdf" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ background: 'rgba(43,217,255,0.2)', border: '1px solid rgba(43,217,255,0.5)', color: '#2bd9ff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
-                        >
-                          👁️ Visualizar PDF
-                        </a>
-                        <button
-                          onClick={() => {
-                            const linkPerfumes = `${window.location.origin}/assets/Cat%C3%A1logo%20dos%20Perfumes%20Ozonteck%202026.pdf?gestor=${gestor?.slug || 'master'}`;
-                            navigator.clipboard.writeText(linkPerfumes);
-                            alert('📋 Link independente do Catálogo de Perfumes copiado com sucesso!');
-                          }}
-                          style={{ background: '#2bd9ff', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 15px rgba(43,217,255,0.3)' }}
-                        >
-                          🔗 Copiar Link (WhatsApp)
-                        </button>
-                      </div>
-                    </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <a 
+            href="/assets/catalogo-geral.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'block' }}
+          >
+            👁️ Visualizar PDF no Navegador
+          </a>
 
-                  </div>
-                </div>
-              )}
+          <button
+            onClick={() => {
+              const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
+              const textoMensagem = encodeURIComponent(
+                `✨ *Olá! É um prazer falar com você.*\n\nPreparámos uma curadoria especial com a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿 (Atendimento via Gestor: ${gestor?.nome || 'Master'})`
+              );
+              window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+            }}
+            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)', textAlign: 'center' }}
+          >
+            💬 Enviar Catálogo Geral (WhatsApp)
+          </button>
+        </div>
+      </div>
+
+      {/* CARD 2: CATÁLOGO DE PERFUMARIA */}
+      <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(43,217,255,0.3)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ background: 'rgba(43,217,255,0.2)', color: '#2bd9ff', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(43,217,255,0.4)' }}>
+              COLEÇÃO EXCLUSIVA
+            </span>
+            <span style={{ fontSize: '18px' }}>✨</span>
+          </div>
+          <h4 style={{ color: '#fff', fontSize: '17px', margin: '0 0 6px' }}>Catálogo de Perfumes 2026</h4>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
+            Fragrâncias marcantes, linhas masculinas, femininas e coleções árabes inspiradas nas maiores grifes mundiais.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <a 
+            href="/assets/catalogo-perfumes.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'block' }}
+          >
+            👁️ Visualizar PDF no Navegador
+          </a>
+
+          <button
+            onClick={() => {
+              const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
+              const textoMensagem = encodeURIComponent(
+                `✨ *Olá! Tudo bem?*\n\nSeparamos a nossa coleção exclusiva de perfumaria fina e fragrâncias inspiradas nas maiores referências internacionais.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição para te orientar! 🌟 (Atendimento via Gestor: ${gestor?.nome || 'Master'})`
+              );
+              window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+            }}
+            style={{ background: 'linear-gradient(135deg, #2bd9ff, #0099cc)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(43,217,255,0.3)', textAlign: 'center' }}
+          >
+            💬 Enviar Perfumaria (WhatsApp)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+)}
 
               {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
