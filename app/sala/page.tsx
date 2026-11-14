@@ -1278,256 +1278,199 @@ export default function SalaPage() {
               )}
 
               {/* CATÁLOGO UNIFICADO & VITRINE DE PRODUTOS INDIVIDUAIS (1 A 40) */}
-{gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
-  <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
-    
-    {/* CABEÇALHO DO MÓDULO */}
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-      <div>
-        <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
-        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
-        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo geral completo em PDF com capa ou utilize a vitrine de itens (1 a 40) para compartilhar e inspecionar livremente.
-        </p>
-      </div>
-    </div>
-
-    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA */}
-    <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-        
-        {/* CAPA DO CATÁLOGO GERAL */}
-        <div style={{ width: '120px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', background: '#111', flexShrink: 0 }}>
-          <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-
-        <div style={{ flex: 1, minWidth: '250px' }}>
-          <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
-            CATÁLOGO OFICIAL UNIFICADO
-          </span>
-          <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
-            Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
-          </p>
-
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <a 
-              href="/assets/catalogo-geral.pdf" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
-            >
-              👁️ Visualizar PDF
-            </a>
-            <button
-              onClick={() => {
-                const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
-                const textoMensagem = encodeURIComponent(
-                  `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
-                );
-                window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
-              }}
-              style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
-            >
-              💬 Enviar Catálogo no WhatsApp
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM COMPARTILHAMENTO UNIVERSAL */}
-    <div style={{ marginBottom: '16px' }}>
-      <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
-      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique na imagem para inspecionar os detalhes ou utilize os botões para compartilhar ou copiar o item.
-      </p>
-    </div>
-
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-      {Array.from({ length: 40 }, (_, index) => {
-        const num = index + 1;
-        const imagemSrc = `${window.location.origin}/assets/produto/imagem%20(${num}).jpg`;
-
-        return (
-          <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Inspecionar</span>
-              </div>
-              
-              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL) */}
-              <div 
-                onClick={() => {
-                  const modalEl = document.getElementById('modal-zoom-produto');
-                  const imgEl = document.getElementById('img-zoom-preview') as HTMLImageElement;
-                  const btnShare = document.getElementById('btn-universal-share') as HTMLButtonElement;
-                  const btnCopy = document.getElementById('btn-universal-copy') as HTMLButtonElement;
+              {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
+                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
                   
-                  if (modalEl && imgEl && btnShare && btnCopy) {
-                    imgEl.src = imagemSrc;
-                    modalEl.style.display = 'flex';
-                    
-                    // Ação do Botão Compartilhar Universal
-                    btnShare.onclick = async () => {
-                      if (navigator.share) {
-                        try {
-                          await navigator.share({
-                            title: `Item #${num} - Catálogo CRC`,
-                            text: `Confira os detalhes do Item #${num} do nosso catálogo.`,
-                            url: imagemSrc,
-                          });
-                        } catch (err) {
-                          console.log('Compartilhamento cancelado');
-                        }
-                      } else {
-                        // Fallback se o navegador não suportar share API: abre a imagem
-                        window.open(imagemSrc, '_blank');
+                  {/* CABEÇALHO DO MÓDULO */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+                    <div>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
+                      <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                        Envie o catálogo geral completo em PDF com capa ou utilize a vitrine de itens (1 a 40) para inspecionar e baixar para o atendimento.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA */}
+                  <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      
+                      {/* CAPA DO CATÁLOGO GERAL */}
+                      <div style={{ width: '120px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', background: '#111', flexShrink: 0 }}>
+                        <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: '250px' }}>
+                        <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
+                          CATÁLOGO OFICIAL UNIFICADO
+                        </span>
+                        <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
+                          Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
+                        </p>
+
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <a 
+                            href="/assets/catalogo-geral.pdf" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
+                          >
+                            👁️ Visualizar PDF
+                          </a>
+                          <button
+                            onClick={() => {
+                              const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
+                              const textoMensagem = encodeURIComponent(
+                                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                              );
+                              window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+                            }}
+                            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
+                          >
+                            💬 Enviar Catálogo no WhatsApp
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
+                      Clique na imagem de qualquer item para abrir a janela de inspeção detalhada.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+                    {Array.from({ length: 40 }, (_, index) => {
+                      const num = index + 1;
+                      const imagemSrc = `/assets/produto/imagem%20(${num}).jpg`;
+
+                      return (
+                        <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
+                              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Inspecionar</span>
+                            </div>
+                            
+                            {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL) */}
+                            <div 
+                              onClick={() => {
+                                const modalEl = document.getElementById('modal-zoom-produto');
+                                const imgEl = document.getElementById('img-zoom-preview') as HTMLImageElement;
+                                const btnDownload = document.getElementById('btn-download-item') as HTMLAnchorElement;
+                                
+                                if (modalEl && imgEl && btnDownload) {
+                                  imgEl.src = imagemSrc;
+                                  modalEl.style.display = 'flex';
+                                  
+                                  // Configura o link de download direto para o item exato
+                                  btnDownload.href = imagemSrc;
+                                  btnDownload.download = `produto-item-${num}.jpg`;
+                                }
+                              }}
+                              style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative' }}
+                              title="Clique para inspecionar os detalhes"
+                            >
+                              <img 
+                                src={imagemSrc} 
+                                alt={`Produto ${num}`} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  const step = target.dataset.step ? parseInt(target.dataset.step) : 0;
+                                  if (step === 0) {
+                                    target.dataset.step = "1";
+                                    target.src = `/assets/produto/imagem(${num}).jpg`;
+                                  } else if (step === 1) {
+                                    target.dataset.step = "2";
+                                    target.src = `/assets/produto/imagem-${num}.jpg`;
+                                  } else if (step === 2) {
+                                    target.dataset.step = "3";
+                                    target.src = `/assets/produto/${num}.jpg`;
+                                  } else {
+                                    target.style.display = 'none';
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* BOTÃO DE BAIXAR DIRETO NO CARD */}
+                          <a
+                            href={imagemSrc}
+                            download={`produto-item-${num}.jpg`}
+                            style={{ background: 'rgba(0,255,136,0.15)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'block', transition: 'all 0.2s' }}
+                          >
+                            📥 Baixar Imagem Item #{num}
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* MODAL DE INSPEÇÃO COM ZOOM PROPORCIONAL E DOWNLOAD */}
+                  <div 
+                    id="modal-zoom-produto"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        e.currentTarget.style.display = 'none';
                       }
-                    };
+                    }}
+                    style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)', zIndex: 9999, alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                  >
+                    <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '92vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,255,136,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
+                      
+                      {/* BOTÃO DE FECHAR (X) */}
+                      <button 
+                        onClick={() => {
+                          const modalEl = document.getElementById('modal-zoom-produto');
+                          if (modalEl) modalEl.style.display = 'none';
+                        }}
+                        style={{ position: 'absolute', top: '12px', right: '12px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(255,68,68,0.4)' }}
+                        title="Fechar janela"
+                      >
+                        ✕
+                      </button>
 
-                    // Ação do Botão Copiar Imagem para Área de Transferência
-                    btnCopy.onclick = async () => {
-                      try {
-                        const response = await fetch(imagemSrc);
-                        const blob = await response.blob();
-                        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                        alert(`✅ Imagem do Item #${num} copiada com sucesso! Agora basta colar (Ctrl + V) no aplicativo desejado.`);
-                      } catch (err) {
-                        alert('⚠️ O navegador bloqueou a cópia direta. Utilize o botão direito na imagem e escolha "Copiar imagem".');
-                      }
-                    };
-                  }
-                }}
-                style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative' }}
-                title="Clique para inspecionar os detalhes"
-              >
-                <img 
-                  src={`/assets/produto/imagem%20(${num}).jpg`} 
-                  alt={`Produto ${num}`} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    const step = target.dataset.step ? parseInt(target.dataset.step) : 0;
-                    if (step === 0) {
-                      target.dataset.step = "1";
-                      target.src = `/assets/produto/imagem(${num}).jpg`;
-                    } else if (step === 1) {
-                      target.dataset.step = "2";
-                      target.src = `/assets/produto/imagem-${num}.jpg`;
-                    } else if (step === 2) {
-                      target.dataset.step = "3";
-                      target.src = `/assets/produto/${num}.jpg`;
-                    } else {
-                      target.style.display = 'none';
-                    }
-                  }}
-                />
-              </div>
-            </div>
+                      {/* IMAGEM AMPLIADA PROPORCIONALMENTE (SEM CORTES) */}
+                      <div style={{ maxWidth: '80vw', maxHeight: '64vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img 
+                          id="img-zoom-preview"
+                          src="" 
+                          alt="Produto Detalhado" 
+                          style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '6px', display: 'block' }} 
+                        />
+                      </div>
 
-            {/* BOTÕES DE AÇÃO RÁPIDA NO CARD */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              <button
-                onClick={async () => {
-                  if (navigator.share) {
-                    try {
-                      await navigator.share({ title: `Item #${num}`, url: imagemSrc });
-                    } catch (e) {}
-                  } else {
-                    window.open(imagemSrc, '_blank');
-                  }
-                }}
-                style={{ background: 'rgba(0,255,136,0.15)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
-              >
-                📤 Compartilhar
-              </button>
+                      {/* BOTÃO DE DOWNLOAD DIRETO DENTRO DO MODAL */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '350px', alignItems: 'center' }}>
+                        <a
+                          id="btn-download-item"
+                          href=""
+                          download="produto.jpg"
+                          style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '900', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,255,136,0.4)', width: '100%', display: 'block' }}
+                        >
+                          📥 Baixar Imagem em Alta Resolução
+                        </a>
+                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', textAlign: 'center' }}>
+                          💡 Dica: Clique com o botão direito na imagem acima e escolha <b>"Copiar imagem"</b>, ou utilize o botão de baixar para enviar no WhatsApp.
+                        </span>
+                      </div>
 
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetch(imagemSrc);
-                    const blob = await res.blob();
-                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                    alert(`✅ Item #${num} copiado! Cole (Ctrl + V) onde preferir.`);
-                  } catch (e) {
-                    alert('⚠️ Use o botão direito na foto para copiar.');
-                  }
-                }}
-                style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
-              >
-                📋 Copiar
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+                    </div>
+                  </div>
 
-    {/* MODAL DE INSPEÇÃO COM COMPARTILHAMENTO UNIVERSAL E CÓPIA */}
-    <div 
-      id="modal-zoom-produto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          e.currentTarget.style.display = 'none';
-        }
-      }}
-      style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)', zIndex: 9999, alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-    >
-      <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '92vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,255,136,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
-        
-        {/* BOTÃO DE FECHAR (X) */}
-        <button 
-          onClick={() => {
-            const modalEl = document.getElementById('modal-zoom-produto');
-            if (modalEl) modalEl.style.display = 'none';
-          }}
-          style={{ position: 'absolute', top: '12px', right: '12px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(255,68,68,0.4)' }}
-          title="Fechar janela"
-        >
-          ✕
-        </button>
+                </div>
+              )}
 
-        {/* IMAGEM AMPLIADA PROPORCIONALMENTE */}
-        <div style={{ maxWidth: '80vw', maxHeight: '64vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <img 
-            id="img-zoom-preview"
-            src="" 
-            alt="Produto Detalhado" 
-            style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '6px', display: 'block' }} 
-          />
-        </div>
-
-        {/* BARRA DE AÇÕES UNIVERSAIS DENTRO DO MODAL */}
-        <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '400px', flexWrap: 'wrap' }}>
-          <button
-            id="btn-universal-share"
-            style={{ flex: 1, background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)', textAlign: 'center' }}
-          >
-            📤 Compartilhar Item
-          </button>
-
-          <button
-            id="btn-universal-copy"
-            style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
-          >
-            📋 Copiar Imagem
-          </button>
-        </div>
-
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', textAlign: 'center' }}>
-          💡 Dica: O botão "Compartilhar" envia para qualquer app ou impressora compatível. O botão "Copiar" coloca a foto na área de transferência.
-        </span>
-
-      </div>
-    </div>
-
-  </div>
-)}
               {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', alignItems: 'center' }}>
