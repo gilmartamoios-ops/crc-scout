@@ -63,7 +63,7 @@ const modulos: Modulo[] = [
     nome: 'Apresentação do Negócio',
     descricao: 'Sua ferramenta para reuniões caseiras e apresentações online ao vivo.',
     icone: '🚀',
-    sublinks: ['Simulador de Negócio', 'Slides do Negócio'],
+    sublinks: ['Simulador de Negócio', 'Slides do Negócio', 'Catálogos & Vendas'],
   },
   {
     nome: 'Informativos',
@@ -102,10 +102,8 @@ export default function SalaPage() {
   const [modoVisitante, setModoVisitante] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
-  // ESTADO DA MANUTENÇÃO DINÂMICA VIA SUPABASE
   const [manutencaoAtiva, setManutencaoAtiva] = useState(false);
 
-  // ESTADOS DO SIMULADOR OFICIAL
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
   const [consumoSelect, setConsumoSelect] = useState<string>('450');
   const [infoContent, setInfoContent] = useState<string>('');
@@ -154,7 +152,6 @@ export default function SalaPage() {
     return regexUuid.test(id);
   };
   
-  // VALIDAÇÃO MASTER APRIMORADA (VERIFICA ESTADO E LOCALSTORAGE DIRETAMENTE)
   const isMasterUser = useMemo(() => {
     if (gestor?.slug === 'master' || gestor?.nome?.toLowerCase().includes('gilmar')) return true;
     if (typeof window !== 'undefined') {
@@ -164,7 +161,6 @@ export default function SalaPage() {
     return false;
   }, [gestor]);
 
-  // VERIFICAÇÃO DO STATUS DE MANUTENÇÃO NO SUPABASE
   useEffect(() => {
     async function verificarManutencao() {
       try {
@@ -700,7 +696,6 @@ export default function SalaPage() {
     alert(`✅ Gestor aprovado com sucesso!\n• E-mail: ${emailConvidado}\n• Movido para a aba Gestores Aprovados.`);
   };
 
-  // FUNÇÃO DE REPROVAÇÃO COM EXCLUSÃO DEFINITIVA IMEDIATA (SEM ARQUIVO MORTO)
   const reprovarEDeletarLead = async (id: string) => {
     if (!confirm('🛑 Deseja excluir definitivamente este lead reprovado do banco de dados?')) return;
 
@@ -759,23 +754,6 @@ export default function SalaPage() {
     carregarListaGestores();
     carregarLeadsScout();
     alert(`🚀 SUCESSO! ${aprovados} gestores foram aprovados em lote e removidos da fila.`);
-  };
-
-  const deletarLeadDefinitivo = async (id: string) => {
-    if (!confirm('🛑 ATENÇÃO (PODER MASTER): Deseja DELETAR DEFINITIVAMENTE este registro do banco de dados?')) return;
-
-    const { error } = await supabase
-      .from('scout_registros')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      alert('Erro ao deletar registro do Supabase: ' + error.message);
-      return;
-    }
-
-    setLeads((anterior) => anterior.filter((item) => item.id !== id));
-    alert('🗑️ Registro deletado com sucesso do banco de dados.');
   };
 
   const deletarGestorAprovado = async (email: string | undefined, gestorId: string) => {
@@ -1295,6 +1273,91 @@ export default function SalaPage() {
                       style={{ width: '100%', height: '100%', border: 'none' }}
                       title="Apresentação de Negócio Ozonteck"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* CATÁLOGOS & VENDAS (DOIS CATÁLOGOS: GERAL E PERFUMARIA) */}
+              {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
+                <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+                    <div>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
+                      <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Catálogos Oficiais de Produtos</h3>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                        Envie o catálogo completo (linha geral) ou o catálogo exclusivo de perfumaria para seus clientes e prospectos.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    
+                    {/* CATÁLOGO 1: GERAL / CLIENTE FINAL */}
+                    <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                      <div>
+                        <span style={{ background: '#00ff88', color: '#050505', padding: '2px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase' }}>
+                          CATÁLOGO PRINCIPAL
+                        </span>
+                        <h4 style={{ color: '#fff', fontSize: '16px', margin: '8px 0 4px' }}>📖 Catálogo Cliente Final (Linha Completa)</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, maxWidth: '480px' }}>
+                          Contém todos os produtos ozonizados, suplementos e cuidados diários com preços e especificações.
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <a 
+                          href="/assets/Catalogo cliente final _ CS _ 2026 V.3.0.0 (1).pdf" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ background: 'rgba(0,255,136,0.2)', border: '1px solid rgba(0,255,136,0.5)', color: '#00ff88', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
+                        >
+                          👁️ Visualizar PDF
+                        </a>
+                        <button
+                          onClick={() => {
+                            const linkGeral = `${window.location.origin}/assets/Catalogo%20cliente%20final%20_%20CS%20_%202026%20V.3.0.0%20(1).pdf?gestor=${gestor?.slug || 'master'}`;
+                            navigator.clipboard.writeText(linkGeral);
+                            alert('📋 Link independente do Catálogo Geral copiado com sucesso!');
+                          }}
+                          style={{ background: '#00ff88', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 15px rgba(0,255,136,0.3)' }}
+                        >
+                          🔗 Copiar Link (WhatsApp)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* CATÁLOGO 2: PERFUMARIA */}
+                    <div style={{ background: 'rgba(43,217,255,0.06)', border: '1px solid rgba(43,217,255,0.35)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                      <div>
+                        <span style={{ background: '#2bd9ff', color: '#050505', padding: '2px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase' }}>
+                          CATÁLOGO EXCLUSIVO
+                        </span>
+                        <h4 style={{ color: '#fff', fontSize: '16px', margin: '8px 0 4px' }}>✨ Catálogo dos Perfumes Ozonteck 2026</h4>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, maxWidth: '480px' }}>
+                          Coleção completa de perfumaria masculina, feminina e linha árabe inspirada nas maiores grifes internacionais.
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <a 
+                          href="/assets/Catálogo dos Perfumes Ozonteck 2026.pdf" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ background: 'rgba(43,217,255,0.2)', border: '1px solid rgba(43,217,255,0.5)', color: '#2bd9ff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
+                        >
+                          👁️ Visualizar PDF
+                        </a>
+                        <button
+                          onClick={() => {
+                            const linkPerfumes = `${window.location.origin}/assets/Cat%C3%A1logo%20dos%20Perfumes%20Ozonteck%202026.pdf?gestor=${gestor?.slug || 'master'}`;
+                            navigator.clipboard.writeText(linkPerfumes);
+                            alert('📋 Link independente do Catálogo de Perfumes copiado com sucesso!');
+                          }}
+                          style={{ background: '#2bd9ff', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 0 15px rgba(43,217,255,0.3)' }}
+                        >
+                          🔗 Copiar Link (WhatsApp)
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -2531,7 +2594,7 @@ export default function SalaPage() {
           }
         }
 
-        @keyframes fadeInOaut {
+        @keyframes fadeInOut {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
