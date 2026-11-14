@@ -1277,43 +1277,111 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) */}
+              {/* CATÁLOGO UNIFICADO & VITRINE DE PRODUTOS INDIVIDUAIS (1 A 40) */}
+{gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
+  <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
+    
+    {/* CABEÇALHO DO MÓDULO */}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+      <div>
+        <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
+        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+          Envie o catálogo geral completo em PDF com capa ou selecione o card do produto específico (1 a 40) para inspecionar e compartilhar.
+        </p>
+      </div>
+    </div>
+
+    {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA (RETORNANDO AO TOPO) */}
+    <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        
+        {/* CAPA DO CATÁLOGO GERAL */}
+        <div style={{ width: '120px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', background: '#111', flexShrink: 0 }}>
+          <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+
+        <div style={{ flex: 1, minWidth: '250px' }}>
+          <span style={{ background: 'rgba(0,255,136,0.2)', color: '#00ff88', padding: '3px 10px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', border: '1px solid rgba(0,255,136,0.4)' }}>
+            CATÁLOGO OFICIAL UNIFICADO
+          </span>
+          <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
+            Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <a 
+              href="/assets/catalogo-geral.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' }}
+            >
+              👁️ Visualizar PDF
+            </a>
+            <button
+              onClick={() => {
+                const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
+                const textoMensagem = encodeURIComponent(
+                  `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                );
+                window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+              }}
+              style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)' }}
+            >
+              💬 Enviar Catálogo no WhatsApp
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM ZOOM */}
     <div style={{ marginBottom: '16px' }}>
       <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
       <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique no botão abaixo de cada item para enviar uma mensagem focada no produto ou utilize o botão direito do rato para copiar a imagem.
+        Clique na imagem de qualquer item para abri-la ampliada em alta resolução ou utilize o botão abaixo para compartilhar no WhatsApp.
       </p>
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
       {Array.from({ length: 40 }, (_, index) => {
         const num = index + 1;
+        const imagemSrc = `/assets/produto/imagem%20(${num}).jpg`;
 
         return (
           <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#00ff88' }}>ITEM #{num}</span>
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Clique para ampliar</span>
               </div>
-              {/* IMAGEM DO PRODUTO - APONTANDO PARA A PASTA "produto" (SINGULAR) */}
-              <div style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)' }}>
+              
+              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR EM TELA CHEIA) */}
+              <div 
+                onClick={() => setImagemModal(imagemSrc)}
+                style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', background: '#111', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative' }}
+                title="Clique para ampliar a imagem"
+              >
                 <img 
-                  src={`/assets/produto/imagem%20(${num}).jpg`} 
+                  src={imagemSrc} 
                   alt={`Produto ${num}`} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   onError={(e) => {
                     const target = e.currentTarget;
                     const step = target.dataset.step ? parseInt(target.dataset.step) : 0;
-                    
                     if (step === 0) {
                       target.dataset.step = "1";
-                      target.src = `/assets/produto/imagem(${num}).jpg`; // Sem espaço
+                      target.src = `/assets/produto/imagem(${num}).jpg`;
                     } else if (step === 1) {
                       target.dataset.step = "2";
-                      target.src = `/assets/produto/imagem-${num}.jpg`; // Com hífen
+                      target.src = `/assets/produto/imagem-${num}.jpg`;
                     } else if (step === 2) {
                       target.dataset.step = "3";
-                      target.src = `/assets/produto/${num}.jpg`; // Apenas número
+                      target.src = `/assets/produto/${num}.jpg`;
                     } else {
                       target.style.display = 'none';
                     }
@@ -1338,6 +1406,43 @@ export default function SalaPage() {
         );
       })}
     </div>
+
+    {/* MODAL / JANELA FLUTUANTE PARA AMPLIAR A IMAGEM */}
+    {typeof window !== 'undefined' && (function() {
+      // Criação dinâmica do estado do modal se ainda não existir no componente pai
+      if (typeof imagemModal === 'undefined') {
+        // Se precisar declarar a variável de estado no topo do componente principal, 
+        // adicione: const [imagemModal, setImagemModal] = useState<string | null>(null);
+      }
+      return null;
+    })()}
+
+    {imagemModal && (
+      <div 
+        onClick={() => setImagemModal(null)}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+      >
+        <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '16px', boxShadow: '0 10px 40px rgba(0,255,136,0.2)' }} onClick={(e) => e.stopPropagation()}>
+          <button 
+            onClick={() => setImagemModal(null)}
+            style={{ position: 'absolute', top: '10px', right: '10px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            ✕
+          </button>
+          <img 
+            src={imagemModal} 
+            alt="Produto Ampliado" 
+            style={{ maxWidth: '85vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: '8px', display: 'block' }} 
+          />
+          <div style={{ textAlign: 'center', marginTop: '12px', color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
+            💡 Dica: Clique com o botão direito na imagem acima e escolha <b>"Copiar imagem"</b> para enviá-la colada diretamente no chat do WhatsApp com o cliente.
+          </div>
+        </div>
+      </div>
+    )}
+
+  </div>
+)}
 
               {gestorDesbloqueado && moduloAtivo === 'O Oleiro e a Argila' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.95))' }}>
