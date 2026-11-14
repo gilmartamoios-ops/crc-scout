@@ -1320,8 +1320,9 @@ export default function SalaPage() {
           <button
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
+              const urlCapa = `${window.location.origin}/assets/capa-catalogo-geral.jpg`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n🖼️ *Capa do Catálogo:* \n${urlCapa}\n\n📖 *Confira o Catálogo Oficial em PDF:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
@@ -1360,8 +1361,9 @@ export default function SalaPage() {
           <button
             onClick={() => {
               const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
+              const urlCapa = `${window.location.origin}/assets/capa-catalogo-perfume.jpg`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n🖼️ *Capa do Catálogo:* \n${urlCapa}\n\n💎 *Confira o Catálogo de Perfumes 2026 em PDF:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
