@@ -1287,7 +1287,7 @@ export default function SalaPage() {
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
         <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo geral completo em PDF com capa ou clique em qualquer produto (1 a 40) para inspecionar os detalhes e compartilhar.
+          Envie o catálogo geral completo em PDF com capa ou utilize a vitrine de itens (1 a 40) para compartilhar e inspecionar livremente.
         </p>
       </div>
     </div>
@@ -1337,18 +1337,18 @@ export default function SalaPage() {
       </div>
     </div>
 
-    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM ZOOM MODAL */}
+    {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) COM COMPARTILHAMENTO UNIVERSAL */}
     <div style={{ marginBottom: '16px' }}>
       <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
       <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-        Clique na imagem de qualquer item para abrir a janela de inspeção detalhada ou utilize o botão abaixo para compartilhar no WhatsApp.
+        Clique na imagem para inspecionar os detalhes ou utilize os botões para compartilhar ou copiar o item.
       </p>
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
       {Array.from({ length: 40 }, (_, index) => {
         const num = index + 1;
-        const imagemSrc = `/assets/produto/imagem%20(${num}).jpg`;
+        const imagemSrc = `${window.location.origin}/assets/produto/imagem%20(${num}).jpg`;
 
         return (
           <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
@@ -1358,23 +1358,46 @@ export default function SalaPage() {
                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Inspecionar</span>
               </div>
               
-              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL CONTROLADO) */}
+              {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL) */}
               <div 
                 onClick={() => {
                   const modalEl = document.getElementById('modal-zoom-produto');
                   const imgEl = document.getElementById('img-zoom-preview') as HTMLImageElement;
-                  const btnEl = document.getElementById('btn-whatsapp-modal') as HTMLButtonElement;
+                  const btnShare = document.getElementById('btn-universal-share') as HTMLButtonElement;
+                  const btnCopy = document.getElementById('btn-universal-copy') as HTMLButtonElement;
                   
-                  if (modalEl && imgEl && btnEl) {
+                  if (modalEl && imgEl && btnShare && btnCopy) {
                     imgEl.src = imagemSrc;
                     modalEl.style.display = 'flex';
                     
-                    // Configura o botão de WhatsApp dentro do modal para este item exato
-                    btnEl.onclick = () => {
-                      const textoMensagem = encodeURIComponent(
-                        `✨ *Olá! Veja este destaque exclusivo do nosso catálogo:* \n\nReferência do Item: *#${num}*\n\nConheça os detalhes e benefícios deste produto incrível para o seu bem-estar.\n\nQualquer dúvida estou à disposição para ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
-                      );
-                      window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
+                    // Ação do Botão Compartilhar Universal
+                    btnShare.onclick = async () => {
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({
+                            title: `Item #${num} - Catálogo CRC`,
+                            text: `Confira os detalhes do Item #${num} do nosso catálogo.`,
+                            url: imagemSrc,
+                          });
+                        } catch (err) {
+                          console.log('Compartilhamento cancelado');
+                        }
+                      } else {
+                        // Fallback se o navegador não suportar share API: abre a imagem
+                        window.open(imagemSrc, '_blank');
+                      }
+                    };
+
+                    // Ação do Botão Copiar Imagem para Área de Transferência
+                    btnCopy.onclick = async () => {
+                      try {
+                        const response = await fetch(imagemSrc);
+                        const blob = await response.blob();
+                        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                        alert(`✅ Imagem do Item #${num} copiada com sucesso! Agora basta colar (Ctrl + V) no aplicativo desejado.`);
+                      } catch (err) {
+                        alert('⚠️ O navegador bloqueou a cópia direta. Utilize o botão direito na imagem e escolha "Copiar imagem".');
+                      }
                     };
                   }
                 }}
@@ -1382,7 +1405,7 @@ export default function SalaPage() {
                 title="Clique para inspecionar os detalhes"
               >
                 <img 
-                  src={imagemSrc} 
+                  src={`/assets/produto/imagem%20(${num}).jpg`} 
                   alt={`Produto ${num}`} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
@@ -1407,28 +1430,48 @@ export default function SalaPage() {
               </div>
             </div>
 
-            {/* BOTÃO DE COMPARTILHAMENTO RÁPIDO NO WHATSAPP */}
-            <button
-              onClick={() => {
-                const textoMensagem = encodeURIComponent(
-                  `✨ *Olá! Veja este destaque exclusivo do nosso catálogo:* \n\nReferência do Item: *#${num}*\n\nConheça os detalhes e benefícios deste produto incrível para o seu bem-estar.\n\nQualquer dúvida estou à disposição para ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
-                );
-                window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
-              }}
-              style={{ background: 'rgba(0,255,136,0.15)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
-            >
-              💬 Compartilhar Item #{num}
-            </button>
+            {/* BOTÕES DE AÇÃO RÁPIDA NO CARD */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <button
+                onClick={async () => {
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: `Item #${num}`, url: imagemSrc });
+                    } catch (e) {}
+                  } else {
+                    window.open(imagemSrc, '_blank');
+                  }
+                }}
+                style={{ background: 'rgba(0,255,136,0.15)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', padding: '8px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
+              >
+                📤 Compartilhar
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(imagemSrc);
+                    const blob = await res.blob();
+                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                    alert(`✅ Item #${num} copiado! Cole (Ctrl + V) onde preferir.`);
+                  } catch (e) {
+                    alert('⚠️ Use o botão direito na foto para copiar.');
+                  }
+                }}
+                style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
+              >
+                📋 Copiar
+              </button>
+            </div>
           </div>
         );
       })}
     </div>
 
-    {/* MODAL DE INSPEÇÃO / ZOOM COM BOTÃO DE WHATSAPP INTEGRADO (NATIVO E SEM CONFLITO DE ESTADO) */}
+    {/* MODAL DE INSPEÇÃO COM COMPARTILHAMENTO UNIVERSAL E CÓPIA */}
     <div 
       id="modal-zoom-produto"
       onClick={(e) => {
-        // Fecha apenas se clicar no fundo escuro fora da caixa
         if (e.target === e.currentTarget) {
           e.currentTarget.style.display = 'none';
         }
@@ -1449,28 +1492,36 @@ export default function SalaPage() {
           ✕
         </button>
 
-        {/* IMAGEM AMPLIADA PROPORCIONALMENTE (SEM CORTES) */}
-        <div style={{ maxWidth: '80vw', maxHeight: '68vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        {/* IMAGEM AMPLIADA PROPORCIONALMENTE */}
+        <div style={{ maxWidth: '80vw', maxHeight: '64vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <img 
             id="img-zoom-preview"
             src="" 
             alt="Produto Detalhado" 
-            style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '6px', display: 'block' }} 
+            style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '6px', display: 'block' }} 
           />
         </div>
 
-        {/* BARRA DE AÇÕES DENTRO DO MODAL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', alignItems: 'center' }}>
+        {/* BARRA DE AÇÕES UNIVERSAIS DENTRO DO MODAL */}
+        <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '400px', flexWrap: 'wrap' }}>
           <button
-            id="btn-whatsapp-modal"
-            style={{ background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,255,136,0.4)', width: '100%', maxWidth: '350px', textAlign: 'center' }}
+            id="btn-universal-share"
+            style={{ flex: 1, background: 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#050505', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,255,136,0.3)', textAlign: 'center' }}
           >
-            💬 Enviar Este Item no WhatsApp
+            📤 Compartilhar Item
           </button>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', textAlign: 'center' }}>
-            💡 Dica: Você também pode clicar com o botão direito na imagem ampliada e escolher <b>"Copiar imagem"</b> para colar no chat.
-          </span>
+
+          <button
+            id="btn-universal-copy"
+            style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}
+          >
+            📋 Copiar Imagem
+          </button>
         </div>
+
+        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', textAlign: 'center' }}>
+          💡 Dica: O botão "Compartilhar" envia para qualquer app ou impressora compatível. O botão "Copiar" coloca a foto na área de transferência.
+        </span>
 
       </div>
     </div>
