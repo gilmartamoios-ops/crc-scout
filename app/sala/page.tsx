@@ -1277,15 +1277,15 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS NO CARD E WHATSAPP LIMPO */}
+              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS E LINKS DE ALTA CONVERSÃO */}
 {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
   <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
       <div>
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
-        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos Oficiais</h3>
+        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos & Produtos</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Envie o catálogo ideal diretamente para o WhatsApp dos seus clientes com alta apresentação profissional.
+          Compartilhe catálogos completos ou itens específicos com pré-visualização de capa e mensagens formatadas para o WhatsApp.
         </p>
       </div>
     </div>
