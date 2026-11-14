@@ -1348,8 +1348,8 @@ export default function SalaPage() {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
       {Array.from({ length: 40 }, (_, index) => {
         const num = index + 1;
-        // Testando os dois formatos mais comuns gerados por conversores: com parênteses ou sem parênteses
-        const imagemSrc = `/assets/produtos/imagem (${num}).jpg`;
+        // Codificação correta para o navegador ler os espaços e parênteses do arquivo "imagem (1).jpg"
+        const imagemSrc = `/assets/produtos/imagem%20(${num}).jpg`;
 
         return (
           <div key={num} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
@@ -1363,16 +1363,6 @@ export default function SalaPage() {
                   src={imagemSrc} 
                   alt={`Produto ${num}`} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  onError={(e) => {
-                    // Se falhar o formato com parênteses, tenta o formato sem parênteses (ex: imagem1.jpg ou imagem-1.jpg)
-                    const target = e.currentTarget;
-                    if (!target.dataset.triedAlt) {
-                      target.dataset.triedAlt = "true";
-                      target.src = `/assets/produtos/imagem${num}.jpg`;
-                    } else {
-                      target.style.opacity = '0.3';
-                    }
-                  }}
                 />
               </div>
             </div>
