@@ -1277,15 +1277,15 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS E LINKS DE ALTA CONVERSÃO */}
+              {/* CATÁLOGOS & VENDAS COM CAPAS VISUAIS E LINKS OTIMIZADOS PARA WHATSAPP */}
 {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
   <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
       <div>
         <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
-        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos & Produtos</h3>
+        <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogos Oficiais</h3>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          Compartilhe catálogos completos ou itens específicos com pré-visualização de capa e mensagens formatadas para o WhatsApp.
+          Envie o catálogo ideal diretamente para o WhatsApp dos seus clientes com alta apresentação profissional e capa em destaque.
         </p>
       </div>
     </div>
@@ -1324,9 +1324,10 @@ export default function SalaPage() {
 
           <button
             onClick={() => {
+              const urlCapa = `${window.location.origin}/assets/capa-catalogo-geral.jpg`;
               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n🖼️ *Capa Oficial:* \n${urlCapa}\n\n📖 *Acesse o Catálogo Completo em PDF:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
@@ -1369,9 +1370,10 @@ export default function SalaPage() {
 
           <button
             onClick={() => {
+              const urlCapa = `${window.location.origin}/assets/capa-catalogo-perfume.jpg`;
               const urlPdf = `${window.location.origin}/assets/catalogo-perfumes.pdf`;
               const textoMensagem = encodeURIComponent(
-                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n💎 *Confira o Catálogo de Perfumes 2026:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                `✨ *Olá! Tudo bem?*\n\nConheça a nossa linha de perfumes para o seu bem-estar e sofisticação.\n\n🖼️ *Capa Oficial:* \n${urlCapa}\n\n💎 *Acesse o Catálogo de Perfumes 2026 em PDF:* \n${urlPdf}\n\nQual estilo de fragrância você mais aprecia? Estou à disposição! 🌟\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
               );
               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
             }}
