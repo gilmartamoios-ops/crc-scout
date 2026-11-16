@@ -287,23 +287,11 @@ export default function LandingPage() {
       origem: 'quiz_publico',
     };
 
-    const numeroDestino = '5522999231211';
-
-    const msgWhats = encodeURIComponent(
-      `Olá! Meu nome é *${nome.trim()}* (${cidadeFormatada}). Acabei de responder ao Quiz do SCOUT!\n\n` +
-      `📱 Whats: ${whatsClean}\n` +
-      `✉️ E-mail: ${email.trim()}\n` +
-      `🎯 Objetivo: ${respostas.objetivo}\n\n` +
-      `Gostaria de solicitar meu atendimento de assistência técnica e suporte!`
-    );
-
-    const linkWhatsAppFinal = `https://wa.me/${numeroDestino}?text=${msgWhats}`;
-
     const telegramToken = '8943733795:AAGALRSNsq-c9a3nwlpti7VLUI6Hk14LTQ4';
     const telegramChatId = '6327378053';
 
     const mensagemTelegram = 
-      `🚨 *NOVO GESTOR AUTORIZADO NO SCOUT!*\n\n` +
+      `🚨 *NOVO GESTOR DESBLOQUEADO NO SCOUT!*\n\n` +
       `👤 *Nome:* ${nome.trim()}\n` +
       `📍 *Cidade:* ${cidadeFormatada}\n` +
       `📱 *WhatsApp:* ${whatsClean}\n` +
@@ -325,35 +313,43 @@ export default function LandingPage() {
     try {
       const uuidGestorValido = gestorId && gestorId !== 'master' && gestorId.length > 10 ? gestorId : null;
 
-      const { error } = await supabase.from('scout_registros').insert({
-        tipo: 'quiz_prospecto',
+      // 1. Salva na tabela scout_registros do Supabase
+      const { data: registroSalvo, error } = await supabase.from('scout_registros').insert({
+        tipo: 'gestor_desbloqueado',
         gestor_id: uuidGestorValido,
-        titulo: `Autorizado Token: ${respostas.objetivo}`,
-        nome: nome.trim(),
-        whatsapp: whatsClean,
-        email: email.trim(),
-        cidade: cidadeFormatada,
-        perfil: respostas.objetivo,
-        status_atendimento: 'novo',
+        titulo: `Quiz Concluído - ${respostas.objetivo}`,
+        gestor_nome: gestorId || 'Master',
+        categoria_origem: 'Quiz Automático SCOUT',
         dados: dadosRegistro,
-      });
+      }).select().single();
 
       if (error) {
         console.error('Erro detalhado do Supabase:', error);
-        window.location.href = linkWhatsAppFinal;
-        return;
       }
+
+      // 2. Cria a sessão local do novo gestor para desbloqueio imediato
+      const dadosSessao = {
+        id: registroSalvo?.id || 'temp-' + Date.now(),
+        nome: nome.trim(),
+        whatsapp: whatsClean,
+        email: email.trim(),
+        slug: gestorId || 'master'
+      };
+
+      localStorage.setItem('scout_gestor', JSON.stringify(dadosSessao));
+      sessionStorage.setItem('scout_gestor', JSON.stringify(dadosSessao));
 
       setEnviado(true);
       setEtapa(9);
       
+      // 3. Redireciona diretamente para a Sala de Operações após 1 segundo sem abrir o WhatsApp
       setTimeout(() => {
-        window.location.href = linkWhatsAppFinal;
+        window.location.href = '/sala';
       }, 1000);
 
     } catch (err) {
       console.error('Falha de conexão:', err);
-      window.location.href = linkWhatsAppFinal;
+      alert('Erro ao processar o cadastro. Tente novamente.');
     } finally {
       setCarregando(false);
     }
@@ -702,7 +698,7 @@ export default function LandingPage() {
                 {erro && <div className="scout-error" style={{ color: '#ff6464', fontSize: '12px', textAlign: 'center' }}>{erro}</div>}
 
                 <button type="submit" className="btn-destaque-neon" disabled={carregando} style={{ marginTop: '8px' }}>
-                  {carregando ? 'A LIBERAR...' : 'LIBERAR ACESSO & SUPORTE 🚀'}
+                  {carregando ? 'A LIBERAR...' : 'LIBERAR ACESSO & ENTRAR NA SALA 🚀'}
                 </button>
               </form>
 
@@ -715,31 +711,29 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ETAPA 9: TELA FINAL COM DESFOQUE */}
+      {/* ETAPA 9: TELA FINAL COM DESFOQUE E REDIRECIONAMENTO DIRETO PARA /sala */}
       {etapa === 9 && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(16px)' }}>
           <div style={{ width: 'min(480px, 100%)', padding: '32px', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '24px', background: '#0b0f0d', boxShadow: '0 30px 100px rgba(0,255,136,0.25)', textAlign: 'center' }}>
             <div style={{ fontSize: '40px', marginBottom: '8px' }}>🚀</div>
             <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
-              ACESSO REGISTRADO COM SUCESSO!
+              ACESSO REGISTRADO E DESBLOQUEADO!
             </span>
-            <h2 style={{ fontSize: '22px', color: '#fff', margin: '0 0 12px' }}>Pronto para o Atendimento X1</h2>
+            <h2 style={{ fontSize: '22px', color: '#fff', margin: '0 0 12px' }}>Bem-vindo à Sala de Operações</h2>
             
             <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: '1.6', marginBottom: '20px' }}>
-              Seu cadastro foi salvo na lista de assistência técnica. O Master já registrou sua entrada para prestar suporte individualizado.
+              Seu cadastro foi salvo e suas respostas foram enviadas para o seu patrocinador. Seu acesso está liberado.
             </p>
 
             <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.25)', padding: '14px', borderRadius: '12px', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '20px' }}>
-              ⚡ Redirecionando para o canal de suporte técnico no WhatsApp...
+              ⚡ Entrando automaticamente na Sala de Operações...
             </div>
 
             <a
-              href={`https://wa.me/5522999231211?text=${encodeURIComponent(`Olá! Concluí a jornada no SCOUT. Meu objetivo é: ${respostas.objetivo}. Gostaria de assistência técnica.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/sala"
               style={{ display: 'block', background: '#00ff88', color: '#050505', padding: '14px', borderRadius: '12px', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px' }}
             >
-              💬 Falar com Suporte no WhatsApp Agora
+              🚀 Acessar Sala de Operações Agora
             </a>
           </div>
         </div>
