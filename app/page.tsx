@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Script from 'next/script';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
@@ -11,7 +10,6 @@ interface Respostas {
 
 export default function LandingPage() {
   const [etapa, setEtapa] = useState<number>(1);
-  const [isMuted, setIsMuted] = useState(true);
 
   const [respostas, setRespostas] = useState<Respostas>({
     objetivo: '',
@@ -57,13 +55,12 @@ export default function LandingPage() {
     carregarCidades();
   }, [estadoSelecionado]);
 
-  // Estados do Simulador de Negócio MMN
+  // Estados do Simulador de Negócio
   const [gestoresSelect, setGestoresSelect] = useState<string>('4');
   const [consumoSelect, setConsumoSelect] = useState<string>('450');
   const [infoContent, setInfoContent] = useState<string>('');
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const santinhoVideoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<any>(null);
 
@@ -250,13 +247,6 @@ export default function LandingPage() {
     }
   };
 
-  const toggleAudio = () => {
-    if (santinhoVideoRef.current) {
-      santinhoVideoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
   const selecionarResposta = (valor: string) => {
     setRespostas({ objetivo: valor });
   };
@@ -293,18 +283,18 @@ export default function LandingPage() {
       },
       perfil: respostas.objetivo,
       respostas,
-      status_aprovacao: 'pendente',
+      status_atendimento: 'novo',
       origem: 'quiz_publico',
     };
 
     const numeroDestino = '5522999231211';
 
     const msgWhats = encodeURIComponent(
-      `Olá! Meu nome é *${nome.trim()}* (${cidadeFormatada}). Acabei de responder ao Quiz do SCOUT.CRC!\n\n` +
+      `Olá! Meu nome é *${nome.trim()}* (${cidadeFormatada}). Acabei de responder ao Quiz do SCOUT!\n\n` +
       `📱 Whats: ${whatsClean}\n` +
       `✉️ E-mail: ${email.trim()}\n` +
       `🎯 Objetivo: ${respostas.objetivo}\n\n` +
-      `Gostaria de agendar meu atendimento e entender como construir minha comunidade!`
+      `Gostaria de solicitar meu atendimento de assistência técnica e suporte!`
     );
 
     const linkWhatsAppFinal = `https://wa.me/${numeroDestino}?text=${msgWhats}`;
@@ -313,13 +303,13 @@ export default function LandingPage() {
     const telegramChatId = '6327378053';
 
     const mensagemTelegram = 
-      `🚨 *NOVO LEAD NO SCOUT.CRC!*\n\n` +
+      `🚨 *NOVO GESTOR AUTORIZADO NO SCOUT!*\n\n` +
       `👤 *Nome:* ${nome.trim()}\n` +
       `📍 *Cidade:* ${cidadeFormatada}\n` +
       `📱 *WhatsApp:* ${whatsClean}\n` +
       `✉️ *E-mail:* ${email.trim()}\n` +
       `🎯 *Objetivo:* ${respostas.objetivo}\n\n` +
-      `👉 [Chamar no WhatsApp](https://wa.me/${whatsClean})`;
+      `👉 [Chamar para Suporte X1](https://wa.me/${whatsClean})`;
 
     fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
       method: 'POST',
@@ -338,13 +328,13 @@ export default function LandingPage() {
       const { error } = await supabase.from('scout_registros').insert({
         tipo: 'quiz_prospecto',
         gestor_id: uuidGestorValido,
-        titulo: `Lead Quiz: ${respostas.objetivo}`,
+        titulo: `Autorizado Token: ${respostas.objetivo}`,
         nome: nome.trim(),
         whatsapp: whatsClean,
         email: email.trim(),
         cidade: cidadeFormatada,
         perfil: respostas.objetivo,
-        status_aprovacao: 'pendente',
+        status_atendimento: 'novo',
         dados: dadosRegistro,
       });
 
@@ -387,19 +377,13 @@ export default function LandingPage() {
         <div className="scout-shell">
           <header className="scout-header">
             <div className="scout-brand">
-              <div className="scout-logo">
-                <Image
-                  src="/assets/logo-crc.png"
-                  alt="CRC"
-                  width={44}
-                  height={44}
-                  priority
-                  className="scout-logo-image"
-                />
+              {/* LOGO ELEGANTE SUBSTITUTA (GESTÃO DE COMUNIDADE) */}
+              <div className="scout-logo" style={{ display: 'flex', width: '44px', height: '44px', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0, 255, 136, 0.42)', borderRadius: '12px', color: '#00ff88', fontSize: '13px', fontWeight: '800', background: 'rgba(0,255,136,0.06)' }}>
+                GC
               </div>
               <div className="scout-brand-copy"> 
-                <div className="scout-brand-name">SCOUT.CRC</div> 
-                <div className="scout-brand-subtitle">inteligência para comunidades</div>
+                <div className="scout-brand-name">SCOUT</div> 
+                <div className="scout-brand-subtitle">gestão de comunidades</div>
                 <a href="/sala" className="scout-gestor-link">Acesso do Gestor</a> 
               </div>
             </div>
@@ -408,51 +392,21 @@ export default function LandingPage() {
             </div>
           </header>
 
-          {/* ETAPA 1: SANTINHO DIGITAL */}
+          {/* ETAPA 1: BANNER INSTITUCIONAL */}
           {etapa === 1 && (
             <section className="scout-hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10px 10px 20px 10px' }}>
-              <div style={{ maxWidth: '340px', width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+              <div style={{ maxWidth: '420px', width: '100%', display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center' }}>
                 
                 <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '2px', color: '#00ff88', background: 'rgba(0,255,136,0.1)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(0,255,136,0.25)' }}>
                   SANTINHO DIGITAL · RISCO ZERO
                 </span>
 
-                <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: '55vh', background: '#000', borderRadius: '18px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.5)', boxShadow: '0 0 35px rgba(0,255,136,0.25)', position: 'relative' }}>
-                  <video
-                    ref={santinhoVideoRef}
-                    src="/assets/santinho.mp4"
-                    autoPlay
-                    loop
-                    muted={isMuted}
-                    playsInline
-                    preload="auto"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                <div style={{ width: '100%', borderRadius: '18px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.5)', boxShadow: '0 0 35px rgba(0,255,136,0.25)', background: '#000' }}>
+                  <img
+                    src="/assets/banner-scout.jpg"
+                    alt="Banner Institucional Scout"
+                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
                   />
-                  
-                  <button
-                    type="button"
-                    onClick={toggleAudio}
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      right: '12px',
-                      background: 'rgba(0, 0, 0, 0.75)',
-                      color: '#00ff88',
-                      border: '1px solid rgba(0, 255, 136, 0.4)',
-                      padding: '8px 12px',
-                      borderRadius: '20px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      backdropFilter: 'blur(4px)',
-                      zIndex: 10
-                    }}
-                  >
-                    {isMuted ? '🔇 LIGAR SOM' : '🔊 COM SOM'}
-                  </button>
                 </div>
 
                 <button
@@ -478,7 +432,7 @@ export default function LandingPage() {
                   AGORA VOCÊ PODE CONHECER
                 </div>
                 <h2 className="scout-section-title" style={{ fontSize: '18px', margin: '2px 0 6px', lineHeight: '1.2' }}>
-                  O conceito por trás do CRC.
+                  O conceito por trás da Gestão de Comunidades.
                 </h2>
               </div>
 
@@ -529,7 +483,7 @@ export default function LandingPage() {
               <div className="scout-eyebrow" style={{ color: '#00ff88', marginBottom: '8px' }}>PRECISÃO FINANCEIRA</div>
               <h2 className="scout-section-title" style={{ fontSize: '20px', marginBottom: '16px' }}>Nota de Rigor Técnico</h2>
               <p className="scout-section-text" style={{ fontSize: '13px', lineHeight: '1.6', marginBottom: '24px' }}>
-                O <strong>Simulador de Negócio</strong> a seguir baseia-se rigorosamente nas regras de cálculo, pontos e bonificações oficiais do nosso Plano de Negócios. Os valores projetados refletem a duplicação real do consumo consciente da sua futura comunidade.
+                O <strong>Simulador de Negócio</strong> a seguir baseia-se rigorosamente nas regras de cálculo, pontos e bonificações oficiais. Os valores projetados refletem a duplicação real do consumo consciente da sua futura comunidade.
               </p>
               <button
                 type="button"
@@ -544,14 +498,14 @@ export default function LandingPage() {
             </section>
           )}
 
-          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO COM PLAYER DE NARRADOR */}
+          {/* ETAPA 2.4: SIMULADOR DE NEGÓCIO */}
           {etapa === 2.4 && (
             <section className="scout-content" style={{ padding: '12px', width: '100%', boxSizing: 'border-box' }}>
               <div className="card-simulador-original">
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
                   <div>
-                    <div className="eyebrow-sim">CRC | Modelo de Comunidades</div>
+                    <div className="eyebrow-sim">Gestão de Comunidade | Modelo de Expansão</div>
                     <h1 className="title-sim">Simulação de Expansão da Comunidade</h1>
                     <p className="subtitle-sim" style={{ margin: 0 }}>Projeção baseada em GCom - gestores de comunidade e consumo recorrente.</p>
                   </div>
@@ -615,11 +569,11 @@ export default function LandingPage() {
             </section>
           )}
 
-          {/* ETAPA 3: QUIZ DE PERFIL ENXUTO */}
+          {/* ETAPA 3: QUIZ DE PERFIL */}
           {etapa === 3 && perguntaAtual && (
             <section className="scout-content scout-content-narrow">
               <div className="scout-progress-head">
-                <span>QUALIFICAÇÃO CRC</span>
+                <span>QUALIFICAÇÃO DE COMUNIDADE</span>
                 <strong>1/1</strong>
               </div>
 
@@ -674,7 +628,7 @@ export default function LandingPage() {
               <div className="scout-section-intro">
                 <div className="scout-eyebrow">CONCLUIR JORNADA</div>
                 <h2 className="scout-section-title">Seus dados para contato direto:</h2>
-                <p className="scout-section-text">Preencha todos os campos para que o gestor responsável possa falar consigo.</p>
+                <p className="scout-section-text">Preencha todos os campos para desbloquear sua entrada na plataforma.</p>
               </div>
 
               <form className="scout-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -756,7 +710,7 @@ export default function LandingPage() {
                 {erro && <div className="scout-error" style={{ color: '#ff6464', fontSize: '12px', textAlign: 'center' }}>{erro}</div>}
 
                 <button type="submit" className="btn-destaque-neon" disabled={carregando} style={{ marginTop: '8px' }}>
-                  {carregando ? 'A ENVIAR...' : 'FINALIZAR & FALAR COM GESTOR 🚀'}
+                  {carregando ? 'A LIBERAR...' : 'LIBERAR ACESSO & SUPORTE 🚀'}
                 </button>
               </form>
 
@@ -769,31 +723,31 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ETAPA 9: TELA FINAL COM DESFOQUE (BLUR) */}
+      {/* ETAPA 9: TELA FINAL COM DESFOQUE */}
       {etapa === 9 && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(16px)' }}>
           <div style={{ width: 'min(480px, 100%)', padding: '32px', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '24px', background: '#0b0f0d', boxShadow: '0 30px 100px rgba(0,255,136,0.25)', textAlign: 'center' }}>
-            <div style={{ fontSize: '40px', marginBottom: '8px' }}>🔒</div>
+            <div style={{ fontSize: '40px', marginBottom: '8px' }}>🚀</div>
             <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '6px' }}>
-              SOLICITAÇÃO ENVIADA COM SUCESSO!
+              ACESSO REGISTRADO COM SUCESSO!
             </span>
-            <h2 style={{ fontSize: '22px', color: '#fff', margin: '0 0 12px' }}>Aguardando Validação do Gestor</h2>
+            <h2 style={{ fontSize: '22px', color: '#fff', margin: '0 0 12px' }}>Pronto para o Atendimento X1</h2>
             
             <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: '1.6', marginBottom: '20px' }}>
-              Sua Ficha de Qualificação deu entrada no sistema. O seu Gestor de Comunidade recebeu seu perfil e iniciará seu atendimento individual no X1.
+              Seu cadastro foi salvo na lista de assistência técnica. O Master já registrou sua entrada para prestar suporte individualizado.
             </p>
 
             <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.25)', padding: '14px', borderRadius: '12px', fontSize: '11px', color: '#00ff88', fontWeight: 'bold', marginBottom: '20px' }}>
-              ⚡ Não feche esta tela. Mantenha seu WhatsApp por perto para receber seu Código de Entrada.
+              ⚡ Redirecionando para o canal de suporte técnico no WhatsApp...
             </div>
 
             <a
-              href={`https://wa.me/5522999231211?text=${encodeURIComponent(`Olá! Acabei de responder ao Quiz do SCOUT.CRC. Meu objetivo é: ${respostas.objetivo}.`)}`}
+              href={`https://wa.me/5522999231211?text=${encodeURIComponent(`Olá! Concluí a jornada no SCOUT. Meu objetivo é: ${respostas.objetivo}. Gostaria de assistência técnica.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'block', background: '#00ff88', color: '#050505', padding: '14px', borderRadius: '12px', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px' }}
             >
-              💬 Abrir Conversa no WhatsApp Agora
+              💬 Falar com Suporte no WhatsApp Agora
             </a>
           </div>
         </div>
