@@ -33,9 +33,7 @@ interface ConvidadoRegistro {
     };
     perfil?: string;
     respostas?: Record<string, string>;
-    status_aprovacao?: 'pendente' | 'aprovado' | 'reprovado' | 'bloqueado' | 'acompanhamento' | 'solicitado_master' | 'codigo_liberado';
-    codigo_lib?: string;
-    codigo_master?: string;
+    status_atendimento?: 'novo' | 'em_atendimento' | 'concluido';
     origem?: string;
     gestor_nome?: string;
   };
@@ -53,12 +51,12 @@ interface GestorItem {
 const modulos: Modulo[] = [
   {
     nome: 'Visão Geral & Boas-Vindas',
-    descricao: 'Bem-vindo ao ecossistema SCOUT.CRC e à central do Gestor.',
+    descricao: 'Bem-vindo ao ecossistema SCOUT e à central do Gestor.',
     icone: '🏛️',
   },
   {
     nome: 'O Oleiro e a Argila',
-    descricao: 'A base conceitual e filosófica do Gestor de Comunidades no modelo CRC.',
+    descricao: 'A base conceitual e filosófica do Gestor de Comunidades.',
     icone: '📖',
   },
   {
@@ -86,7 +84,7 @@ const modulos: Modulo[] = [
     nome: 'Seu SCOUT',
     descricao: 'Sua operação de prospecção e gestão de convidados.',
     icone: '✧',
-    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Feedback de Prospectos', 'Gestores Aprovados'],
+    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Feedback de Prospectos', 'Gestores Autorizados'],
   },
 ];
 
@@ -140,7 +138,7 @@ export default function SalaPage() {
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
-  const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroGestorId, setFiltroGestorId] = useState<string>('todos');
   const [modoVisaoMaster, setModoVisaoMaster] = useState<'global' | 'pessoal'>('global');
   const [buscaNome, setBuscaNome] = useState<string>('');
@@ -555,7 +553,7 @@ export default function SalaPage() {
               rede_social_origem: p.redeSocialOrigem
             },
             perfil: p.perfil,
-            status_aprovacao: 'pendente',
+            status_atendimento: 'novo',
             gestor_nome: nomeGestorAtual
           }
         }));
@@ -650,62 +648,8 @@ export default function SalaPage() {
     alert(`✅ Lead reatribuído com sucesso!`);
   };
 
-  const aprovarLead = async (id: string) => {
-    const leadAlvo = leads.find((l) => l.id === id);
-    if (!leadAlvo) return;
-
-    const nomeConvidado = leadAlvo.dados?.convidado?.nome || 'Novo Gestor';
-    const emailConvidado = leadAlvo.dados?.convidado?.email?.trim().toLowerCase() || '';
-    const whatsConvidado = leadAlvo.dados?.convidado?.whatsapp || '';
-    const cidadeConvidado = leadAlvo.dados?.convidado?.cidade || '';
-
-    if (!emailConvidado) {
-      alert('⚠️ Este lead não possui e-mail cadastrado. Por favor, adicione o e-mail antes de aprovar.');
-      return;
-    }
-
-    const slugGerado = nomeConvidado
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
-
-    const { error: erroGestor } = await supabase
-      .from('scout_gestores')
-      .upsert([
-        {
-          nome: nomeConvidado,
-          whatsapp: whatsConvidado,
-          email: emailConvidado,
-          cidade: cidadeConvidado,
-          slug: slugGerado,
-        }
-      ], { onConflict: 'email' });
-
-    if (erroGestor) {
-      console.error('Erro ao registrar na tabela scout_gestores:', erroGestor.message);
-      alert('⚠️ Erro ao registrar na tabela de gestores: ' + erroGestor.message);
-      return;
-    }
-
-    const { error: erroDelete } = await supabase
-      .from('scout_registros')
-      .delete()
-      .eq('id', id);
-
-    if (erroDelete) {
-      alert('Gestor criado, mas houve erro ao remover da fila de registros: ' + erroDelete.message);
-      return;
-    }
-
-    setLeads((anterior) => anterior.filter((item) => item.id !== id));
-    carregarListaGestores();
-
-    alert(`✅ Gestor aprovado com sucesso!\n• E-mail: ${emailConvidado}\n• Movido para a aba Gestores Aprovados.`);
-  };
-
-  const reprovarEDeletarLead = async (id: string) => {
-    if (!confirm('🛑 Deseja excluir definitivamente este lead reprovado do banco de dados?')) return;
+  const deletarRegistroMaster = async (id: string) => {
+    if (!confirm('🛑 (MASTER) Deseja excluir definitivamente este registro do banco de dados?')) return;
 
     const { error } = await supabase
       .from('scout_registros')
@@ -713,55 +657,37 @@ export default function SalaPage() {
       .eq('id', id);
 
     if (error) {
-      alert('Erro ao excluir lead do Supabase: ' + error.message);
+      alert('Erro ao excluir registro: ' + error.message);
       return;
     }
 
     setLeads((anterior) => anterior.filter((item) => item.id !== id));
   };
 
-  const aprovarTodosPendentes = async () => {
-    const pendentes = leadsFiltrados.filter(l => (l.dados?.status_aprovacao || 'pendente') === 'pendente');
-    if (pendentes.length === 0) {
-      alert('Nenhum prospecto pendente na fila filtrada para aprovação.');
+  const atualizarStatusAtendimento = async (id: string, novoStatus: 'novo' | 'em_atendimento' | 'concluido') => {
+    const leadAlvo = leads.find((l) => l.id === id);
+    if (!leadAlvo) return;
+
+    const novosDados = {
+      ...leadAlvo.dados,
+      status_atendimento: novoStatus,
+    };
+
+    const { error } = await supabase
+      .from('scout_registros')
+      .update({ dados: novosDados })
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao atualizar status de atendimento.');
       return;
     }
 
-    if (!confirm(`👑 DESEJA APROVAR TODOS OS ${pendentes.length} PENDENTES?\nEles serão cadastrados em scout_gestores e removidos da fila de prospectos.`)) {
-      return;
-    }
-
-    let aprovados = 0;
-    for (const item of pendentes) {
-      const emailConvidado = item.dados?.convidado?.email?.trim().toLowerCase();
-      if (!emailConvidado) continue;
-
-      const nomeConvidado = item.dados?.convidado?.nome || 'Novo Gestor';
-      const whatsConvidado = item.dados?.convidado?.whatsapp || '';
-      const cidadeConvidado = item.dados?.convidado?.cidade || '';
-
-      const slugGerado = nomeConvidado
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
-
-      await supabase.from('scout_gestores').upsert([{
-        nome: nomeConvidado,
-        whatsapp: whatsConvidado,
-        email: emailConvidado,
-        cidade: cidadeConvidado,
-        slug: slugGerado,
-      }], { onConflict: 'email' });
-
-      await supabase.from('scout_registros').delete().eq('id', item.id);
-
-      aprovados++;
-    }
-
-    carregarListaGestores();
-    carregarLeadsScout();
-    alert(`🚀 SUCESSO! ${aprovados} gestores foram aprovados em lote e removidos da fila.`);
+    setLeads((anterior) =>
+      anterior.map((item) =>
+        item.id === id ? { ...item, dados: novosDados } : item
+      )
+    );
   };
 
   const deletarGestorAprovado = async (email: string | undefined, gestorId: string) => {
@@ -776,46 +702,21 @@ export default function SalaPage() {
     alert('🗑️ Acesso do gestor revogado com sucesso!');
   };
 
-  const atualizarStatusGenerico = async (id: string, novoStatus: 'pendente' | 'acompanhamento') => {
-    const leadAlvo = leads.find((l) => l.id === id);
-    if (!leadAlvo) return;
-
-    const novosDados = {
-      ...leadAlvo.dados,
-      status_aprovacao: novoStatus,
-    };
-
-    const { error } = await supabase
-      .from('scout_registros')
-      .update({ dados: novosDados })
-      .eq('id', id);
-
-    if (error) {
-      alert('Erro ao atualizar status do registo.');
-      return;
-    }
-
-    setLeads((anterior) =>
-      anterior.map((item) =>
-        item.id === id ? { ...item, dados: novosDados } : item
-      )
-    );
-  };
-
   const linkBaseGestor = `https://crc-scout.vercel.app/?gestor_id=${gestor?.slug || 'master'}`;
 
-  const leadsAtivosGestor = leads.filter((l) => l.dados?.status_aprovacao !== 'reprovado' && l.tipo !== 'garimpo');
+  const leadsAtivosGestor = leads.filter((l) => l.tipo !== 'garimpo');
 
   const totalLeads = leadsAtivosGestor.length;
-  const pendentesFila = leadsAtivosGestor.filter((l) => (l.dados?.status_aprovacao || 'pendente') === 'pendente').length;
-  const acompanhamentoLeads = leadsAtivosGestor.filter((l) => l.dados?.status_aprovacao === 'acompanhamento').length;
+  const novosAtendimento = leadsAtivosGestor.filter((l) => (l.dados?.status_atendimento || 'novo') === 'novo').length;
+  const emAtendimentoLeads = leadsAtivosGestor.filter((l) => l.dados?.status_atendimento === 'em_atendimento').length;
+  const concluidosLeads = leadsAtivosGestor.filter((l) => l.dados?.status_atendimento === 'concluido').length;
 
   const leadsFiltrados = leadsAtivosGestor.filter((item) => {
     const nome = item.dados?.convidado?.nome?.toLowerCase() || '';
     const regiao = item.dados?.convidado?.cidade?.toLowerCase() || '';
     const email = item.dados?.convidado?.email?.toLowerCase() || '';
     const whats = item.dados?.convidado?.whatsapp || '';
-    const status = item.dados?.status_aprovacao || 'pendente';
+    const status = item.dados?.status_atendimento || 'novo';
 
     const buscaLower = buscaNome.toLowerCase();
     const matchesNome = nome.includes(buscaLower) || email.includes(buscaLower) || whats.includes(buscaLower);
@@ -871,13 +772,10 @@ export default function SalaPage() {
 
       <div className="sala-shell">
         <header className="sala-header">
-          <div className="sala-brand">
-            <div className="sala-brand-mark">CRC</div>
-            <div>
-              <div className="sala-brand-name">SCOUT.CRC</div>
-              <div className="sala-brand-subtitle">
-                sala de operações · ambiente operacional {isMasterUser && '👑 [MASTER]'}
-              </div>
+          <div className="sala-brand" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div className="sala-brand-name" style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '3px', color: '#fff' }}>SCOUT</div>
+            <div className="sala-brand-subtitle" style={{ fontSize: '9px', color: 'rgba(255,255,255,0.45)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              sala de operações · gestão de comunidades {isMasterUser && '👑 [MASTER]'}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -946,7 +844,7 @@ export default function SalaPage() {
               )}
 
               <span className="sala-status-dot mobile-hide" />
-              <span className="mobile-hide">AMBIENTE CRC</span>
+              <span className="mobile-hide">AMBIENTE ATIVO</span>
             </div>
           </div>
         </header>
@@ -982,9 +880,9 @@ export default function SalaPage() {
             zIndex: 100,
             animation: 'fadeInOut 0.3s ease'
           }}>
-            <span>🚨 NOVO LEAD DETECTADO EM TEMPO REAL:</span>
+            <span>🚨 NOVO GESTOR DESBLOQUEADO VIA TOKEN:</span>
             <strong style={{ textDecoration: 'underline' }}>{novoLeadAlerta}</strong>
-            <span>➔ Verifique na Fila!</span>
+            <span>➔ Verifique na Fila de Assistência!</span>
           </div>
         )}
 
@@ -1019,46 +917,56 @@ export default function SalaPage() {
                   <span className="sala-menu-icon">🔥</span>
                   <span className="sala-menu-copy">
                     <strong>QUERO CONSTRUIR MINHA COMUNIDADE</strong>
-                    <small>Quiz de Qualificação CRC</small>
+                    <small>Quiz de Qualificação</small>
                   </span>
                   <span className="sala-lock">➔</span>
                 </button>
               )}
 
-              {modulos.map((modulo) => (
-                <div key={modulo.nome} className="sala-menu-group">
-                  <button
-                    type="button"
-                    className={`sala-menu-item ${moduloAtivo === modulo.nome ? 'active' : ''}`}
-                    onClick={() => lidarComCliqueModulo(modulo)}
-                  >
-                    <span className="sala-menu-icon">{modulo.icone}</span>
-                    <span className="sala-menu-copy">
-                      <strong>{modulo.nome}</strong>
-                      <small>{gestorDesbloqueado ? 'ambiente livre' : '🔒 restrito'}</small>
-                    </span>
-                    <span className="sala-lock">{gestorDesbloqueado ? '✦' : '⌕'}</span>
-                  </button>
+              {modulos.map((modulo) => {
+                // Oculta "Gestores Autorizados" para quem não for Master
+                if (modulo.nome === 'Seu SCOUT' && modulo.sublinks?.includes('Gestores Autorizados') && !isMasterUser) {
+                  return null;
+                }
 
-                  {gestorDesbloqueado && modulo.sublinks && moduloAtivo === modulo.nome && (
-                    <div className="sala-sublinks">
-                      {modulo.sublinks.map((sub) => (
-                        <button
-                          key={sub}
-                          type="button"
-                          className={`sala-sublink-btn ${subModuloAtivo === sub ? 'active' : ''}`}
-                          onClick={() => {
-                            setSubModuloAtivo(sub);
-                            setMenuMobileAberto(false);
-                          }}
-                        >
-                          ↳ {sub}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                return (
+                  <div key={modulo.nome} className="sala-menu-group">
+                    <button
+                      type="button"
+                      className={`sala-menu-item ${moduloAtivo === modulo.nome ? 'active' : ''}`}
+                      onClick={() => lidarComCliqueModulo(modulo)}
+                    >
+                      <span className="sala-menu-icon">{modulo.icone}</span>
+                      <span className="sala-menu-copy">
+                        <strong>{modulo.nome}</strong>
+                        <small>{gestorDesbloqueado ? 'ambiente livre' : '🔒 restrito'}</small>
+                      </span>
+                      <span className="sala-lock">{gestorDesbloqueado ? '✦' : '⌕'}</span>
+                    </button>
+
+                    {gestorDesbloqueado && modulo.sublinks && moduloAtivo === modulo.nome && (
+                      <div className="sala-sublinks">
+                        {modulo.sublinks.map((sub) => {
+                          if (sub === 'Gestores Autorizados' && !isMasterUser) return null;
+                          return (
+                            <button
+                              key={sub}
+                              type="button"
+                              className={`sala-sublink-btn ${subModuloAtivo === sub ? 'active' : ''}`}
+                              onClick={() => {
+                                setSubModuloAtivo(sub);
+                                setMenuMobileAberto(false);
+                              }}
+                            >
+                              ↳ {sub}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
 
             {!modoVisitante && (
@@ -1089,12 +997,12 @@ export default function SalaPage() {
                   Sua Central <span>SCOUT.</span>
                 </h1>
                 <p className="mobile-hide">
-                  Prospecção, atração visual e inteligência de qualificação para o modelo CRC.
+                  Prospecção, atração visual e inteligência de qualificação para a Gestão de Comunidades.
                 </p>
               </div>
 
               <div className="sala-welcome-mark mobile-hide">
-                <span>CRC</span>
+                <span>SCOUT</span>
                 <small>COMUNIDADE · RELAÇÃO · CONSUMO</small>
               </div>
             </div>
@@ -1105,13 +1013,13 @@ export default function SalaPage() {
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.35)', background: 'linear-gradient(135deg, rgba(0,255,136,0.06), rgba(5,5,5,0.98))' }}>
                   <div style={{ maxWidth: '820px' }}>
                     <span style={{ color: '#00ff88', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                      ✦ BEM-VINDO À SALA DE OPERAÇÕES DO CRC
+                      ✦ BEM-VINDO À SALA DE OPERAÇÕES DA GESTÃO DE COMUNIDADES
                     </span>
                     <h2 style={{ fontSize: '26px', color: '#fff', margin: '0 0 14px', lineHeight: '1.2' }}>
                       Liderança Relacional & Arquitetura de Comunidades
                     </h2>
                     <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.7', marginBottom: '24px' }}>
-                      Você está no coração operacional do <strong>SCOUT.CRC</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
+                      Você está no coração operacional do <strong>SCOUT</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px', marginBottom: '28px' }}>
@@ -1133,9 +1041,9 @@ export default function SalaPage() {
 
                       <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
                         <div style={{ fontSize: '22px', marginBottom: '8px' }}>🤝</div>
-                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Acompanhamento X1</h4>
+                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Assistência Técnica X1</h4>
                         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', lineHeight: '1.5', margin: 0 }}>
-                          Qualifique e organize seus convidados com uma prancheta integrada em tempo real com o banco do sistema.
+                          Acompanhe os novos gestores que desbloquearam a plataforma via token para prestar suporte de acolhimento em tempo real.
                         </p>
                       </div>
                     </div>
@@ -1174,7 +1082,7 @@ export default function SalaPage() {
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
                     <div>
-                      <span className="eyebrow-sim">CRC | Modelo de Comunidades</span>
+                      <span className="eyebrow-sim">Gestão de Comunidade | Modelo de Expansão</span>
                       <h3 className="title-sim" style={{ fontSize: '22px', color: '#fff', margin: '4px 0 2px' }}>Simulação de Expansão da Comunidade</h3>
                       <p className="subtitle-sim" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
                         Projeção baseada em GCom - gestores de comunidade e consumo recorrente.
@@ -1245,7 +1153,7 @@ export default function SalaPage() {
                 <div className="sala-dynamic-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>APN INSTITUCIONAL · OZONTECK</span>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>APN INSTITUCIONAL</span>
                       <h3 style={{ fontSize: '20px', margin: '4px 0 2px', color: '#fff' }}>🖼️ Slides da Apresentação do Negócio</h3>
                       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
                         Material visual em alta definição para reuniões caseiras ou conferências via Zoom/Google Meet.
@@ -1255,7 +1163,7 @@ export default function SalaPage() {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <a
                         href="/assets/apn-ozonteck.pdf"
-                        download="APN_Ozonteck_Oficial.pdf"
+                        download="APN_Oficial.pdf"
                         style={{
                           background: 'rgba(0,255,136,0.15)',
                           border: '1px solid rgba(0,255,136,0.4)',
@@ -1279,20 +1187,18 @@ export default function SalaPage() {
                     <iframe
                       src="/assets/apn-ozonteck.pdf#toolbar=1&navpanes=0&scrollbar=1"
                       style={{ width: '100%', height: '100%', border: 'none' }}
-                      title="Apresentação de Negócio Ozonteck"
+                      title="Apresentação de Negócio"
                     />
                   </div>
                 </div>
               )}
 
-              {/* CATÁLOGO UNIFICADO & VITRINE DE PRODUTOS INDIVIDUAIS (1 A 40) */}
               {gestorDesbloqueado && moduloAtivo === 'Apresentação do Negócio' && subModuloAtivo === 'Catálogos & Vendas' && (
                 <div className="sala-dynamic-card" style={{ border: '1px solid rgba(0, 255, 136, 0.4)', background: 'linear-gradient(135deg, rgba(0,255,136,0.05), rgba(5,5,5,0.98))' }}>
                   
-                  {/* CABEÇALHO DO MÓDULO */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS · CRC</span>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>COMÉRCIO & VENDAS DIRETAS</span>
                       <h3 style={{ fontSize: '22px', margin: '4px 0 2px', color: '#fff' }}>🛍️ Vitrine de Catálogo Unificado & Produtos</h3>
                       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
                         Envie o catálogo geral completo em PDF com capa ou utilize a vitrine de itens (1 a 40) para inspecionar e baixar para o atendimento.
@@ -1300,11 +1206,9 @@ export default function SalaPage() {
                     </div>
                   </div>
 
-                  {/* OPÇÃO 1: CATÁLOGO GERAL UNIFICADO EM PDF COM CAPA */}
                   <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '20px', marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
                       
-                      {/* CAPA DO CATÁLOGO GERAL */}
                       <div style={{ width: '120px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', background: '#111', flexShrink: 0 }}>
                         <img src="/assets/capa-catalogo-geral.jpg" alt="Capa Catálogo Geral" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
@@ -1315,7 +1219,7 @@ export default function SalaPage() {
                         </span>
                         <h4 style={{ color: '#fff', fontSize: '18px', margin: '6px 0 4px' }}>📁 Catálogo Geral 2026 (PDF Completo)</h4>
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
-                          Conheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.
+                          Conheça a nossa linha completa de produtos e de bem-estar para o seu lar.
                         </p>
 
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -1331,7 +1235,7 @@ export default function SalaPage() {
                             onClick={() => {
                               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
                               const textoMensagem = encodeURIComponent(
-                                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos ozonizados e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
                               );
                               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
                             }}
@@ -1345,7 +1249,6 @@ export default function SalaPage() {
                     </div>
                   </div>
 
-                  {/* OPÇÃO 2: GRADE DE CARDS INDIVIDUAIS (1 A 40) */}
                   <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ color: '#fff', fontSize: '16px', marginBottom: '8px' }}>🎯 Vitrine Rápida por Item (Páginas 1 a 40)</h4>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
@@ -1366,7 +1269,6 @@ export default function SalaPage() {
                               <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>🔍 Inspecionar</span>
                             </div>
                             
-                            {/* IMAGEM DO PRODUTO (CLICÁVEL PARA ABRIR NO MODAL) */}
                             <div 
                               onClick={() => {
                                 const modalEl = document.getElementById('modal-zoom-produto');
@@ -1376,8 +1278,6 @@ export default function SalaPage() {
                                 if (modalEl && imgEl && btnDownload) {
                                   imgEl.src = imagemSrc;
                                   modalEl.style.display = 'flex';
-                                  
-                                  // Configura o link de download direto para o item exato
                                   btnDownload.href = imagemSrc;
                                   btnDownload.download = `produto-item-${num}.jpg`;
                                 }
@@ -1411,7 +1311,6 @@ export default function SalaPage() {
                             </div>
                           </div>
 
-                          {/* BOTÃO DE BAIXAR DIRETO NO CARD */}
                           <a
                             href={imagemSrc}
                             download={`produto-item-${num}.jpg`}
@@ -1424,7 +1323,6 @@ export default function SalaPage() {
                     })}
                   </div>
 
-                  {/* MODAL DE INSPEÇÃO COM ZOOM PROPORCIONAL E DOWNLOAD */}
                   <div 
                     id="modal-zoom-produto"
                     onClick={(e) => {
@@ -1436,7 +1334,6 @@ export default function SalaPage() {
                   >
                     <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '92vh', background: '#111', border: '1px solid rgba(0,255,136,0.4)', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,255,136,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
                       
-                      {/* BOTÃO DE FECHAR (X) */}
                       <button 
                         onClick={() => {
                           const modalEl = document.getElementById('modal-zoom-produto');
@@ -1448,7 +1345,6 @@ export default function SalaPage() {
                         ✕
                       </button>
 
-                      {/* IMAGEM AMPLIADA PROPORCIONALMENTE (SEM CORTES) */}
                       <div style={{ maxWidth: '80vw', maxHeight: '64vh', overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#050505', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <img 
                           id="img-zoom-preview"
@@ -1458,7 +1354,6 @@ export default function SalaPage() {
                         />
                       </div>
 
-                      {/* BOTÃO DE DOWNLOAD DIRETO DENTRO DO MODAL */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '350px', alignItems: 'center' }}>
                         <a
                           id="btn-download-item"
@@ -1499,10 +1394,10 @@ export default function SalaPage() {
                     </div>
 
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA CRC</span>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILOSOFIA & GOVERNANÇA</span>
                       <h2 style={{ fontSize: '22px', color: '#fff', margin: '8px 0 12px' }}>A Relação entre o Livro e a Plataforma</h2>
                       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '16px' }}>
-                        A plataforma <strong>SCOUT.CRC</strong> não é apenas uma ferramenta de prospecção; ela é a materialização prática dos conceitos apresentados no livro <em>"O Oleiro e a Argila"</em>. 
+                        A plataforma <strong>SCOUT</strong> não é apenas uma ferramenta de prospecção; ela é a materialização prática dos conceitos apresentados no livro <em>"O Oleiro e a Argila"</em>. 
                       </p>
                       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '20px' }}>
                         Assim como o oleiro molda a argila com intenção e cuidado, o Gestor de Comunidades molda relações de consumo sustentáveis, liderança relacional e pertencimento na rede.
@@ -1546,7 +1441,7 @@ export default function SalaPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
                           <strong style={{ color: '#00ff88', fontSize: '13px', letterSpacing: '0.5px' }}>
-                            O SCOUT DO CRC OPERA SEGUNDO A LEI DAS MÉDIAS.
+                            O SCOUT OPERA SEGUNDO A LEI DAS MÉDIAS.
                           </strong>
                         </div>
                         <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
@@ -1610,7 +1505,7 @@ export default function SalaPage() {
                             onClick={() => setNichoPfSelecionado('liberais')}
                             style={{ padding: '12px', borderRadius: '12px', cursor: 'pointer', background: nichoPfSelecionado === 'liberais' ? 'rgba(43,217,255,0.18)' : 'rgba(255,255,255,0.03)', color: nichoPfSelecionado === 'liberais' ? '#2bd9ff' : '#fff', border: nichoPfSelecionado === 'liberais' ? '1px solid #2bd9ff' : '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}
                           >
-                            <strong style={{ display: 'block', fontSize: '12px' }}>🩺 Saúde & Ozonioterapia</strong>
+                            <strong style={{ display: 'block', fontSize: '12px' }}>🩺 Saúde Integrativa</strong>
                           </button>
 
                           <button
@@ -1821,15 +1716,15 @@ export default function SalaPage() {
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Santinho Digital' && (
                 <div className="sala-dynamic-card">
                   <span className="sala-eyebrow" style={{ color: '#00ff88' }}>SEU SCOUT · LINK 2</span>
-                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Santinho Digital (Vídeo de 10s)</h3>
+                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>Banner Institucional de Atração</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>
-                    Sua assinatura visual com vídeo de alta conversão para atração rápida.
+                    Sua assinatura visual de impacto para atração unificada ao ecossistema.
                   </p>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', alignItems: 'center', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(0,255,136,0.3)' }}>
                     <div style={{ background: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,255,136,0.3)', textAlign: 'center', padding: '10px' }}>
-                      <span style={{ fontSize: '10px', color: '#00ff88', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>VÍDEO 10s · ATRAÇÃO</span>
-                      <video src="/assets/santinho.mp4" controls style={{ width: '100%', borderRadius: '6px' }} />
+                      <span style={{ fontSize: '10px', color: '#00ff88', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>BANNER INSTITUCIONAL OFICIAL</span>
+                      <img src="/assets/banner-scout.jpg" alt="Banner Scout" style={{ width: '100%', borderRadius: '6px', display: 'block' }} />
                     </div>
                     <div>
                       <strong style={{ fontSize: '14px', color: '#fff', display: 'block', marginBottom: '8px' }}>Seu Link Exclusivo de Atribuição (Gestor):</strong>
@@ -1858,100 +1753,48 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Feedback de Prospectos' && (
+              {/* ABA DE GESTORES AUTORIZADOS (EXCLUSIVO MASTER - ASSISTÊNCIA TÉCNICA) */}
+              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Autorizados' && isMasterUser && (
                 <div className="sala-dynamic-card">
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ background: '#00ff88', color: '#050505', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', letterSpacing: '1px' }}>
-                          CENTRAL DE ATENDIMENTO {isMasterUser && '👑 [MASTER]'}
+                          PAINEL MASTER 👑 · ASSISTÊNCIA TÉCNICA
                         </span>
                         <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
-                          Gestão de Prospectos & Julgamento Individual
+                          Gestores Autorizados via Token (Acesso Imediato)
                         </h4>
                       </div>
-
-                      {isMasterUser && (
-                        <button
-                          onClick={aprovarTodosPendentes}
-                          style={{
-                            background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                            color: '#050505',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '10px',
-                            fontWeight: '900',
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            boxShadow: '0 0 15px rgba(0,255,136,0.4)',
-                            letterSpacing: '0.5px'
-                          }}
-                        >
-                          ⚡ APROVAR LISTA EXIBIDA EM LOTE
-                        </button>
-                      )}
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Analise as respostas do Quiz. Ao aprovar, o lead sai automaticamente desta fila e é promovido para a tabela de gestores ativos.
+                      Estes membros desbloquearam o site automaticamente pelo Quiz. O X1 agora é focado em suporte técnico e acolhimento. Utilize os botões de status para gerenciar o atendimento.
                     </p>
                   </div>
 
-                  {isMasterUser && (
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(0,255,136,0.2)' }}>
-                      <button
-                        onClick={() => setModoVisaoMaster('global')}
-                        style={{
-                          flex: 1,
-                          padding: '8px 12px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: modoVisaoMaster === 'global' ? '#00ff88' : 'transparent',
-                          color: modoVisaoMaster === 'global' ? '#050505' : 'rgba(255,255,255,0.6)',
-                          fontWeight: 'bold',
-                          fontSize: '11px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🌐 Visão Global da Rede (Toda a Base)
-                      </button>
-                      <button
-                        onClick={() => setModoVisaoMaster('pessoal')}
-                        style={{
-                          flex: 1,
-                          padding: '8px 12px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: modoVisaoMaster === 'pessoal' ? '#00ff88' : 'transparent',
-                          color: modoVisaoMaster === 'pessoal' ? '#050505' : 'rgba(255,255,255,0.6)',
-                          fontWeight: 'bold',
-                          fontSize: '11px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        👤 Meus Leads Diretos
-                      </button>
-                    </div>
-                  )}
-
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '22px' }}>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>TOTAL ATIVOS</span>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>TOTAL MEMBROS</span>
                       <strong style={{ fontSize: '20px', color: '#fff' }}>{totalLeads}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>PENDENTES X1</span>
-                      <strong style={{ fontSize: '20px', color: '#00ff88' }}>{pendentesFila}</strong>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>NOVO SUPORTE</span>
+                      <strong style={{ fontSize: '20px', color: '#00ff88' }}>{novosAtendimento}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>ACOMPANHAMENTO</span>
-                      <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{acompanhamentoLeads}</strong>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>EM ATENDIMENTO</span>
+                      <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{emAtendimentoLeads}</strong>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>CONCLUÍDO</span>
+                      <strong style={{ fontSize: '20px', color: '#ffd700' }}>{concluidosLeads}</strong>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>FILA OPERACIONAL ATIVA</span>
-                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Registros do Supabase</h3>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>RELATÓRIO DE ASSISTÊNCIA</span>
+                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Cadastros do Supabase</h3>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1975,7 +1818,7 @@ export default function SalaPage() {
                         onClick={carregarLeadsScout}
                         style={{ background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.3)', color: '#00ff88', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
                       >
-                        🔄 Atualizar Fila
+                        🔄 Atualizar Registros
                       </button>
                     </div>
                   </div>
@@ -1989,21 +1832,19 @@ export default function SalaPage() {
                       style={{ background: '#050505', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 14px', borderRadius: '10px', color: '#fff', fontSize: '12px' }}
                     />
 
-                    {isMasterUser && (
-                      <select
-                        value={filtroGestorId}
-                        onChange={(e) => setFiltroGestorId(e.target.value)}
-                        style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.4)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
-                      >
-                        <option value="todos">👤 Todos os Gestores da Rede</option>
-                        <option value="sem_gestor">❓ (Sem Gestor - Pool Geral)</option>
-                        {listaGestores.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            👤 Fila de: {g.nome}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                    <select
+                      value={filtroGestorId}
+                      onChange={(e) => setFiltroGestorId(e.target.value)}
+                      style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.4)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
+                    >
+                      <option value="todos">👤 Todos os Patrocinadores</option>
+                      <option value="sem_gestor">❓ (Sem Patrocinador - Pool Master)</option>
+                      {listaGestores.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          👤 Patrocínio de: {g.nome}
+                        </option>
+                      ))}
+                    </select>
 
                     <input
                       type="text"
@@ -2018,9 +1859,10 @@ export default function SalaPage() {
                       onChange={(e) => setFiltroStatus(e.target.value)}
                       style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
                     >
-                      <option value="pendente">Pendentes (Fila Ativa)</option>
                       <option value="todos">Todos os Status</option>
-                      <option value="acompanhamento">Em Acompanhamento</option>
+                      <option value="novo">Novo Suporte</option>
+                      <option value="em_atendimento">Em Atendimento</option>
+                      <option value="concluido">Assistência Concluída</option>
                     </select>
                   </div>
 
@@ -2030,19 +1872,19 @@ export default function SalaPage() {
                     </div>
                   ) : leadsFiltrados.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px', background: 'rgba(0,0,0,0.3)' }}>
-                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Nenhum prospecto encontrado para esse filtro.</strong>
-                      Ajuste a busca por nome ou selecione outro Gestor Patrocinador.
+                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Nenhum gestor autorizado encontrado para esse filtro.</strong>
+                      Ajuste a busca ou aguarde novos cadastros via token.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {leadsFiltrados.map((item) => {
                         const convidado = item.dados?.convidado;
                         const whatsClean = convidado?.whatsapp?.replace(/\D/g, '') || '';
-                        const statusAtual = item.dados?.status_aprovacao || 'pendente';
+                        const statusAtendimento = item.dados?.status_atendimento || 'novo';
                         const perfilSocialUrl = convidado?.perfil_social_url || '';
                         const redeSocialOrigem = convidado?.rede_social_origem || 'Rede Social';
                         
-                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, recebi seu cadastro no Quiz do SCOUT.CRC! Podemos conversar sobre seu objetivo?`);
+                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, vi que você concluiu a jornada e desbloqueou o SCOUT! Estou aqui para prestar total assistência técnica no que precisar.`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
 
                         return (
@@ -2062,10 +1904,10 @@ export default function SalaPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <strong style={{ color: '#fff', fontSize: '14px' }}>
-                                  {convidado?.nome || 'Convidado Real'}
+                                  {convidado?.nome || 'Novo Gestor'}
                                 </strong>
                                 <span style={{ fontSize: '9px', background: 'rgba(0,255,136,0.15)', color: '#00ff88', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.3)', fontWeight: 'bold' }}>
-                                  {item.dados?.perfil?.toUpperCase() || 'RESPOSTAS QUIZ'}
+                                  {item.dados?.perfil?.toUpperCase() || 'TOKEN LIBERADO'}
                                 </span>
                                 
                                 <span style={{ 
@@ -2073,10 +1915,10 @@ export default function SalaPage() {
                                   padding: '2px 8px', 
                                   borderRadius: '10px', 
                                   fontWeight: 'bold', 
-                                  background: statusAtual === 'acompanhamento' ? 'rgba(43,217,255,0.2)' : 'rgba(255,255,255,0.08)', 
-                                  color: statusAtual === 'acompanhamento' ? '#2bd9ff' : 'rgba(255,255,255,0.6)' 
+                                  background: statusAtendimento === 'concluido' ? 'rgba(255,215,0,0.2)' : statusAtendimento === 'em_atendimento' ? 'rgba(43,217,255,0.2)' : 'rgba(0,255,136,0.2)', 
+                                  color: statusAtendimento === 'concluido' ? '#ffd700' : statusAtendimento === 'em_atendimento' ? '#2bd9ff' : '#00ff88' 
                                 }}>
-                                  {statusAtual === 'acompanhamento' ? '🔵 EM ACOMPANHAMENTO' : '⚪ PENDENTE X1'}
+                                  {statusAtendimento === 'concluido' ? '✅ CONCLUÍDO' : statusAtendimento === 'em_atendimento' ? '💬 EM ATENDIMENTO' : '🆕 NOVO SUPORTE'}
                                 </span>
                               </div>
 
@@ -2091,13 +1933,7 @@ export default function SalaPage() {
 
                               {perfilSocialUrl && (
                                 <div style={{ fontSize: '11px', color: '#2bd9ff', marginTop: '4px' }}>
-                                  🌐 <strong>Perfil de Origem ({redeSocialOrigem}):</strong> <a href={perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{perfilSocialUrl}</a>
-                                </div>
-                              )}
-
-                              {item.dados?.respostas && (
-                                <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>
-                                  <strong>Objetivo Declarado:</strong> {item.dados.respostas['objetivo'] || 'Não especificado'}
+                                  🌐 <strong>Origem ({redeSocialOrigem}):</strong> <a href={perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{perfilSocialUrl}</a>
                                 </div>
                               )}
 
@@ -2120,7 +1956,7 @@ export default function SalaPage() {
                                     outline: 'none',
                                   }}
                                 >
-                                  <option value="">(Sem Gestor - Pool Geral / Master)</option>
+                                  <option value="">(Sem Patrocinador - Pool Master)</option>
                                   {listaGestores.map((g) => (
                                     <option key={g.id} value={g.id}>
                                       {g.nome}
@@ -2131,54 +1967,39 @@ export default function SalaPage() {
 
                               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }} className="no-print">
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Ações:</span>
+                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Status Assistência:</span>
                                   
                                   <button
-                                    onClick={() => aprovarLead(item.id)}
-                                    style={{ background: 'rgba(0,255,136,0.18)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    onClick={() => atualizarStatusAtendimento(item.id, 'novo')}
+                                    style={{ background: statusAtendimento === 'novo' ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(0,255,136,0.4)', color: '#00ff88', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🟢 Aprovar & Promover
+                                    🆕 Novo
                                   </button>
 
                                   <button
-                                    onClick={() => atualizarStatusGenerico(item.id, 'acompanhamento')}
-                                    style={{ background: 'rgba(43,217,255,0.12)', border: '1px solid rgba(43,217,255,0.3)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    onClick={() => atualizarStatusAtendimento(item.id, 'em_atendimento')}
+                                    style={{ background: statusAtendimento === 'em_atendimento' ? 'rgba(43,217,255,0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(43,217,255,0.4)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🔵 Acompanhamento
+                                    💬 Em Atendimento
                                   </button>
 
                                   <button
-                                    onClick={() => reprovarEDeletarLead(item.id)}
-                                    style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    onClick={() => atualizarStatusAtendimento(item.id, 'concluido')}
+                                    style={{ background: statusAtendimento === 'concluido' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,215,0,0.4)', color: '#ffd700', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    🗑️ Excluir Definitivo (Reprovado)
+                                    ✅ Concluído
+                                  </button>
+
+                                  <button
+                                    onClick={() => deletarRegistroMaster(item.id)}
+                                    style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '6px' }}
+                                    title="Excluir definitivo"
+                                  >
+                                    🗑️ Deletar
                                   </button>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {perfilSocialUrl && (
-                                    <a
-                                      href={perfilSocialUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{
-                                        background: 'rgba(43,217,255,0.15)',
-                                        color: '#2bd9ff',
-                                        fontWeight: '900',
-                                        fontSize: '11px',
-                                        padding: '8px 14px',
-                                        borderRadius: '8px',
-                                        textAlign: 'center',
-                                        textDecoration: 'none',
-                                        whiteSpace: 'nowrap',
-                                        border: '1px solid rgba(43,217,255,0.4)',
-                                        display: 'inline-block'
-                                      }}
-                                    >
-                                      🔗 Visitar {redeSocialOrigem}
-                                    </a>
-                                  )}
-
                                   {whatsClean && (
                                     <a
                                       href={linkWhats}
@@ -2198,7 +2019,7 @@ export default function SalaPage() {
                                         display: 'inline-block'
                                       }}
                                     >
-                                      💬 Iniciar X1 (WhatsApp)
+                                      💬 Suporte X1 (WhatsApp)
                                     </a>
                                   )}
                                 </div>
@@ -2208,78 +2029,6 @@ export default function SalaPage() {
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Aprovados' && (
-                <div className="sala-dynamic-card">
-                  <span className="sala-eyebrow" style={{ color: '#00ff88' }}>
-                    {isMasterUser ? 'REPOSITÓRIO DA REDE · GESTORES ATIVOS' : 'MEU PERFIL DE GESTOR'}
-                  </span>
-                  <h3 style={{ fontSize: '20px', margin: '8px 0 4px', color: '#fff' }}>
-                    {isMasterUser ? 'Gestores Aprovados e Cadastrados' : 'Seu Cadastro Oficial'}
-                  </h3>
-                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>
-                    {isMasterUser 
-                      ? 'Lista oficial de operadores cadastrados na tabela scout_gestores.' 
-                      : 'Suas informações de cadastro na rede SCOUT.CRC.'}
-                  </p>
-
-                  {carregandoGestores ? (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#00ff88', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '14px', border: '1px dashed rgba(0,255,136,0.3)' }}>
-                      ⚙️ Sincronizando com a base de gestores do Supabase... Aguarde um instante.
-                    </div>
-                  ) : (
-                    (() => {
-                      const gestoresParaExibir = isMasterUser 
-                        ? listaGestores 
-                        : listaGestores.filter(g => g.email === gestor?.email || g.id === gestor?.id);
-
-                      if (gestoresParaExibir.length === 0) {
-                        return (
-                          <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px' }}>
-                            Nenhum registro de gestor encontrado para o seu usuário.
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          {gestoresParaExibir.map((gItem) => (
-                            <div key={gItem.id} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                              <div>
-                                <strong style={{ color: '#fff', fontSize: '14px', display: 'block' }}>{gItem.nome}</strong>
-                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>📱 {gItem.whatsapp || 'Sem WhatsApp'} | 📍 {gItem.cidade || 'Região não informada'} | 🔗 Slug: <code style={{ color: '#00ff88' }}>{gItem.slug || 'N/D'}</code></span>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                                <div style={{ background: 'rgba(0,255,136,0.15)', border: '1px solid rgba(0,255,136,0.4)', padding: '6px 12px', borderRadius: '8px', color: '#00ff88', fontSize: '11px', fontWeight: 'bold' }}>
-                                  ✉️ E-mail: {gItem.email || 'Não informado'}
-                                </div>
-
-                                {isMasterUser && (
-                                  <button
-                                    onClick={() => deletarGestorAprovado(gItem.email, gItem.id)}
-                                    style={{
-                                      background: 'rgba(255,68,68,0.18)',
-                                      border: '1px solid rgba(255,68,68,0.4)',
-                                      color: '#ff4444',
-                                      padding: '6px 12px',
-                                      borderRadius: '8px',
-                                      fontSize: '11px',
-                                      fontWeight: 'bold',
-                                      cursor: 'pointer',
-                                    }}
-                                  >
-                                    🗑️ Revogar / Deletar
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()
                   )}
                 </div>
               )}
@@ -2307,7 +2056,7 @@ export default function SalaPage() {
         </div>
 
         <footer className="sala-footer">
-          <span>SCOUT.CRC</span>
+          <span>SCOUT</span>
           <small>Conheça o ambiente. Descubra o seu lugar.</small>
         </footer>
       </div>
@@ -2361,36 +2110,6 @@ export default function SalaPage() {
           padding: 0 26px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.07);
           background: rgba(255, 255, 255, 0.015);
-        }
-        .sala-brand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .sala-brand-mark {
-          display: flex;
-          width: 42px;
-          height: 42px;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(0, 255, 136, 0.42);
-          border-radius: 12px;
-          color: #00ff88;
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 1px;
-        }
-        .sala-brand-name {
-          font-size: 15px;
-          font-weight: 800;
-          letter-spacing: 2px;
-        }
-        .sala-brand-subtitle {
-          margin-top: 3px;
-          color: rgba(255, 255, 255, 0.45);
-          font-size: 10px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
         }
         .sala-header-status {
           display: flex;
