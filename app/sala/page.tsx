@@ -84,7 +84,7 @@ const modulos: Modulo[] = [
     nome: 'Seu SCOUT',
     descricao: 'Sua operação de prospecção e gestão de convidados.',
     icone: '✧',
-    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Feedback de Prospectos', 'Gestores Autorizados'],
+    sublinks: ['Prospecto Digital', 'Santinho Digital', 'Gestores Desbloqueados'],
   },
 ];
 
@@ -127,6 +127,9 @@ export default function SalaPage() {
     slug: string | null;
   } | null>(null);
 
+  // Patrocinador identificado para o gestor logado
+  const [patrocinadorGestor, setPatrocinadorGestor] = useState<GestorItem | null>(null);
+
   const [listaGestores, setListaGestores] = useState<GestorItem[]>([]);
   const [carregandoGestores, setCarregandoGestores] = useState<boolean>(true);
 
@@ -140,7 +143,6 @@ export default function SalaPage() {
   const [carregandoLeads, setCarregandoLeads] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroGestorId, setFiltroGestorId] = useState<string>('todos');
-  const [modoVisaoMaster, setModoVisaoMaster] = useState<'global' | 'pessoal'>('global');
   const [buscaNome, setBuscaNome] = useState<string>('');
   const [buscaRegiao, setBuscaRegiao] = useState<string>('');
   
@@ -223,9 +225,11 @@ export default function SalaPage() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!isMasterUser || modoVisaoMaster === 'pessoal') {
+      if (!isMasterUser) {
         if (eUuidValido(gestor?.id)) {
-          query = query.or(`gestor_id.eq.${gestor?.id},gestor_id.is.null`);
+          query = query.eq('gestor_id', gestor?.id);
+        } else {
+          query = query.eq('gestor_id', '00000000-0000-0000-0000-000000000000');
         }
       }
 
@@ -240,6 +244,57 @@ export default function SalaPage() {
       console.error('Erro inesperado:', err);
     } finally {
       setCarregandoLeads(false);
+    }
+  };
+
+  // Buscar patrocinador do gestor logado ao carregar leads ou gestor
+  const identificarPatrocinadorLogado = async (gestorIdLogado: string | null) => {
+    if (!gestorIdLogado || !eUuidValido(gestorIdLogado)) {
+      setPatrocinadorGestor({
+        id: 'master',
+        nome: 'Gilmar Aguiar (Master)',
+        whatsapp: '5522999231211',
+        slug: 'master'
+      });
+      return;
+    }
+
+    try {
+      // Busca o registro deste gestor na tabela scout_registros para ver quem foi o gestor_id que o cadastrou
+      const { data: reg } = await supabase
+        .from('scout_registros')
+        .select('gestor_id')
+        .eq('id', gestorIdLogado)
+        .single();
+
+      if (reg?.gestor_id && eUuidValido(reg.gestor_id)) {
+        const { data: patroc } = await supabase
+          .from('scout_gestores')
+          .select('*')
+          .eq('id', reg.gestor_id)
+          .single();
+
+        if (patroc) {
+          setPatrocinadorGestor(patroc as GestorItem);
+          return;
+        }
+      }
+
+      // Se não achar registro direto, define o Master como padrão
+      setPatrocinadorGestor({
+        id: 'master',
+        nome: 'Gilmar Aguiar (Master)',
+        whatsapp: '5522999231211',
+        slug: 'master'
+      });
+    } catch (err) {
+      console.error('Erro ao identificar patrocinador:', err);
+      setPatrocinadorGestor({
+        id: 'master',
+        nome: 'Gilmar Aguiar (Master)',
+        whatsapp: '5522999231211',
+        slug: 'master'
+      });
     }
   };
 
@@ -268,6 +323,7 @@ export default function SalaPage() {
             setGestor(gestorBanco);
             setGestorDesbloqueado(true);
             localStorage.setItem('scout_gestor', JSON.stringify(gestorBanco));
+            identificarPatrocinadorLogado(gestorBanco.id);
             carregarLeadsScout();
             return;
           }
@@ -595,7 +651,7 @@ export default function SalaPage() {
         (payload) => {
           const novoRegistro = payload.new as ConvidadoRegistro;
 
-          if (!isMasterUser && eUuidValido(gestor?.id) && novoRegistro.gestor_id !== gestor?.id && novoRegistro.gestor_id !== null) {
+          if (!isMasterUser && eUuidValido(gestor?.id) && novoRegistro.gestor_id !== gestor?.id) {
             return;
           }
 
@@ -615,13 +671,13 @@ export default function SalaPage() {
     return () => {
       supabase.removeChannel(canal);
     };
-  }, [gestorDesbloqueado, gestor, modoVisaoMaster]);
+  }, [gestorDesbloqueado, gestor, isMasterUser]);
 
   useEffect(() => {
     if (gestorDesbloqueado) {
       carregarLeadsScout();
     }
-  }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo, modoVisaoMaster]);
+  }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
 
   const atribuirGestorLead = async (id: string, novoGestorId: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
@@ -690,18 +746,6 @@ export default function SalaPage() {
     );
   };
 
-  const deletarGestorAprovado = async (email: string | undefined, gestorId: string) => {
-    if (!confirm(`🛑 ATENÇÃO (PODER MASTER): Deseja revogar e DELETAR o acesso deste Gestor (${email})?\nIsso removerá a conta dele da tabela oficial scout_gestores.`)) return;
-
-    if (email) {
-      await supabase.from('scout_gestores').delete().eq('email', email);
-    }
-
-    carregarListaGestores();
-    carregarLeadsScout();
-    alert('🗑️ Acesso do gestor revogado com sucesso!');
-  };
-
   const linkBaseGestor = `https://crc-scout.vercel.app/?gestor_id=${gestor?.slug || 'master'}`;
 
   const leadsAtivosGestor = leads.filter((l) => l.tipo !== 'garimpo');
@@ -724,7 +768,7 @@ export default function SalaPage() {
     const matchesStatus = filtroStatus === 'todos' ? true : status === filtroStatus;
 
     let matchesGestor = true;
-    if (filtroGestorId !== 'todos') {
+    if (isMasterUser && filtroGestorId !== 'todos') {
       if (filtroGestorId === 'sem_gestor') {
         matchesGestor = item.gestor_id === null;
       } else {
@@ -775,11 +819,35 @@ export default function SalaPage() {
           <div className="sala-brand" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <div className="sala-brand-name" style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '3px', color: '#fff' }}>SCOUT</div>
             <div className="sala-brand-subtitle" style={{ fontSize: '9px', color: 'rgba(255,255,255,0.45)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              sala de operações · gestão de comunidades {isMasterUser && '👑 [MASTER]'}
+              sala de operações · gestão de comunidades {isMasterUser ? '👑 [MASTER]' : `👤 [GESTOR: ${gestor?.nome || 'Ativo'}]`}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             
+            {/* BOTÃO DE CONTATO DIRETO COM O GESTOR / PATROCINADOR PARA O NOVO GESTOR */}
+            {!isMasterUser && patrocinadorGestor && (
+              <a
+                href={`https://wa.me/55${patrocinadorGestor.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor.nome}! Acabei de desbloquear meu acesso no SCOUT e gostaria de falar com meu gestor/patrocinador.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                  color: '#050505',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  fontWeight: '900',
+                  fontSize: '11px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 0 20px rgba(0,255,136,0.35)'
+                }}
+              >
+                💬 Fale com seu Gestor: {patrocinadorGestor.nome}
+              </a>
+            )}
+
             {isMasterUser && (
               <button
                 type="button"
@@ -882,7 +950,7 @@ export default function SalaPage() {
           }}>
             <span>🚨 NOVO GESTOR DESBLOQUEADO VIA TOKEN:</span>
             <strong style={{ textDecoration: 'underline' }}>{novoLeadAlerta}</strong>
-            <span>➔ Verifique na Fila de Assistência!</span>
+            <span>➔ Verifique na Fila de Gestores Desbloqueados!</span>
           </div>
         )}
 
@@ -924,11 +992,6 @@ export default function SalaPage() {
               )}
 
               {modulos.map((modulo) => {
-                // Oculta "Gestores Autorizados" para quem não for Master
-                if (modulo.nome === 'Seu SCOUT' && modulo.sublinks?.includes('Gestores Autorizados') && !isMasterUser) {
-                  return null;
-                }
-
                 return (
                   <div key={modulo.nome} className="sala-menu-group">
                     <button
@@ -947,7 +1010,6 @@ export default function SalaPage() {
                     {gestorDesbloqueado && modulo.sublinks && moduloAtivo === modulo.nome && (
                       <div className="sala-sublinks">
                         {modulo.sublinks.map((sub) => {
-                          if (sub === 'Gestores Autorizados' && !isMasterUser) return null;
                           return (
                             <button
                               key={sub}
@@ -977,7 +1039,7 @@ export default function SalaPage() {
                       {isMasterUser ? '👑 GESTOR MASTER (GLOBAL)' : 'GESTOR DE COMUNIDADE'}
                     </span>
                     <strong className="sala-gestor-name">{gestor.nome}</strong>
-                    <p>Operação SCOUT ativa com rastreio direto no Supabase.</p>
+                    <p>Operação SCOUT ativa com rastreio direto no banco.</p>
                   </>
                 ) : (
                   <>
@@ -1022,6 +1084,33 @@ export default function SalaPage() {
                       Você está no coração operacional do <strong>SCOUT</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
                     </p>
 
+                    {/* CARD DE CONTATO COM O GESTOR PATROCINADOR NA HOME DE BOAS-VINDAS */}
+                    {!isMasterUser && patrocinadorGestor && (
+                      <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                        <div>
+                          <span style={{ color: '#00ff88', fontSize: '9px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', display: 'block' }}>SEU PATROCINADOR DE REFERÊNCIA</span>
+                          <strong style={{ color: '#fff', fontSize: '16px' }}>{patrocinadorGestor.nome}</strong>
+                        </div>
+                        <a
+                          href={`https://wa.me/55${patrocinadorGestor.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor.nome}! Acabei de desbloquear meu acesso no SCOUT e gostaria de falar com meu gestor/patrocinador.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            background: '#00ff88',
+                            color: '#050505',
+                            padding: '10px 18px',
+                            borderRadius: '10px',
+                            fontWeight: '900',
+                            fontSize: '12px',
+                            textDecoration: 'none',
+                            boxShadow: '0 4px 15px rgba(0,255,136,0.35)'
+                          }}
+                        >
+                          💬 Fale com seu Gestor no WhatsApp →
+                        </a>
+                      </div>
+                    )}
+
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px', marginBottom: '28px' }}>
                       <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
                         <div style={{ fontSize: '22px', marginBottom: '8px' }}>🎯</div>
@@ -1041,9 +1130,9 @@ export default function SalaPage() {
 
                       <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: '14px', padding: '18px' }}>
                         <div style={{ fontSize: '22px', marginBottom: '8px' }}>🤝</div>
-                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Assistência Técnica X1</h4>
+                        <h4 style={{ color: '#00ff88', fontSize: '14px', margin: '0 0 6px' }}>Gestores Desbloqueados</h4>
                         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', lineHeight: '1.5', margin: 0 }}>
-                          Acompanhe os novos gestores que desbloquearam a plataforma via token para prestar suporte de acolhimento em tempo real.
+                          Acompanhe os novos gestores que desbloquearam a plataforma automaticamente via token para acompanhar o crescimento da rede.
                         </p>
                       </div>
                     </div>
@@ -1052,7 +1141,7 @@ export default function SalaPage() {
                       <div style={{ background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.35)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
                         <h4 style={{ color: '#fff', fontSize: '15px', margin: '0 0 6px' }}>Pronto para iniciar a sua comunidade?</h4>
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 14px' }}>
-                          Responda ao Quiz de Qualificação para registrar seu objetivo e acionar seu gestor.
+                          Responda ao Quiz de Qualificação para registrar seu objetivo e desbloquear seu acesso.
                         </p>
                         <button
                           type="button"
@@ -1235,7 +1324,7 @@ export default function SalaPage() {
                             onClick={() => {
                               const urlPdf = `${window.location.origin}/assets/catalogo-geral.pdf`;
                               const textoMensagem = encodeURIComponent(
-                                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Atendimento via Gestor: ${gestor?.nome || 'Master'})*`
+                                `✨ *Olá! É um prazer falar com você.*\n\nConheça a nossa linha completa de produtos e de bem-estar para o seu lar.\n\n📖 *Confira o Catálogo Oficial Completo:* \n${urlPdf}\n\nEstou à disposição para tirar qualquer dúvida e ajudar no seu pedido! 🌿\n*(Gestor: ${gestor?.nome || 'Ativo'})*`
                               );
                               window.open(`https://wa.me/?text=${textoMensagem}`, '_blank');
                             }}
@@ -1364,7 +1453,7 @@ export default function SalaPage() {
                           📥 Baixar Imagem em Alta Resolução
                         </a>
                         <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', textAlign: 'center' }}>
-                          💡 Dica: Clique com o botão direito na imagem acima e escolha <b>"Copiar imagem"</b>, ou utilize o botão de baixar para enviar no WhatsApp.
+                          💡 Dica: Clique com o botão direito na imagem acima e escolha <b>"Copiar imagem"</b>, ou utilize o botão de baixar.
                         </span>
                       </div>
 
@@ -1561,7 +1650,7 @@ export default function SalaPage() {
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                           <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                            ⚡ Lote Ativo no Supabase ({perfisGarimpados.length} Perfis Persistidos com WhatsApp + Rede Social)
+                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Perfis Persistidos com WhatsApp + Rede Social)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
                             💡 Utilize o WhatsApp (inegociável) ou visite o perfil social de origem
@@ -1753,22 +1842,24 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* ABA DE GESTORES AUTORIZADOS (EXCLUSIVO MASTER - ASSISTÊNCIA TÉCNICA) */}
-              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Autorizados' && isMasterUser && (
+              {/* ABA DE GESTORES DESBLOQUEADOS (COM FILTRAGEM POR PATROCINADOR PARA GESTORES E VISÃO GLOBAL PARA O MASTER) */}
+              {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Desbloqueados' && (
                 <div className="sala-dynamic-card">
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ background: '#00ff88', color: '#050505', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', fontSize: '10px', letterSpacing: '1px' }}>
-                          PAINEL MASTER 👑 · ASSISTÊNCIA TÉCNICA
+                          {isMasterUser ? '👑 PAINEL MASTER' : `👤 GESTOR: ${gestor?.nome?.toUpperCase()}`}
                         </span>
                         <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>
-                          Gestores Autorizados via Token (Acesso Imediato)
+                          Gestores Desbloqueados via Token (Acesso Imediato)
                         </h4>
                       </div>
                     </div>
                     <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                      Estes membros desbloquearam o site automaticamente pelo Quiz. O X1 agora é focado em suporte técnico e acolhimento. Utilize os botões de status para gerenciar o atendimento.
+                      {isMasterUser 
+                        ? 'Estes membros desbloquearam o site automaticamente pelo Quiz. Como Master, você visualiza a rede global e o patrocínio de cada membro.'
+                        : 'Estes são os novos gestores que entraram através dos seus links e santinhos digitais. Acompanhe o crescimento da sua comunidade em tempo real.'}
                     </p>
                   </div>
 
@@ -1778,11 +1869,11 @@ export default function SalaPage() {
                       <strong style={{ fontSize: '20px', color: '#fff' }}>{totalLeads}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>NOVO SUPORTE</span>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>NOVOS</span>
                       <strong style={{ fontSize: '20px', color: '#00ff88' }}>{novosAtendimento}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>EM ATENDIMENTO</span>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', display: 'block' }}>EM ACOMPANHAMENTO</span>
                       <strong style={{ fontSize: '20px', color: '#2bd9ff' }}>{emAtendimentoLeads}</strong>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
@@ -1793,8 +1884,8 @@ export default function SalaPage() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>RELATÓRIO DE ASSISTÊNCIA</span>
-                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Cadastros do Supabase</h3>
+                      <span className="sala-eyebrow" style={{ color: '#00ff88' }}>RELATÓRIO DE REDE</span>
+                      <h3 style={{ fontSize: '18px', margin: '2px 0', color: '#fff' }}>Cadastros de Gestores Desbloqueados</h3>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1832,19 +1923,21 @@ export default function SalaPage() {
                       style={{ background: '#050505', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 14px', borderRadius: '10px', color: '#fff', fontSize: '12px' }}
                     />
 
-                    <select
-                      value={filtroGestorId}
-                      onChange={(e) => setFiltroGestorId(e.target.value)}
-                      style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.4)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
-                    >
-                      <option value="todos">👤 Todos os Patrocinadores</option>
-                      <option value="sem_gestor">❓ (Sem Patrocinador - Pool Master)</option>
-                      {listaGestores.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          👤 Patrocínio de: {g.nome}
-                        </option>
-                      ))}
-                    </select>
+                    {isMasterUser && (
+                      <select
+                        value={filtroGestorId}
+                        onChange={(e) => setFiltroGestorId(e.target.value)}
+                        style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.4)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
+                      >
+                        <option value="todos">👤 Todos os Patrocinadores</option>
+                        <option value="sem_gestor">❓ (Sem Patrocinador - Pool Master)</option>
+                        {listaGestores.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            👤 Patrocínio de: {g.nome}
+                          </option>
+                        ))}
+                      </select>
+                    )}
 
                     <input
                       type="text"
@@ -1860,20 +1953,20 @@ export default function SalaPage() {
                       style={{ background: '#050505', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 14px', borderRadius: '10px', color: '#00ff88', fontSize: '12px', fontWeight: 'bold' }}
                     >
                       <option value="todos">Todos os Status</option>
-                      <option value="novo">Novo Suporte</option>
-                      <option value="em_atendimento">Em Atendimento</option>
-                      <option value="concluido">Assistência Concluída</option>
+                      <option value="novo">Novo</option>
+                      <option value="em_atendimento">Em Acompanhamento</option>
+                      <option value="concluido">Concluído</option>
                     </select>
                   </div>
 
                   {carregandoLeads ? (
                     <div style={{ padding: '40px', textAlign: 'center', color: '#00ff88', fontSize: '12px' }}>
-                      ⚙️ Conectando ao Supabase e buscando registros...
+                      ⚙️ Conectando ao banco de dados e buscando registros...
                     </div>
                   ) : leadsFiltrados.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', border: '1px dashed rgba(0,255,136,0.2)', borderRadius: '14px', background: 'rgba(0,0,0,0.3)' }}>
-                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Nenhum gestor autorizado encontrado para esse filtro.</strong>
-                      Ajuste a busca ou aguarde novos cadastros via token.
+                      <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '6px' }}>Nenhum gestor desbloqueado encontrado para esse filtro.</strong>
+                      Ajuste a busca ou aguarde novos cadastros automáticos via token.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1884,7 +1977,7 @@ export default function SalaPage() {
                         const perfilSocialUrl = convidado?.perfil_social_url || '';
                         const redeSocialOrigem = convidado?.rede_social_origem || 'Rede Social';
                         
-                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, vi que você concluiu a jornada e desbloqueou o SCOUT! Estou aqui para prestar total assistência técnica no que precisar.`);
+                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, vi que você concluiu a jornada e desbloqueou o SCOUT automaticamente! Seja muito bem-vindo à nossa comunidade.`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
 
                         return (
@@ -1918,7 +2011,7 @@ export default function SalaPage() {
                                   background: statusAtendimento === 'concluido' ? 'rgba(255,215,0,0.2)' : statusAtendimento === 'em_atendimento' ? 'rgba(43,217,255,0.2)' : 'rgba(0,255,136,0.2)', 
                                   color: statusAtendimento === 'concluido' ? '#ffd700' : statusAtendimento === 'em_atendimento' ? '#2bd9ff' : '#00ff88' 
                                 }}>
-                                  {statusAtendimento === 'concluido' ? '✅ CONCLUÍDO' : statusAtendimento === 'em_atendimento' ? '💬 EM ATENDIMENTO' : '🆕 NOVO SUPORTE'}
+                                  {statusAtendimento === 'concluido' ? '✅ CONCLUÍDO' : statusAtendimento === 'em_atendimento' ? '💬 EM ACOMPANHAMENTO' : '🆕 NOVO'}
                                 </span>
                               </div>
 
@@ -1937,37 +2030,39 @@ export default function SalaPage() {
                                 </div>
                               )}
 
-                              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
-                                  👤 Gestor Patrocinador:
-                                </span>
-                                <select
-                                  value={item.gestor_id || ''}
-                                  onChange={(e) => atribuirGestorLead(item.id, e.target.value)}
-                                  style={{
-                                    background: '#080808',
-                                    border: '1px solid rgba(0,255,136,0.3)',
-                                    color: '#00ff88',
-                                    padding: '4px 10px',
-                                    borderRadius: '8px',
-                                    fontSize: '11px',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    outline: 'none',
-                                  }}
-                                >
-                                  <option value="">(Sem Patrocinador - Pool Master)</option>
-                                  {listaGestores.map((g) => (
-                                    <option key={g.id} value={g.id}>
-                                      {g.nome}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+                              {isMasterUser && (
+                                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
+                                    👤 Gestor Patrocinador:
+                                  </span>
+                                  <select
+                                    value={item.gestor_id || ''}
+                                    onChange={(e) => atribuirGestorLead(item.id, e.target.value)}
+                                    style={{
+                                      background: '#080808',
+                                      border: '1px solid rgba(0,255,136,0.3)',
+                                      color: '#00ff88',
+                                      padding: '4px 10px',
+                                      borderRadius: '8px',
+                                      fontSize: '11px',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      outline: 'none',
+                                    }}
+                                  >
+                                    <option value="">(Sem Patrocinador - Pool Master)</option>
+                                    {listaGestores.map((g) => (
+                                      <option key={g.id} value={g.id}>
+                                        {g.nome}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
 
                               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }} className="no-print">
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Status Assistência:</span>
+                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Status:</span>
                                   
                                   <button
                                     onClick={() => atualizarStatusAtendimento(item.id, 'novo')}
@@ -1980,7 +2075,7 @@ export default function SalaPage() {
                                     onClick={() => atualizarStatusAtendimento(item.id, 'em_atendimento')}
                                     style={{ background: statusAtendimento === 'em_atendimento' ? 'rgba(43,217,255,0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(43,217,255,0.4)', color: '#2bd9ff', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                                   >
-                                    💬 Em Atendimento
+                                    💬 Em Acompanhamento
                                   </button>
 
                                   <button
@@ -1990,13 +2085,15 @@ export default function SalaPage() {
                                     ✅ Concluído
                                   </button>
 
-                                  <button
-                                    onClick={() => deletarRegistroMaster(item.id)}
-                                    style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '6px' }}
-                                    title="Excluir definitivo"
-                                  >
-                                    🗑️ Deletar
-                                  </button>
+                                  {isMasterUser && (
+                                    <button
+                                      onClick={() => deletarRegistroMaster(item.id)}
+                                      style={{ background: 'rgba(255,68,68,0.18)', border: '1px solid rgba(255,68,68,0.4)', color: '#ff4444', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '6px' }}
+                                      title="Excluir definitivo"
+                                    >
+                                      🗑️ Deletar
+                                    </button>
+                                  )}
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -2019,7 +2116,7 @@ export default function SalaPage() {
                                         display: 'inline-block'
                                       }}
                                     >
-                                      💬 Suporte X1 (WhatsApp)
+                                      💬 Contatar no WhatsApp
                                     </a>
                                   )}
                                 </div>
@@ -2040,7 +2137,7 @@ export default function SalaPage() {
               )}
 
               {gestorDesbloqueado && moduloAtivo === 'Mentoria' && (
-                <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+                <div className="sala-dynamic-card" style={{ padding: 0, background: 'transparent', border: '1px solid rgba(0,255,136,0.2)' }}>
                   <MentoriaPage />
                 </div>
               )}
@@ -2072,7 +2169,7 @@ export default function SalaPage() {
             <div className="sala-modal-message">
               Bem-vindo à Sala de Operações! Sua solicitação deu entrada no sistema.
               <br />
-              <strong>Aguarde a validação do seu Gestor de referência para desbloquear este recurso no atendimento X1.</strong>
+              <strong>Aguarde a validação do seu Gestor de referência para desbloquear este recurso no atendimento.</strong>
             </div>
 
             <button
