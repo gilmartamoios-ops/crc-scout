@@ -127,9 +127,7 @@ export default function SalaPage() {
     slug: string | null;
   } | null>(null);
 
-  // Patrocinador identificado para o gestor logado
   const [patrocinadorGestor, setPatrocinadorGestor] = useState<GestorItem | null>(null);
-
   const [listaGestores, setListaGestores] = useState<GestorItem[]>([]);
   const [carregandoGestores, setCarregandoGestores] = useState<boolean>(true);
 
@@ -247,7 +245,6 @@ export default function SalaPage() {
     }
   };
 
-  // Buscar patrocinador do gestor logado ao carregar leads ou gestor
   const identificarPatrocinadorLogado = async (gestorIdLogado: string | null) => {
     if (!gestorIdLogado || !eUuidValido(gestorIdLogado)) {
       setPatrocinadorGestor({
@@ -260,7 +257,6 @@ export default function SalaPage() {
     }
 
     try {
-      // Busca o registro deste gestor na tabela scout_registros para ver quem foi o gestor_id que o cadastrou
       const { data: reg } = await supabase
         .from('scout_registros')
         .select('gestor_id')
@@ -280,7 +276,6 @@ export default function SalaPage() {
         }
       }
 
-      // Se não achar registro direto, define o Master como padrão
       setPatrocinadorGestor({
         id: 'master',
         nome: 'Gilmar Aguiar (Master)',
@@ -824,7 +819,6 @@ export default function SalaPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             
-            {/* BOTÃO DE CONTATO DIRETO COM O GESTOR / PATROCINADOR PARA O NOVO GESTOR */}
             {!isMasterUser && patrocinadorGestor && (
               <a
                 href={`https://wa.me/55${patrocinadorGestor.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor.nome}! Acabei de desbloquear meu acesso no SCOUT e gostaria de falar com meu gestor/patrocinador.`)}`}
@@ -1084,7 +1078,6 @@ export default function SalaPage() {
                       Você está no coração operacional do <strong>SCOUT</strong>. Nossa tecnologia transforma a atração tradicional de negócios em uma jornada de valor, onde o <strong>Gestor de Comunidade</strong> organiza redes sustentáveis de consumo consciente e alto alinhamento.
                     </p>
 
-                    {/* CARD DE CONTATO COM O GESTOR PATROCINADOR NA HOME DE BOAS-VINDAS */}
                     {!isMasterUser && patrocinadorGestor && (
                       <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                         <div>
@@ -1842,7 +1835,6 @@ export default function SalaPage() {
                 </div>
               )}
 
-              {/* ABA DE GESTORES DESBLOQUEADOS (COM FILTRAGEM POR PATROCINADOR PARA GESTORES E VISÃO GLOBAL PARA O MASTER) */}
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Gestores Desbloqueados' && (
                 <div className="sala-dynamic-card">
                   <div style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,0,0,0.6))', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '16px', padding: '18px 20px', marginBottom: '22px' }}>
@@ -1976,8 +1968,9 @@ export default function SalaPage() {
                         const statusAtendimento = item.dados?.status_atendimento || 'novo';
                         const perfilSocialUrl = convidado?.perfil_social_url || '';
                         const redeSocialOrigem = convidado?.rede_social_origem || 'Rede Social';
+                        const perfilObjetivo = item.dados?.perfil || 'Não informado';
                         
-                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, vi que você concluiu a jornada e desbloqueou o SCOUT automaticamente! Seja muito bem-vindo à nossa comunidade.`);
+                        const msgWhats = encodeURIComponent(`Olá ${convidado?.nome || ''}, vi que você concluiu o Quiz com o objetivo "${perfilObjetivo}" e desbloqueou o SCOUT! Seja muito bem-vindo à nossa comunidade.`);
                         const linkWhats = `https://wa.me/55${whatsClean}?text=${msgWhats}`;
 
                         return (
@@ -2000,7 +1993,7 @@ export default function SalaPage() {
                                   {convidado?.nome || 'Novo Gestor'}
                                 </strong>
                                 <span style={{ fontSize: '9px', background: 'rgba(0,255,136,0.15)', color: '#00ff88', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.3)', fontWeight: 'bold' }}>
-                                  {item.dados?.perfil?.toUpperCase() || 'TOKEN LIBERADO'}
+                                  🎯 OBJETIVO: {perfilObjetivo.toUpperCase()}
                                 </span>
                                 
                                 <span style={{ 
@@ -2015,7 +2008,7 @@ export default function SalaPage() {
                                 </span>
                               </div>
 
-                              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '12px', marginTop: '2px', flexWrap: 'wrap' }}>
+                              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '12px', marginTop: '4px', flexWrap: 'wrap' }}>
                                 <span>📱 WhatsApp: <strong style={{ color: '#00ff88' }}>{convidado?.whatsapp || 'Sem WhatsApp'}</strong></span>
                                 <span style={{ color: '#00ff88', fontWeight: 'bold' }}>
                                   📍 {convidado?.cidade || 'Região não informada'}
@@ -2116,7 +2109,7 @@ export default function SalaPage() {
                                         display: 'inline-block'
                                       }}
                                     >
-                                      💬 Contatar no WhatsApp
+                                      💬 Contatar no WhatsApp (Personalizado)
                                     </a>
                                   )}
                                 </div>
