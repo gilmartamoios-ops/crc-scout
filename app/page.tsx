@@ -386,30 +386,32 @@ export default function LandingPage() {
             </div>
           </header>
 
-          {/* ETAPA 1: BANNER IMPONENTE (OCUPA TELA TODA RESPEITANDO OS LIMITES) */}
+          {/* ETAPA 1: BANNER COM IMPONÊNCIA TOTAL (LARGURA MÁXIMA FLUIDA) */}
           {etapa === 1 && (
-            <section className="scout-hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '12px 10px 24px 10px', width: '100%', boxSizing: 'border-box' }}>
-              <div style={{ maxWidth: '480px', width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+            <section className="scout-hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '16px 8px 32px 8px', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ maxWidth: '860px', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
                 
-                <div style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.5)', boxShadow: '0 0 40px rgba(0,255,136,0.3)', background: '#000' }}>
+                <div style={{ width: '100%', borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.6)', boxShadow: '0 0 50px rgba(0,255,136,0.35)', background: '#000' }}>
                   <img
                     src="/assets/banner-scout.jpg"
                     alt="Banner Imponente Scout"
-                    style={{ width: '100vw', maxWidth: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setEtapa(2)}
-                  className="btn-destaque-neon"
-                >
-                  ENTRAR NO SCOUT ➔
-                </button>
+                <div style={{ width: '100%', maxWidth: '520px', padding: '0 10px', boxSizing: 'border-box' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEtapa(2)}
+                    className="btn-destaque-neon"
+                  >
+                    ENTRAR NO SCOUT ➔
+                  </button>
 
-                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-                  Conheça primeiro. Decida depois.
-                </p>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '12px', marginBottom: 0 }}>
+                    Conheça primeiro. Decida depois.
+                  </p>
+                </div>
               </div>
             </section>
           )}
@@ -747,23 +749,23 @@ export default function LandingPage() {
       <style jsx>{`
         .btn-destaque-neon {
           width: 100%;
-          padding: 16px;
+          padding: 18px 24px;
           background: #00ff88;
           color: #050505;
           font-weight: 900;
-          font-size: 13px;
+          font-size: 14px;
           border-radius: 14px;
           border: none;
-          letter-spacing: 1px;
+          letter-spacing: 1.5px;
           cursor: pointer;
-          box-shadow: 0 0 25px rgba(0, 255, 136, 0.35);
+          box-shadow: 0 0 35px rgba(0, 255, 136, 0.45);
           transition: all 0.2s ease;
           text-align: center;
           box-sizing: border-box;
         }
         .btn-destaque-neon:hover {
           background: #26ff97;
-          box-shadow: 0 0 35px rgba(0, 255, 136, 0.55);
+          box-shadow: 0 0 45px rgba(0, 255, 136, 0.65);
           transform: translateY(-1px);
         }
         .btn-destaque-neon:disabled {
@@ -874,6 +876,7 @@ export default function LandingPage() {
         }
 
         .info-col-left-original {
+          box-sizing: border-box;
           width: 32%;
           min-width: 220px;
           background: rgba(0, 255, 136, 0.06);
@@ -884,7 +887,6 @@ export default function LandingPage() {
           flex-direction: column;
           justify-content: center;
           box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.03);
-          box-sizing: border-box;
         }
 
         .chart-col-right-original {
