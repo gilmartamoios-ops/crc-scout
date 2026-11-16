@@ -375,37 +375,27 @@ export default function LandingPage() {
       <div style={etapa === 9 ? { filter: 'blur(16px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.35 } : undefined}>
         
         <div className="scout-shell">
-          <header className="scout-header">
-            <div className="scout-brand">
-              {/* LOGO ELEGANTE SUBSTITUTA (GESTÃO DE COMUNIDADE) */}
-              <div className="scout-logo" style={{ display: 'flex', width: '44px', height: '44px', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0, 255, 136, 0.42)', borderRadius: '12px', color: '#00ff88', fontSize: '13px', fontWeight: '800', background: 'rgba(0,255,136,0.06)' }}>
-                GC
-              </div>
-              <div className="scout-brand-copy"> 
-                <div className="scout-brand-name">SCOUT</div> 
-                <div className="scout-brand-subtitle">gestão de comunidades</div>
-                <a href="/sala" className="scout-gestor-link">Acesso do Gestor</a> 
-              </div>
+          <header className="scout-header" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="scout-brand" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div className="scout-brand-name" style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '3px', color: '#fff' }}>SCOUT</div> 
+              <div className="scout-brand-subtitle" style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px' }}>gestão de comunidades</div>
+              <a href="/sala" className="scout-gestor-link" style={{ fontSize: '11px', color: '#00ff88', fontWeight: 'bold', textDecoration: 'none', marginTop: '4px' }}>Acesso do Gestor →</a> 
             </div>
-            <div className="scout-header-note">
+            <div className="scout-header-note" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>
               {gestorId ? `GESTOR: ${gestorId.toUpperCase()}` : 'CONHEÇA · EXPLORE · DECIDA'}
             </div>
           </header>
 
-          {/* ETAPA 1: BANNER INSTITUCIONAL */}
+          {/* ETAPA 1: BANNER IMPONENTE (OCUPA TELA TODA RESPEITANDO OS LIMITES) */}
           {etapa === 1 && (
-            <section className="scout-hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10px 10px 20px 10px' }}>
-              <div style={{ maxWidth: '420px', width: '100%', display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center' }}>
+            <section className="scout-hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '12px 10px 24px 10px', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ maxWidth: '480px', width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
                 
-                <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '2px', color: '#00ff88', background: 'rgba(0,255,136,0.1)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(0,255,136,0.25)' }}>
-                  SANTINHO DIGITAL · RISCO ZERO
-                </span>
-
-                <div style={{ width: '100%', borderRadius: '18px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.5)', boxShadow: '0 0 35px rgba(0,255,136,0.25)', background: '#000' }}>
+                <div style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', border: '2px solid rgba(0,255,136,0.5)', boxShadow: '0 0 40px rgba(0,255,136,0.3)', background: '#000' }}>
                   <img
                     src="/assets/banner-scout.jpg"
-                    alt="Banner Institucional Scout"
-                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+                    alt="Banner Imponente Scout"
+                    style={{ width: '100vw', maxWidth: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
 
