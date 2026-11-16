@@ -819,28 +819,27 @@ export default function SalaPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             
-            {!isMasterUser && patrocinadorGestor && (
-              <a
-                href={`https://wa.me/55${patrocinadorGestor.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor.nome}! Acabei de desbloquear meu acesso no SCOUT e gostaria de falar com meu gestor/patrocinador.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-                  color: '#050505',
-                  padding: '8px 14px',
-                  borderRadius: '10px',
-                  fontWeight: '900',
-                  fontSize: '11px',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 0 20px rgba(0,255,136,0.35)'
-                }}
-              >
-                💬 Fale com seu Gestor: {patrocinadorGestor.nome}
-              </a>
-            )}
+            {/* BOTÃO FALE COM SEU GESTOR / PATROCINADOR RESTAURADO */}
+            <a
+              href={`https://wa.me/55${patrocinadorGestor?.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor?.nome || 'Gestor'}! Acabei de acessar a Sala de Operações do SCOUT e gostaria de falar com meu gestor de referência.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+                color: '#050505',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontWeight: '900',
+                fontSize: '11px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 0 20px rgba(0,255,136,0.35)'
+              }}
+            >
+              💬 Fale com seu Gestor: {patrocinadorGestor?.nome || 'Gilmar Aguiar (Master)'}
+            </a>
 
             {isMasterUser && (
               <button
