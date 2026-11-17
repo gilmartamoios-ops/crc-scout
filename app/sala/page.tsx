@@ -551,11 +551,10 @@ export default function SalaPage() {
         categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral',
         perfilSocialUrl: item.dados?.convidado?.perfil_social_url || '',
         redeSocialOrigem: item.dados?.convidado?.rede_social_origem || '',
-        resumoAnalitico: item.dados?.convidado?.resumo_analitico || 'Alvo qualificado com fit para abordagem direta na praça.'
+        resumoAnalitico: item.dados?.convidado?.resumo_analitico || 'Registro comercial mapeado na praça.'
       }));
   }, [leads, gestor, isMasterUser]);
 
-  // Executa o motor com base na lista suspensa selecionada
   const executarGarimpoUnificado = async () => {
     if (nichoSelecionado === 'OUTRO NICHO (Solicitar Manutenção / Suporte)') {
       alert('⚠️ Para novos nichos não listados, entre em contato com o suporte para atualização do motor.');
@@ -586,7 +585,7 @@ export default function SalaPage() {
               nome: p.nome,
               whatsapp: p.whatsapp,
               cidade: p.regiao,
-              email: `${p.whatsapp}@garimpo.scout`,
+              email: `comercial@garimpo.scout`,
               perfil_social_url: p.perfilSocialUrl,
               rede_social_origem: p.redeSocialOrigem,
               resumo_analitico: p.resumoAnalitico
@@ -1509,11 +1508,11 @@ export default function SalaPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
                           <strong style={{ color: '#00ff88', fontSize: '13px', letterSpacing: '0.5px' }}>
-                            MOTOR DE INTELIGÊNCIA TERRITORIAL & DNA DO PERFIL.
+                            MOTOR DE INTELIGÊNCIA TERRITORIAL & DADOS REAIS.
                           </strong>
                         </div>
                         <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
-                          O motor cruza a geolocalização com o objetivo escolhido na lista, entregando contatos validados com WhatsApp, redes sociais e resumo analítico pronto para abordagem.
+                          O motor cruza a geolocalização com o objetivo escolhido, entregando canais comerciais públicos (WhatsApp Business) e links de presença digital reais indexados na praça.
                         </p>
                       </div>
 
@@ -1549,7 +1548,7 @@ export default function SalaPage() {
                           </div>
                         </div>
 
-                        {/* Substituição da Caixa de Texto por Lista Suspensa (Dropdown) Segura e Organizada */}
+                        {/* Lista Suspensa (Dropdown) Segura e Organizada */}
                         <div style={{ marginBottom: '20px' }}>
                           <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
                             🎯 SELECIONE O OBJETIVO DO GARIMPO NA LISTA ABAIXO:
@@ -1621,17 +1620,17 @@ export default function SalaPage() {
                             textAlign: 'center',
                           }}
                         >
-                          ⚡ EXECUTAR GARIMPO COM DNA DO PERFIL (20 PERFIS + WHATSAPP & REDES)
+                          ⚡ EXECUTAR GARIMPO COMERCIAL (WHATSAPP COMERCIAL & REDES)
                         </button>
                       </div>
 
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                           <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Perfis Persistidos com Resumo Analítico)
+                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Registros Comerciais Mapeados)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Cada registro traz o DNA do perfil para orientar sua abordagem
+                            💡 Escolha entre WhatsApp Comercial ou Inspecionar na Rede
                           </span>
                         </div>
 
@@ -1642,8 +1641,8 @@ export default function SalaPage() {
                             </div>
                           ) : (
                             perfisGarimpados.map((lead) => {
-                              const msgSantinho = encodeURIComponent(`Olá ${lead.nome}! Analisei seu perfil na praça de ${lead.regiao} e gostaria de apresentar uma proposta alinhada ao seu momento. Acesse nossa comunidade: ${linkBaseGestor}`);
-                              const linkWhatsSantinho = `https://wa.me/55${lead.whats}?text=${msgSantinho}`;
+                              const msgSantinho = encodeURIComponent(`Olá! Analisei seu negócio/perfil na praça de ${lead.regiao} e gostaria de apresentar uma proposta alinhada ao seu momento. Acesse nossa comunidade: ${linkBaseGestor}`);
+                              const linkWhatsSantinho = `https://wa.me/55${lead.whats.replace(/\D/g, '')}?text=${msgSantinho}`;
 
                               return (
                                 <div
@@ -1678,10 +1677,9 @@ export default function SalaPage() {
                                       🎯 <strong>Perfil Alvo:</strong> {lead.perfil}
                                     </p>
                                     
-                                    {/* Exibição do DNA do Perfil (Resumo Analítico) */}
                                     <div style={{ background: 'rgba(0,255,136,0.05)', borderLeft: '3px solid #00ff88', padding: '8px 12px', borderRadius: '0 8px 8px 0', marginTop: '8px' }}>
                                       <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
-                                        📌 DNA DO PERFIL / RESUMO DE ABORDAGEM:
+                                        📌 CONTEXTO COMERCIAL:
                                       </span>
                                       <p style={{ fontSize: '11px', color: '#fff', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
                                         "{lead.resumoAnalitico}"
@@ -1690,11 +1688,12 @@ export default function SalaPage() {
 
                                     {lead.perfilSocialUrl && (
                                       <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '8px 0 0', wordBreak: 'break-word' }}>
-                                        🌐 <strong>Rede Social ({lead.redeSocialOrigem || 'Rede Social'}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
+                                        🌐 <strong>Presença Digital ({lead.redeSocialOrigem}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
                                       </p>
                                     )}
                                   </div>
 
+                                  {/* Botões atualizados para escolha entre WhatsApp Comercial e Presença Digital */}
                                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
                                     <button
                                       type="button"
@@ -1736,7 +1735,7 @@ export default function SalaPage() {
                                         minWidth: '140px',
                                       }}
                                     >
-                                      📱 WhatsApp (Validado)
+                                      📱 WhatsApp Comercial
                                     </a>
 
                                     {lead.perfilSocialUrl && (
@@ -1758,7 +1757,7 @@ export default function SalaPage() {
                                           minWidth: '130px',
                                         }}
                                       >
-                                        🔗 Acessar {lead.redeSocialOrigem || 'Rede'}
+                                        🌐 Inspecionar na Rede
                                       </a>
                                     )}
 
