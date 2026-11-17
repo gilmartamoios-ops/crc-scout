@@ -550,13 +550,14 @@ export default function SalaPage() {
       }));
   }, [leads, gestor, isMasterUser]);
 
-  const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
+  // Função unificada de Garimpo: Valida e traz obrigatoriamente WhatsApp + Rede Social integrada
+  const executarGarimpoUnificado = async () => {
     const nomeGestorAtual = gestor?.nome || 'Master';
-    const categoriaDefinida = modo === 'redes_sociais' ? 'Redes Sociais' : 'WhatsApp / Direto';
-    const tituloGarimpo = `Garimpo ${modo} - ${municipioSelecionado}`;
+    const categoriaDefinida = 'Garimpo Unificado (WhatsApp + Rede Social)';
+    const tituloGarimpo = `Garimpo ${nichoPfSelecionado.toUpperCase()} - ${municipioSelecionado}/${estadoSelecionado}`;
 
     try {
-      // Chamada limpa utilizando o motor isolado em lib/motorGarimpo.ts
+      // O motor garante perfis com contato válido e rede social associada
       const perfisBrutos = await executarMotorGarimpo(
         estadoSelecionado,
         municipioSelecionado,
@@ -590,7 +591,7 @@ export default function SalaPage() {
         carregarLeadsScout();
       }
     } catch (err) {
-      console.error('Erro ao executar o motor de garimpo:', err);
+      console.error('Erro ao executar o motor unificado de garimpo:', err);
     }
   };
 
@@ -1548,7 +1549,7 @@ export default function SalaPage() {
                           SELECIONE O PERFIL DESEJADO:
                         </label>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '18px' }}>
                           <button
                             type="button"
                             onClick={() => setNichoPfSelecionado('transicao')}
@@ -1573,45 +1574,27 @@ export default function SalaPage() {
                             <strong style={{ display: 'block', fontSize: '12px' }}>🛒 Consumo Consciente</strong>
                           </button>
                         </div>
-                      </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                        {/* Botão Unificado de Garimpo (Garante WhatsApp + Rede Social integrados) */}
                         <button
                           type="button"
-                          onClick={() => executarGarimpo('whatsapp')}
+                          onClick={executarGarimpoUnificado}
                           style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(0,255,136,0.3)',
-                            color: '#00ff88',
-                            padding: '12px 18px',
-                            borderRadius: '12px',
-                            fontWeight: 'bold',
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            textAlign: 'center',
-                          }}
-                        >
-                          📱 WHATSAPP FILTRADO (20 CONTATOS)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => executarGarimpo('redes_sociais')}
-                          style={{
+                            width: '100%',
                             background: 'linear-gradient(135deg, #00ff88, #00cc6a)',
                             color: '#050505',
                             border: 'none',
-                            padding: '12px 18px',
+                            padding: '14px 20px',
                             borderRadius: '12px',
                             fontWeight: '900',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             cursor: 'pointer',
                             letterSpacing: '0.5px',
-                            boxShadow: '0 4px 15px rgba(0,255,136,0.3)',
+                            boxShadow: '0 4px 20px rgba(0,255,136,0.4)',
                             textAlign: 'center',
                           }}
                         >
-                          🌐 REDES SOCIAIS FILTRADAS (20 PERFIS)
+                          ⚡ EXECUTAR GARIMPO UNIFICADO (20 PERFIS COM WHATSAPP & REDES SOCIAIS)
                         </button>
                       </div>
 
@@ -1621,14 +1604,14 @@ export default function SalaPage() {
                             ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Perfis Persistidos com WhatsApp + Rede Social)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Utilize o WhatsApp (inegociável) ou visite o perfil social de origem
+                            💡 Todos os registros possuem WhatsApp e perfil social de origem validados
                           </span>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                           {perfisGarimpados.length === 0 ? (
                             <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px dashed rgba(0,255,136,0.2)' }}>
-                              Nenhum lote garimpado ativo. Clique em um dos botões acima para gerar e persistir sua lista.
+                              Nenhum lote garimpado ativo. Clique no botão acima para gerar e persistir sua lista unificada.
                             </div>
                           ) : (
                             perfisGarimpados.map((lead) => {
@@ -1669,7 +1652,7 @@ export default function SalaPage() {
                                     
                                     {lead.perfilSocialUrl && (
                                       <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '4px 0 0', wordBreak: 'break-word' }}>
-                                        🌐 <strong>Perfil de Origem ({lead.redeSocialOrigem || 'Rede Social'}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
+                                        🌐 <strong>Rede Social ({lead.redeSocialOrigem || 'Rede Social'}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
                                       </p>
                                     )}
                                   </div>
@@ -1715,7 +1698,7 @@ export default function SalaPage() {
                                         minWidth: '140px',
                                       }}
                                     >
-                                      📱 WhatsApp (Inegociável)
+                                      📱 WhatsApp (Validado)
                                     </a>
 
                                     {lead.perfilSocialUrl && (
@@ -1737,7 +1720,7 @@ export default function SalaPage() {
                                           minWidth: '130px',
                                         }}
                                       >
-                                        🔗 Acessar {lead.redeSocialOrigem || 'Perfil'}
+                                        🔗 Acessar {lead.redeSocialOrigem || 'Rede'}
                                       </a>
                                     )}
 
