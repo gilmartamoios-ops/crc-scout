@@ -6,6 +6,7 @@ import InformesPage from '@/app/informes/page';
 import MentoriaPage from '@/app/mentoria/page';
 import CuradoriaPage from '@/app/curadoria/page';
 import Script from 'next/script';
+import { executarMotorGarimpo } from '@/lib/motorGarimpo';
 
 type Modulo = {
   nome: string;
@@ -135,7 +136,7 @@ export default function SalaPage() {
   const [municipiosDoEstado, setMunicipiosDoEstado] = useState<string[]>([]);
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
-  const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo'>('transicao');
+  const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo' | 'rh'>('transicao');
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
@@ -550,45 +551,21 @@ export default function SalaPage() {
   }, [leads, gestor, isMasterUser]);
 
   const executarGarimpo = async (modo: 'whatsapp' | 'redes_sociais') => {
-    const regiaoStr = `${municipioSelecionado} / ${estadoSelecionado}`;
     const nomeGestorAtual = gestor?.nome || 'Master';
     const categoriaDefinida = modo === 'redes_sociais' ? 'Redes Sociais' : 'WhatsApp / Direto';
     const tituloGarimpo = `Garimpo ${modo} - ${municipioSelecionado}`;
 
-    const novosPerfis = Array.from({ length: 20 }, (_, index) => {
-      const idNum = index + 1;
-      
-      if (modo === 'redes_sociais') {
-        const redesSociaisAlvo = [
-          { nomeRede: 'LinkedIn', urlBase: 'https://linkedin.com/in/perfil-ativo-' },
-          { nomeRede: 'Instagram', urlBase: 'https://instagram.com/perfil.profissional.' },
-          { nomeRede: 'Facebook', urlBase: 'https://facebook.com/empreendedor.local.' }
-        ];
-        const redeEscolhida = redesSociaisAlvo[index % redesSociaisAlvo.length];
-        
-        return {
-          nome: `Titular Ativo #${idNum}`,
-          perfil: `Rede: ${redeEscolhida.nomeRede} — ${regiaoStr}`,
-          regiao: regiaoStr,
-          whats: `2299${Math.floor(100000 + Math.random() * 900000)}`,
-          perfilSocialUrl: `${redeEscolhida.urlBase}${idNum}-${Math.floor(Math.random() * 1000)}`,
-          redeSocialOrigem: redeEscolhida.nomeRede
-        };
-      } else {
-        return {
-          nome: `Contato WhatsApp #${idNum}`,
-          perfil: `WhatsApp Direto / Foco em Titular (${nichoPfSelecionado.toUpperCase()}) — ${regiaoStr}`,
-          regiao: regiaoStr,
-          whats: `2298${Math.floor(100000 + Math.random() * 900000)}`,
-          perfilSocialUrl: `https://wa.me/552298${Math.floor(100000 + Math.random() * 900000)}`,
-          redeSocialOrigem: 'WhatsApp / Direto'
-        };
-      }
-    });
+    try {
+      // Chamada limpa utilizando o motor isolado em lib/motorGarimpo.ts
+      const perfisBrutos = await executarMotorGarimpo(
+        estadoSelecionado,
+        municipioSelecionado,
+        nichoPfSelecionado,
+        20
+      );
 
-    if (gestor?.id) {
-      try {
-        const registrosParaInserir = novosPerfis.map(p => ({
+      if (gestor?.id) {
+        const registrosParaInserir = perfisBrutos.map(p => ({
           gestor_id: gestor.id,
           tipo: 'garimpo',
           titulo: tituloGarimpo,
@@ -597,13 +574,13 @@ export default function SalaPage() {
           dados: {
             convidado: {
               nome: p.nome,
-              whatsapp: p.whats,
+              whatsapp: p.whatsapp,
               cidade: p.regiao,
-              email: `${p.whats}@garimpo.scout`,
+              email: `${p.whatsapp}@garimpo.scout`,
               perfil_social_url: p.perfilSocialUrl,
               rede_social_origem: p.redeSocialOrigem
             },
-            perfil: p.perfil,
+            perfil: p.perfilAlvo,
             status_atendimento: 'novo',
             gestor_nome: nomeGestorAtual
           }
@@ -611,9 +588,9 @@ export default function SalaPage() {
 
         await supabase.from('scout_registros').insert(registrosParaInserir);
         carregarLeadsScout();
-      } catch (err) {
-        console.error('Erro ao salvar garimpo no Supabase:', err);
       }
+    } catch (err) {
+      console.error('Erro ao executar o motor de garimpo:', err);
     }
   };
 
@@ -819,7 +796,6 @@ export default function SalaPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             
-            {/* BOTÃO FALE COM SEU GESTOR / PATROCINADOR RESTAURADO */}
             <a
               href={`https://wa.me/55${patrocinadorGestor?.whatsapp?.replace(/\D/g, '') || '5522999231211'}?text=${encodeURIComponent(`Olá ${patrocinadorGestor?.nome || 'Gestor'}! Acabei de acessar a Sala de Operações do SCOUT e gostaria de falar com meu gestor de referência.`)}`}
               target="_blank"
