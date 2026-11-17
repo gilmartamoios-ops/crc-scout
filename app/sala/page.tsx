@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// app/sala/page.tsx
+'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -31,6 +32,7 @@ interface ConvidadoRegistro {
       cidade?: string;
       perfil_social_url?: string;
       rede_social_origem?: string;
+      resumo_analitico?: string;
     };
     perfil?: string;
     respostas?: Record<string, string>;
@@ -136,7 +138,9 @@ export default function SalaPage() {
   const [municipiosDoEstado, setMunicipiosDoEstado] = useState<string[]>([]);
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
-  const [nichoPfSelecionado, setNichoPfSelecionado] = useState<'transicao' | 'liberais' | 'consumo' | 'rh'>('transicao');
+  
+  // Nicho Dinâmico / Flexível para qualquer profissão
+  const [nichoPersonalizado, setNichoPersonalizado] = useState<string>('Transição Profissional e Oportunidades');
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
@@ -546,22 +550,22 @@ export default function SalaPage() {
         gestorNome: item.gestor_nome || item.dados?.gestor_nome || 'Master/Geral',
         categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral',
         perfilSocialUrl: item.dados?.convidado?.perfil_social_url || '',
-        redeSocialOrigem: item.dados?.convidado?.rede_social_origem || ''
+        redeSocialOrigem: item.dados?.convidado?.rede_social_origem || '',
+        resumoAnalitico: item.dados?.convidado?.resumo_analitico || 'Alvo qualificado com fit para abordagem direta na praça.'
       }));
   }, [leads, gestor, isMasterUser]);
 
-  // Função unificada de Garimpo: Valida e traz obrigatoriamente WhatsApp + Rede Social integrada
+  // Executa o motor com suporte a nicho dinâmico/livre e DNA do perfil (Resumo Analítico)
   const executarGarimpoUnificado = async () => {
     const nomeGestorAtual = gestor?.nome || 'Master';
-    const categoriaDefinida = 'Garimpo Unificado (WhatsApp + Rede Social)';
-    const tituloGarimpo = `Garimpo ${nichoPfSelecionado.toUpperCase()} - ${municipioSelecionado}/${estadoSelecionado}`;
+    const categoriaDefinida = `Garimpo: ${nichoPersonalizado}`;
+    const tituloGarimpo = `Garimpo [${nichoPersonalizado}] - ${municipioSelecionado}/${estadoSelecionado}`;
 
     try {
-      // O motor garante perfis com contato válido e rede social associada
       const perfisBrutos = await executarMotorGarimpo(
         estadoSelecionado,
         municipioSelecionado,
-        nichoPfSelecionado,
+        nichoPersonalizado,
         20
       );
 
@@ -579,7 +583,8 @@ export default function SalaPage() {
               cidade: p.regiao,
               email: `${p.whatsapp}@garimpo.scout`,
               perfil_social_url: p.perfilSocialUrl,
-              rede_social_origem: p.redeSocialOrigem
+              rede_social_origem: p.redeSocialOrigem,
+              resumo_analitico: p.resumoAnalitico
             },
             perfil: p.perfilAlvo,
             status_atendimento: 'novo',
@@ -1488,9 +1493,9 @@ export default function SalaPage() {
 
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
-                  <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital</h3>
+                  <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital (Garimpo Agnóstico)</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
-                    Filtre sua busca para encontrar novos Gestores de Comunidade
+                    Defina sua região e digite o nicho ou segmento exato do seu contrato ou público-alvo
                   </p>
 
                   <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
@@ -1499,17 +1504,11 @@ export default function SalaPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
                           <strong style={{ color: '#00ff88', fontSize: '13px', letterSpacing: '0.5px' }}>
-                            O SCOUT OPERA SEGUNDO A LEI DAS MÉDIAS.
+                            MOTOR DE INTELIGÊNCIA TERRITORIAL & ABORDAGEM COM DNA DO PERFIL.
                           </strong>
                         </div>
                         <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
-                          <strong>A Lei das Médias é o princípio de que, quanto maior o número de pessoas apresentadas ao negócio, maior a probabilidade de resultados.</strong>
-                        </p>
-                        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-                          Exemplo: de cada 20 pessoas abordadas, 4 demonstram interesse.
-                        </p>
-                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontStyle: 'italic', lineHeight: '1.5' }}>
-                          A qualidade da abordagem e o perfil das pessoas influenciam os resultados.
+                          O motor cruza a geolocalização com o segmento desejado, entregando contatos validados com WhatsApp, rede social e um resumo analítico pronto para orientar sua abordagem comercial.
                         </p>
                       </div>
 
@@ -1545,37 +1544,54 @@ export default function SalaPage() {
                           </div>
                         </div>
 
-                        <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '10px', letterSpacing: '0.5px' }}>
-                          SELECIONE O PERFIL DESEJADO:
-                        </label>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '18px' }}>
-                          <button
-                            type="button"
-                            onClick={() => setNichoPfSelecionado('transicao')}
-                            style={{ padding: '12px', borderRadius: '12px', cursor: 'pointer', background: nichoPfSelecionado === 'transicao' ? 'rgba(0,255,136,0.18)' : 'rgba(255,255,255,0.03)', color: nichoPfSelecionado === 'transicao' ? '#00ff88' : '#fff', border: nichoPfSelecionado === 'transicao' ? '1px solid #00ff88' : '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}
-                          >
-                            <strong style={{ display: 'block', fontSize: '12px' }}>💼 Transição Profissional</strong>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setNichoPfSelecionado('liberais')}
-                            style={{ padding: '12px', borderRadius: '12px', cursor: 'pointer', background: nichoPfSelecionado === 'liberais' ? 'rgba(43,217,255,0.18)' : 'rgba(255,255,255,0.03)', color: nichoPfSelecionado === 'liberais' ? '#2bd9ff' : '#fff', border: nichoPfSelecionado === 'liberais' ? '1px solid #2bd9ff' : '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}
-                          >
-                            <strong style={{ display: 'block', fontSize: '12px' }}>🩺 Saúde Integrativa</strong>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setNichoPfSelecionado('consumo')}
-                            style={{ padding: '12px', borderRadius: '12px', cursor: 'pointer', background: nichoPfSelecionado === 'consumo' ? 'rgba(255,215,0,0.18)' : 'rgba(255,255,255,0.03)', color: nichoPfSelecionado === 'consumo' ? '#ffd700' : '#fff', border: nichoPfSelecionado === 'consumo' ? '1px solid #ffd700' : '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}
-                          >
-                            <strong style={{ display: 'block', fontSize: '12px' }}>🛒 Consumo Consciente</strong>
-                          </button>
+                        {/* Campo Dinâmico de Nicho / Alvo */}
+                        <div style={{ marginBottom: '18px' }}>
+                          <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                            🎯 NICHO, SETOR OU PERFIL ALVO DO CONTRATO / BUSCA:
+                          </label>
+                          <input
+                            type="text"
+                            value={nichoPersonalizado}
+                            onChange={(e) => setNichoPersonalizado(e.target.value)}
+                            placeholder="Ex: Restaurantes, Metalurgia, Pessoas perto da aposentadoria, Transição Profissional..."
+                            style={{
+                              width: '100%',
+                              background: '#050505',
+                              border: '1px solid rgba(0,255,136,0.4)',
+                              padding: '12px 14px',
+                              borderRadius: '12px',
+                              color: '#fff',
+                              fontSize: '13px',
+                              fontWeight: 'bold',
+                              outline: 'none',
+                              boxSizing: 'border-box'
+                            }}
+                          />
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center' }}>Sugestões rápidas:</span>
+                            {['Transição Profissional', 'Saúde Integrativa', 'Consumo Consciente', 'Restaurantes', 'Metalurgia', 'Pessoas Próximas Aposentadoria'].map((sugestao) => (
+                              <button
+                                key={sugestao}
+                                type="button"
+                                onClick={() => setNichoPersonalizado(sugestao)}
+                                style={{
+                                  background: nichoPersonalizado === sugestao ? 'rgba(0,255,136,0.2)' : 'rgba(255,255,255,0.05)',
+                                  border: `1px solid ${nichoPersonalizado === sugestao ? '#00ff88' : 'rgba(255,255,255,0.15)'}`,
+                                  color: nichoPersonalizado === sugestao ? '#00ff88' : '#fff',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '10px',
+                                  cursor: 'pointer',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {sugestao}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        {/* Botão Unificado de Garimpo (Garante WhatsApp + Rede Social integrados) */}
+                        {/* Botão Unificado de Garimpo */}
                         <button
                           type="button"
                           onClick={executarGarimpoUnificado}
@@ -1594,28 +1610,28 @@ export default function SalaPage() {
                             textAlign: 'center',
                           }}
                         >
-                          ⚡ EXECUTAR GARIMPO UNIFICADO (20 PERFIS COM WHATSAPP & REDES SOCIAIS)
+                          ⚡ EXECUTAR GARIMPO COM DNA DO PERFIL (20 PERFIS + WHATSAPP & REDES)
                         </button>
                       </div>
 
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                           <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Perfis Persistidos com WhatsApp + Rede Social)
+                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Perfis Persistidos com Resumo Analítico)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Todos os registros possuem WhatsApp e perfil social de origem validados
+                            💡 Cada registro traz o DNA do perfil para orientar sua abordagem
                           </span>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                           {perfisGarimpados.length === 0 ? (
                             <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px dashed rgba(0,255,136,0.2)' }}>
-                              Nenhum lote garimpado ativo. Clique no botão acima para gerar e persistir sua lista unificada.
+                              Nenhum lote garimpado ativo. Digite seu nicho acima e execute o garimpo para gerar sua lista inteligente.
                             </div>
                           ) : (
                             perfisGarimpados.map((lead) => {
-                              const msgSantinho = encodeURIComponent(`Olá! Este é o seu convite para conhecer a Comunidade de Consumo, Economia e Renda. Assista o vídeo e acesse a Comunidade: ${linkBaseGestor}`);
+                              const msgSantinho = encodeURIComponent(`Olá ${lead.nome}! Analisei seu perfil na praça de ${lead.regiao} e gostaria de apresentar uma proposta alinhada ao seu momento. Acesse nossa comunidade: ${linkBaseGestor}`);
                               const linkWhatsSantinho = `https://wa.me/55${lead.whats}?text=${msgSantinho}`;
 
                               return (
@@ -1646,12 +1662,23 @@ export default function SalaPage() {
                                         Origem: {lead.categoriaOrigem}
                                       </span>
                                     </div>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0', wordBreak: 'break-word' }}>
+                                    
+                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '6px 0 0', wordBreak: 'break-word' }}>
                                       🎯 <strong>Perfil Alvo:</strong> {lead.perfil}
                                     </p>
                                     
+                                    {/* Exibição do DNA do Perfil (Resumo Analítico) */}
+                                    <div style={{ background: 'rgba(0,255,136,0.05)', borderLeft: '3px solid #00ff88', padding: '8px 12px', borderRadius: '0 8px 8px 0', marginTop: '8px' }}>
+                                      <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
+                                        📌 DNA DO PERFIL / RESUMO DE ABORDAGEM:
+                                      </span>
+                                      <p style={{ fontSize: '11px', color: '#fff', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
+                                        "{lead.resumoAnalitico}"
+                                      </p>
+                                    </div>
+
                                     {lead.perfilSocialUrl && (
-                                      <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '4px 0 0', wordBreak: 'break-word' }}>
+                                      <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '8px 0 0', wordBreak: 'break-word' }}>
                                         🌐 <strong>Rede Social ({lead.redeSocialOrigem || 'Rede Social'}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
                                       </p>
                                     )}

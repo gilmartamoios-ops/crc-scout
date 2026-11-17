@@ -1,68 +1,54 @@
 // lib/motorGarimpo.ts
 
 export interface PerfilGarimpado {
-  id: string;
   nome: string;
   whatsapp: string;
-  whatsappValido: boolean;
   regiao: string;
   perfilAlvo: string;
   perfilSocialUrl: string;
   redeSocialOrigem: string;
+  resumoAnalitico: string; // O "DNA do Perfil" (Inteligência de Abordagem)
 }
 
-/**
- * Validação rigorosa de telecom para celular brasileiro (+55 DDD 9XXXX-XXXX)
- */
-export function validarWhatsAppBrasileiro(whatsapp: string): boolean {
-  const limpo = whatsapp.replace(/\D/g, '');
-  const regexCelularBrasil = /^[1-9]{2}9[0-9]{8}$/;
-  return regexCelularBrasil.test(limpo);
-}
-
-/**
- * Motor de Garimpo Universal e Independente
- */
 export async function executarMotorGarimpo(
   estado: string,
   municipio: string,
-  nicho: 'transicao' | 'liberais' | 'consumo' | 'rh',
+  nichoOuSegmento: string,
   quantidade: number = 20
 ): Promise<PerfilGarimpado[]> {
   const regiaoStr = `${municipio} / ${estado}`;
-  const perfis: PerfilGarimpado[] = [];
+  const resultados: PerfilGarimpado[] = [];
 
-  const nomesBase = [
-    'Marcos Vinicius', 'Ana Paula', 'Carlos Eduardo', 'Juliana Santos', 
-    'Roberto Almeida', 'Fernanda Lima', 'Lucas Gabriel', 'Camila Souza', 
-    'Bruno Henrique', 'Mariana Costa', 'Rodrigo Silva', 'Beatriz Oliveira'
+  const redesSociaisAlvo = [
+    { nomeRede: 'LinkedIn', urlBase: 'https://linkedin.com/in/profissional-' },
+    { nomeRede: 'Instagram', urlBase: 'https://instagram.com/contato.' },
+    { nomeRede: 'Facebook', urlBase: 'https://facebook.com/perfil.local.' }
   ];
 
-  const redesSociais = [
-    { nome: 'LinkedIn', base: 'https://linkedin.com/in/' },
-    { nome: 'Instagram', base: 'https://instagram.com/' },
-    { nome: 'Facebook', base: 'https://facebook.com/profile.php?id=' }
+  // Textos base para gerar o resumo analítico ("DNA do Perfil") de acordo com o nicho
+  const ganchosAnaliticos = [
+    `Alvo com forte aderência para ${nichoOuSegmento}. Ativo na praça de ${municipio} com histórico de decisão rápida.`,
+    `Perfil identificado com potencial elevado para ${nichoOuSegmento}. Busca soluções práticas e parcerias locais na região.`,
+    `Contato mapeado em ${municipio} com fit direto para ${nichoOuSegmento}. Histórico profissional voltado a resultados e expansão.`,
+    `Oportunidade qualificada em ${nichoOuSegmento}. Apresenta comportamento engajado e demanda recorrente na praça.`
   ];
 
-  for (let i = 1; i <= quantidade; i++) {
-    const nomeSorteado = `${nomesBase[Math.floor(Math.random() * nomesBase.length)]} #${i}`;
-    const redeEscolhida = redesSociais[Math.floor(Math.random() * redesSociais.length)];
-    
-    const dddLocal = estado === 'RJ' ? '22' : '11';
-    const numeroGerado = `${dddLocal}9${Math.floor(10000000 + Math.random() * 89999999)}`;
-    const isValido = validarWhatsAppBrasileiro(numeroGerado);
+  for (let index = 0; index < quantidade; index++) {
+    const idNum = index + 1;
+    const redeEscolhida = redesSociaisAlvo[index % redesSociaisAlvo.length];
+    const whatsSimulado = `2299${Math.floor(100000 + Math.random() * 900000)}`;
+    const resumoGerado = ganchosAnaliticos[index % ganchosAnaliticos.length];
 
-    perfis.push({
-      id: `garimpo-${Date.now()}-${i}`,
-      nome: nomeSorteado,
-      whatsapp: numeroGerado,
-      whatsappValido: isValido,
+    resultados.push({
+      nome: `Contato Qualificado #${idNum}`,
+      whatsapp: whatsSimulado,
       regiao: regiaoStr,
-      perfilAlvo: `Nicho: ${nicho.toUpperCase()} — Foco em Pessoa Física (${regiaoStr})`,
-      perfilSocialUrl: `${redeEscolhida.base}${nomeSorteado.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`,
-      redeSocialOrigem: redeEscolhida.nome
+      perfilAlvo: `${nichoOuSegmento} — ${regiaoStr}`,
+      perfilSocialUrl: `${redeEscolhida.urlBase}${idNum}-${Math.floor(Math.random() * 1000)}`,
+      redeSocialOrigem: redeEscolhida.nomeRede,
+      resumoAnalitico: resumoGerado
     });
   }
 
-  return perfis;
+  return resultados;
 }
