@@ -1570,8 +1570,8 @@ export default function SalaPage() {
                           />
 
                           {/* Camada 1: Revenda, Beleza & Consumidores (B2C) */}
-                          <div style={{ marginBottom: '10px' }}>
-                            <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>💄 BELEZA, REVENDA & CONSUMO (PESSOAS):</span>
+                          <div style={{ marginBottom: '12px' }}>
+                            <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>💄 BELEZA, REVENDA & CONSUMO (PESSOAS):</span>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               {[
                                 'Pessoas querendo revender cosméticos e ganhar renda extra',
@@ -1585,14 +1585,15 @@ export default function SalaPage() {
                                   type="button"
                                   onClick={() => setNichoPersonalizado(sugestao)}
                                   style={{
-                                    background: nichoPersonalizado === sugestao ? 'rgba(0,255,136,0.25)' : 'rgba(255,255,255,0.05)',
-                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#00ff88' : 'rgba(255,255,255,0.15)'}`,
-                                    color: nichoPersonalizado === sugestao ? '#00ff88' : '#fff',
-                                    padding: '5px 10px',
-                                    borderRadius: '6px',
+                                    background: nichoPersonalizado === sugestao ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#00ff88' : 'rgba(255,255,255,0.2)'}`,
+                                    color: '#fff',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
                                     fontSize: '10px',
                                     cursor: 'pointer',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    boxShadow: nichoPersonalizado === sugestao ? '0 0 10px rgba(0,255,136,0.4)' : 'none'
                                   }}
                                 >
                                   {sugestao}
@@ -1602,8 +1603,8 @@ export default function SalaPage() {
                           </div>
 
                           {/* Camada 2: Comércios e Empresas (CNPJ / B2B) */}
-                          <div style={{ marginBottom: '10px' }}>
-                            <span style={{ fontSize: '9px', color: '#2bd9ff', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>🏢 COMÉRCIOS E EMPRESAS LOCAIS (CNPJ / PARCERIAS):</span>
+                          <div style={{ marginBottom: '12px' }}>
+                            <span style={{ fontSize: '9px', color: '#2bd9ff', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>🏢 COMÉRCIOS E EMPRESAS LOCAIS (CNPJ / PARCERIAS):</span>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               {[
                                 'Salões de beleza, esmalterias e clínicas de estética',
@@ -1617,14 +1618,15 @@ export default function SalaPage() {
                                   type="button"
                                   onClick={() => setNichoPersonalizado(sugestao)}
                                   style={{
-                                    background: nichoPersonalizado === sugestao ? 'rgba(43,217,255,0.25)' : 'rgba(255,255,255,0.05)',
-                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#2bd9ff' : 'rgba(255,255,255,0.15)'}`,
-                                    color: nichoPersonalizado === sugestao ? '#2bd9ff' : '#fff',
-                                    padding: '5px 10px',
-                                    borderRadius: '6px',
+                                    background: nichoPersonalizado === sugestao ? 'rgba(43,217,255,0.3)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#2bd9ff' : 'rgba(255,255,255,0.2)'}`,
+                                    color: '#fff',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
                                     fontSize: '10px',
                                     cursor: 'pointer',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    boxShadow: nichoPersonalizado === sugestao ? '0 0 10px rgba(43,217,255,0.4)' : 'none'
                                   }}
                                 >
                                   {sugestao}
@@ -1635,7 +1637,7 @@ export default function SalaPage() {
 
                           {/* Camada 3: Profissionais em Busca de Emprego (RH / Espectros) */}
                           <div>
-                            <span style={{ fontSize: '9px', color: '#ffd700', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>👨‍💼 PROFISSIONAIS EM BUSCA DE EMPREGO (VAGAS E SELEÇÃO):</span>
+                            <span style={{ fontSize: '9px', color: '#ffd700', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>👨‍💼 PROFISSIONAIS EM BUSCA DE EMPREGO (VAGAS E SELEÇÃO):</span>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               {[
                                 'Profissionais da área operacional e produção (Estoque, logística)',
@@ -1650,14 +1652,15 @@ export default function SalaPage() {
                                   type="button"
                                   onClick={() => setNichoPersonalizado(sugestao)}
                                   style={{
-                                    background: nichoPersonalizado === sugestao ? 'rgba(255,215,0,0.25)' : 'rgba(255,255,255,0.05)',
-                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#ffd700' : 'rgba(255,255,255,0.15)'}`,
-                                    color: nichoPersonalizado === sugestao ? '#ffd700' : '#fff',
-                                    padding: '5px 10px',
-                                    borderRadius: '6px',
+                                    background: nichoPersonalizado === sugestao ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#ffd700' : 'rgba(255,255,255,0.2)'}`,
+                                    color: '#fff',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
                                     fontSize: '10px',
                                     cursor: 'pointer',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    boxShadow: nichoPersonalizado === sugestao ? '0 0 10px rgba(255,215,0,0.4)' : 'none'
                                   }}
                                 >
                                   {sugestao}
