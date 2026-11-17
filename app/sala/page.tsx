@@ -139,8 +139,8 @@ export default function SalaPage() {
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
   
-  // Nicho Dinâmico / Flexível para qualquer profissão
-  const [nichoPersonalizado, setNichoPersonalizado] = useState<string>('Transição Profissional e Oportunidades');
+  // Nicho Dinâmico / Categoria Selecionada
+  const [nichoPersonalizado, setNichoPersonalizado] = useState<string>('Pessoas querendo revender cosméticos e ganhar renda extra');
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
   const [carregandoLeads, setCarregandoLeads] = useState(false);
@@ -555,7 +555,7 @@ export default function SalaPage() {
       }));
   }, [leads, gestor, isMasterUser]);
 
-  // Executa o motor com suporte a nicho dinâmico/livre e DNA do perfil (Resumo Analítico)
+  // Executa o motor com suporte a nicho dinâmico e DNA do perfil
   const executarGarimpoUnificado = async () => {
     const nomeGestorAtual = gestor?.nome || 'Master';
     const categoriaDefinida = `Garimpo: ${nichoPersonalizado}`;
@@ -1493,9 +1493,9 @@ export default function SalaPage() {
 
               {gestorDesbloqueado && moduloAtivo === 'Seu SCOUT' && subModuloAtivo === 'Prospecto Digital' && (
                 <div className="sala-dynamic-card">
-                  <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital (Garimpo Agnóstico)</h3>
+                  <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital (Garimpo Inteligente)</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
-                    Defina sua região e digite o nicho ou segmento exato do seu contrato ou público-alvo
+                    Escolha sua região e selecione abaixo o que você quer encontrar (ou digite com suas palavras)
                   </p>
 
                   <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
@@ -1504,11 +1504,11 @@ export default function SalaPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px' }}>📊</span>
                           <strong style={{ color: '#00ff88', fontSize: '13px', letterSpacing: '0.5px' }}>
-                            MOTOR DE INTELIGÊNCIA TERRITORIAL & ABORDAGEM COM DNA DO PERFIL.
+                            MOTOR DE INTELIGÊNCIA TERRITORIAL & DNA DO PERFIL.
                           </strong>
                         </div>
                         <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
-                          O motor cruza a geolocalização com o segmento desejado, entregando contatos validados com WhatsApp, rede social e um resumo analítico pronto para orientar sua abordagem comercial.
+                          O motor cruza a geolocalização com o objetivo escolhido, entregando contatos validados com WhatsApp, redes sociais e um resumo analítico pronto para orientar sua abordagem.
                         </p>
                       </div>
 
@@ -1544,16 +1544,16 @@ export default function SalaPage() {
                           </div>
                         </div>
 
-                        {/* Campo Dinâmico de Nicho / Alvo */}
+                        {/* Campo Dinâmico e Sugestões Ampliadas por Camadas (Linguagem Popular) */}
                         <div style={{ marginBottom: '18px' }}>
                           <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
-                            🎯 NICHO, SETOR OU PERFIL ALVO DO CONTRATO / BUSCA:
+                            🎯 O QUE VOCÊ ESTÁ PROCURANDO NA SUA REGIÃO? (SELECIONE OU DIGITE ABAIXO):
                           </label>
                           <input
                             type="text"
                             value={nichoPersonalizado}
                             onChange={(e) => setNichoPersonalizado(e.target.value)}
-                            placeholder="Ex: Restaurantes, Metalurgia, Pessoas perto da aposentadoria, Transição Profissional..."
+                            placeholder="Digite o que procura ou escolha nas opções abaixo..."
                             style={{
                               width: '100%',
                               background: '#050505',
@@ -1564,31 +1564,108 @@ export default function SalaPage() {
                               fontSize: '13px',
                               fontWeight: 'bold',
                               outline: 'none',
-                              boxSizing: 'border-box'
+                              boxSizing: 'border-box',
+                              marginBottom: '14px'
                             }}
                           />
-                          <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', alignSelf: 'center' }}>Sugestões rápidas:</span>
-                            {['Transição Profissional', 'Saúde Integrativa', 'Consumo Consciente', 'Restaurantes', 'Metalurgia', 'Pessoas Próximas Aposentadoria'].map((sugestao) => (
-                              <button
-                                key={sugestao}
-                                type="button"
-                                onClick={() => setNichoPersonalizado(sugestao)}
-                                style={{
-                                  background: nichoPersonalizado === sugestao ? 'rgba(0,255,136,0.2)' : 'rgba(255,255,255,0.05)',
-                                  border: `1px solid ${nichoPersonalizado === sugestao ? '#00ff88' : 'rgba(255,255,255,0.15)'}`,
-                                  color: nichoPersonalizado === sugestao ? '#00ff88' : '#fff',
-                                  padding: '4px 10px',
-                                  borderRadius: '6px',
-                                  fontSize: '10px',
-                                  cursor: 'pointer',
-                                  fontWeight: 'bold'
-                                }}
-                              >
-                                {sugestao}
-                              </button>
-                            ))}
+
+                          {/* Camada 1: Revenda, Beleza & Consumidores (B2C) */}
+                          <div style={{ marginBottom: '10px' }}>
+                            <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>💄 BELEZA, REVENDA & CONSUMO (PESSOAS):</span>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {[
+                                'Pessoas querendo revender cosméticos e ganhar renda extra',
+                                'Clientes para comprar maquiagens e perfumes',
+                                'Pessoas interessadas em cuidados com a pele (Skincare)',
+                                'Consumidoras de produtos para cabelo e tratamento',
+                                'Donas de casa focadas em produtos para o lar'
+                              ].map((sugestao) => (
+                                <button
+                                  key={sugestao}
+                                  type="button"
+                                  onClick={() => setNichoPersonalizado(sugestao)}
+                                  style={{
+                                    background: nichoPersonalizado === sugestao ? 'rgba(0,255,136,0.25)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#00ff88' : 'rgba(255,255,255,0.15)'}`,
+                                    color: nichoPersonalizado === sugestao ? '#00ff88' : '#fff',
+                                    padding: '5px 10px',
+                                    borderRadius: '6px',
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                  }}
+                                >
+                                  {sugestao}
+                                </button>
+                              ))}
+                            </div>
                           </div>
+
+                          {/* Camada 2: Comércios e Empresas (CNPJ / B2B) */}
+                          <div style={{ marginBottom: '10px' }}>
+                            <span style={{ fontSize: '9px', color: '#2bd9ff', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>🏢 COMÉRCIOS E EMPRESAS LOCAIS (CNPJ / PARCERIAS):</span>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {[
+                                'Salões de beleza, esmalterias e clínicas de estética',
+                                'Lojas de varejo, comércio local e boutiques de bairro',
+                                'Restaurantes, lanchonetes, bares e panificadoras',
+                                'Escritórios de prestação de serviços (Contabilidade, Advocacia, Imobiliárias)',
+                                'Pequenas indústrias, oficinas e prestadores técnicos'
+                              ].map((sugestao) => (
+                                <button
+                                  key={sugestao}
+                                  type="button"
+                                  onClick={() => setNichoPersonalizado(sugestao)}
+                                  style={{
+                                    background: nichoPersonalizado === sugestao ? 'rgba(43,217,255,0.25)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#2bd9ff' : 'rgba(255,255,255,0.15)'}`,
+                                    color: nichoPersonalizado === sugestao ? '#2bd9ff' : '#fff',
+                                    padding: '5px 10px',
+                                    borderRadius: '6px',
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                  }}
+                                >
+                                  {sugestao}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Camada 3: Profissionais em Busca de Emprego (RH / Espectros) */}
+                          <div>
+                            <span style={{ fontSize: '9px', color: '#ffd700', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>👨‍💼 PROFISSIONAIS EM BUSCA DE EMPREGO (VAGAS E SELEÇÃO):</span>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {[
+                                'Profissionais da área operacional e produção (Estoque, logística)',
+                                'Profissionais de cozinha, salão e atendimento (Cozinheiros, garçons)',
+                                'Profissionais de vendas, caixa e atendimento ao cliente',
+                                'Profissionais de beleza, estética e cuidados pessoais',
+                                'Profissionais administrativos, escritório e recepção',
+                                'Profissionais técnicos e especializados (Manutenção, mecânicos)'
+                              ].map((sugestao) => (
+                                <button
+                                  key={sugestao}
+                                  type="button"
+                                  onClick={() => setNichoPersonalizado(sugestao)}
+                                  style={{
+                                    background: nichoPersonalizado === sugestao ? 'rgba(255,215,0,0.25)' : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${nichoPersonalizado === sugestao ? '#ffd700' : 'rgba(255,255,255,0.15)'}`,
+                                    color: nichoPersonalizado === sugestao ? '#ffd700' : '#fff',
+                                    padding: '5px 10px',
+                                    borderRadius: '6px',
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                  }}
+                                >
+                                  {sugestao}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                         </div>
 
                         {/* Botão Unificado de Garimpo */}
@@ -1627,7 +1704,7 @@ export default function SalaPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                           {perfisGarimpados.length === 0 ? (
                             <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px dashed rgba(0,255,136,0.2)' }}>
-                              Nenhum lote garimpado ativo. Digite seu nicho acima e execute o garimpo para gerar sua lista inteligente.
+                              Nenhum lote garimpado ativo. Selecione uma opção acima e execute o garimpo para gerar sua lista inteligente.
                             </div>
                           ) : (
                             perfisGarimpados.map((lead) => {

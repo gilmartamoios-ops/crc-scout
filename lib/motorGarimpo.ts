@@ -13,24 +13,24 @@ export interface PerfilGarimpado {
 export async function executarMotorGarimpo(
   estado: string,
   municipio: string,
-  nichoOuSegmento: string,
+  categoriaOuNicho: string,
   quantidade: number = 20
 ): Promise<PerfilGarimpado[]> {
   const regiaoStr = `${municipio} / ${estado}`;
   const resultados: PerfilGarimpado[] = [];
 
   const redesSociaisAlvo = [
-    { nomeRede: 'LinkedIn', urlBase: 'https://linkedin.com/in/profissional-' },
     { nomeRede: 'Instagram', urlBase: 'https://instagram.com/contato.' },
-    { nomeRede: 'Facebook', urlBase: 'https://facebook.com/perfil.local.' }
+    { nomeRede: 'Facebook', urlBase: 'https://facebook.com/perfil.local.' },
+    { nomeRede: 'LinkedIn', urlBase: 'https://linkedin.com/in/profissional-' }
   ];
 
-  // Textos base para gerar o resumo analítico ("DNA do Perfil") de acordo com o nicho
+  // Ganchos analíticos adaptados para o contexto popular e de negócios
   const ganchosAnaliticos = [
-    `Alvo com forte aderência para ${nichoOuSegmento}. Ativo na praça de ${municipio} com histórico de decisão rápida.`,
-    `Perfil identificado com potencial elevado para ${nichoOuSegmento}. Busca soluções práticas e parcerias locais na região.`,
-    `Contato mapeado em ${municipio} com fit direto para ${nichoOuSegmento}. Histórico profissional voltado a resultados e expansão.`,
-    `Oportunidade qualificada em ${nichoOuSegmento}. Apresenta comportamento engajado e demanda recorrente na praça.`
+    `Contato mapeado em ${regiaoStr} com forte aderência para ${categoriaOuNicho}. Perfil receptivo a novas oportunidades na praça.`,
+    `Oportunidade qualificada para ${categoriaOuNicho} em ${regiaoStr}. Demonstra engajamento e histórico ativo na região.`,
+    `Alvo com fit direto para ${categoriaOuNicho}. Excelente momento para abordagem comercial e apresentação de proposta local.`,
+    `Perfil identificado com perfil promissor em ${categoriaOuNicho} (${regiaoStr}). Ideal para contato via WhatsApp com foco em parceria.`
   ];
 
   for (let index = 0; index < quantidade; index++) {
@@ -40,10 +40,10 @@ export async function executarMotorGarimpo(
     const resumoGerado = ganchosAnaliticos[index % ganchosAnaliticos.length];
 
     resultados.push({
-      nome: `Contato Qualificado #${idNum}`,
+      nome: `Contato Local #${idNum}`,
       whatsapp: whatsSimulado,
       regiao: regiaoStr,
-      perfilAlvo: `${nichoOuSegmento} — ${regiaoStr}`,
+      perfilAlvo: `${categoriaOuNicho} — ${regiaoStr}`,
       perfilSocialUrl: `${redeEscolhida.urlBase}${idNum}-${Math.floor(Math.random() * 1000)}`,
       redeSocialOrigem: redeEscolhida.nomeRede,
       resumoAnalitico: resumoGerado
