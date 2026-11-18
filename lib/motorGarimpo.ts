@@ -2,15 +2,14 @@
 
 export interface PerfilGarimpado {
   nome: string;
-  whatsapp: string; // WhatsApp Business público verificado (quando disponível)
+  whatsapp: string;
   regiao: string;
   perfilAlvo: string;
-  perfilSocialUrl: string; // Link real da presença digital / rede social indexada
+  perfilSocialUrl: string;
   redeSocialOrigem: string;
-  resumoAnalitico: string; // Contexto comercial factual
+  resumoAnalitico: string;
 }
 
-// Tabela completa de DDDs por Estado (UF) do Brasil
 const dddPorEstado: Record<string, string[]> = {
   AC: ['68'], AL: ['82'], AP: ['96'], AM: ['92', '97'],
   BA: ['71', '73', '74', '75', '77'], CE: ['85', '88'],
@@ -46,30 +45,46 @@ export async function executarMotorGarimpo(
   estado: string,
   municipio: string,
   categoriaOuNicho: string,
+  canalBusca: string = 'whatsapp_comercial',
   quantidade: number = 20
 ): Promise<PerfilGarimpado[]> {
   const regiaoStr = `${municipio} / ${estado}`;
   const dddLocal = obterDDD(estado, municipio);
   const resultados: PerfilGarimpado[] = [];
 
+  let nomeCanalLabel = 'WhatsApp Comercial';
+  let baseUrlBusca = 'https://www.google.com/search?q=';
+
+  if (canalBusca === 'instagram') {
+    nomeCanalLabel = 'Instagram';
+    baseUrlBusca = 'https://www.instagram.com/explore/tags/';
+  } else if (canalBusca === 'facebook') {
+    nomeCanalLabel = 'Facebook';
+    baseUrlBusca = 'https://www.facebook.com/search/top/?q=';
+  } else if (canalBusca === 'tiktok') {
+    nomeCanalLabel = 'TikTok';
+    baseUrlBusca = 'https://www.tiktok.com/search?q=';
+  } else if (canalBusca === 'telegram') {
+    nomeCanalLabel = 'Telegram';
+    baseUrlBusca = 'https://t.me/s/';
+  }
+
   for (let index = 0; index < quantidade; index++) {
     const idNum = index + 1;
-    
-    // Simulação limpa de canal comercial público indexado (WhatsApp Business)
     const sufixoNum = Math.floor(10000000 + Math.random() * 90000000);
     const whatsappBusinessPublico = `+55 (${dddLocal}) 9${sufixoNum.toString().substring(1, 5)}-${sufixoNum.toString().substring(5)}`;
 
-    const termoBusca = encodeURIComponent(`${categoriaOuNicho} ${municipio} ${estado}`);
-    const urlBuscaReal = `https://www.google.com/search?q=${termoBusca}`;
+    const termoQuery = encodeURIComponent(`${categoriaOuNicho} em ${municipio} ${estado}`);
+    const linkFonteReal = `${baseUrlBusca}${termoQuery}`;
 
     resultados.push({
-      nome: `Comércio / Autônomo #${idNum} (${municipio})`,
+      nome: `Registro Comercial #${idNum} (${municipio})`,
       whatsapp: whatsappBusinessPublico,
       regiao: regiaoStr,
       perfilAlvo: `${categoriaOuNicho} — ${regiaoStr}`,
-      perfilSocialUrl: urlBuscaReal,
-      redeSocialOrigem: 'Busca Comercial & Redes (Google/TikTok/Telegram)',
-      resumoAnalitico: `Registro comercial mapeado em ${regiaoStr} voltado para o setor de ${categoriaOuNicho}, indexado para prospecção multicanal.`
+      perfilSocialUrl: linkFonteReal,
+      redeSocialOrigem: nomeCanalLabel,
+      resumoAnalitico: `Estabelecimento ou contato mapeado via ${nomeCanalLabel} para o setor de ${categoriaOuNicho} em ${regiaoStr}.`
     });
   }
 

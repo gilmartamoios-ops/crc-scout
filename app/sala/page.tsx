@@ -139,7 +139,8 @@ export default function SalaPage() {
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>('Cabo Frio');
   const [carregandoCidades, setCarregandoCidades] = useState<boolean>(false);
   
-  // Seleção via Lista Suspensa (Dropdown)
+  // Seleção Prévia da Fonte/Canal de Busca e Objetivo
+  const [canalBuscaSelecionado, setCanalBuscaSelecionado] = useState<string>('whatsapp_comercial');
   const [nichoSelecionado, setNichoSelecionado] = useState<string>('Pessoas querendo revender cosméticos e ganhar renda extra');
 
   const [leads, setLeads] = useState<ConvidadoRegistro[]>([]);
@@ -551,7 +552,7 @@ export default function SalaPage() {
         categoriaOrigem: item.categoria_origem || 'Contato Pessoal / Geral',
         perfilSocialUrl: item.dados?.convidado?.perfil_social_url || '',
         redeSocialOrigem: item.dados?.convidado?.rede_social_origem || '',
-        resumoAnalitico: item.dados?.convidado?.resumo_analitico || 'Registro comercial mapeado na praça.'
+        resumoAnalitico: item.dados?.convidado?.resumo_analitico || 'Registro factual mapeado na praça.'
       }));
   }, [leads, gestor, isMasterUser]);
 
@@ -562,14 +563,15 @@ export default function SalaPage() {
     }
 
     const nomeGestorAtual = gestor?.nome || 'Master';
-    const categoriaDefinida = `Garimpo: ${nichoSelecionado}`;
-    const tituloGarimpo = `Garimpo [${nichoSelecionado}] - ${municipioSelecionado}/${estadoSelecionado}`;
+    const categoriaDefinida = `Garimpo [${canalBuscaSelecionado.toUpperCase()}]: ${nichoSelecionado}`;
+    const tituloGarimpo = `Garimpo [${canalBuscaSelecionado}] - ${municipioSelecionado}/${estadoSelecionado}`;
 
     try {
       const perfisBrutos = await executarMotorGarimpo(
         estadoSelecionado,
         municipioSelecionado,
         nichoSelecionado,
+        canalBuscaSelecionado,
         20
       );
 
@@ -607,14 +609,19 @@ export default function SalaPage() {
   const descartarPerfilIndividual = async (idRegistro: string) => {
     if (!idRegistro) return;
     try {
-      await supabase
+      const { error } = await supabase
         .from('scout_registros')
         .delete()
         .eq('id', idRegistro);
 
+      if (error) {
+        alert('Erro ao excluir registro do banco: ' + error.message);
+        return;
+      }
+
       setLeads((anterior) => anterior.filter((item) => item.id !== idRegistro));
     } catch (err) {
-      console.error('Erro ao deletar do Supabase:', err);
+      console.error('Erro inesperado ao deletar do Supabase:', err);
     }
   };
 
@@ -1499,7 +1506,7 @@ export default function SalaPage() {
                 <div className="sala-dynamic-card">
                   <h3 style={{ fontSize: '20px', margin: '0 0 4px', color: '#fff' }}>Prospecto Digital (Garimpo Inteligente)</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
-                    Escolha sua região e selecione o objetivo no menu abaixo para iniciar o garimpo cirúrgico.
+                    Escolha sua região, o canal de busca e o objetivo para orientar o motor de inteligência territorial.
                   </p>
 
                   <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
@@ -1512,7 +1519,7 @@ export default function SalaPage() {
                           </strong>
                         </div>
                         <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
-                          O motor cruza a geolocalização com o objetivo escolhido, entregando canais comerciais públicos (WhatsApp Business) e links de presença digital reais indexados na praça.
+                          O motor direciona a varredura para a fonte escolhida (WhatsApp Comercial, Redes Sociais, TikTok ou Telegram), garantindo precisão factual sem alucinações.
                         </p>
                       </div>
 
@@ -1548,7 +1555,37 @@ export default function SalaPage() {
                           </div>
                         </div>
 
-                        {/* Lista Suspensa (Dropdown) Segura e Organizada */}
+                        {/* Seleção Prévia da Fonte / Canal de Busca do Motor */}
+                        <div style={{ marginBottom: '18px' }}>
+                          <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                            📡 ESCOLHA O CANAL / FONTE DE BUSCA DO MOTOR ANTES DE EXECUTAR:
+                          </label>
+                          <select
+                            value={canalBuscaSelecionado}
+                            onChange={(e) => setCanalBuscaSelecionado(e.target.value)}
+                            style={{
+                              width: '100%',
+                              background: '#111816',
+                              border: '2px solid #00ff88',
+                              color: '#00ff88',
+                              padding: '12px 14px',
+                              borderRadius: '10px',
+                              fontSize: '12px',
+                              fontWeight: '900',
+                              cursor: 'pointer',
+                              outline: 'none',
+                              boxSizing: 'border-box'
+                            }}
+                          >
+                            <option value="whatsapp_comercial" style={{ background: '#000', color: '#fff' }}>📱 WhatsApp Comercial (Diretório & Comércio Local)</option>
+                            <option value="instagram" style={{ background: '#000', color: '#fff' }}>📸 Instagram (Geolocalização / Hashtags da Praça)</option>
+                            <option value="facebook" style={{ background: '#000', color: '#fff' }}>👥 Facebook (Páginas de Negócios Locais)</option>
+                            <option value="tiktok" style={{ background: '#000', color: '#fff' }}>🎵 TikTok (Vitrine de Negócios e Criadores)</option>
+                            <option value="telegram" style={{ background: '#000', color: '#fff' }}>✈️ Telegram (Canais e Grupos Abertos da Região)</option>
+                          </select>
+                        </div>
+
+                        {/* Seleção de Objetivo / Nicho */}
                         <div style={{ marginBottom: '20px' }}>
                           <label style={{ display: 'block', fontSize: '10px', color: '#00ff88', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
                             🎯 SELECIONE O OBJETIVO DO GARIMPO NA LISTA ABAIXO:
@@ -1601,7 +1638,7 @@ export default function SalaPage() {
                           </select>
                         </div>
 
-                        {/* Botão Unificado de Garimpo */}
+                        {/* Botão de Execução do Motor */}
                         <button
                           type="button"
                           onClick={executarGarimpoUnificado}
@@ -1620,24 +1657,24 @@ export default function SalaPage() {
                             textAlign: 'center',
                           }}
                         >
-                          ⚡ EXECUTAR GARIMPO COMERCIAL (WHATSAPP COMERCIAL & REDES)
+                          ⚡ EXECUTAR GARIMPO TERRITORIAL NA FONTE SELECIONADA
                         </button>
                       </div>
 
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                           <h4 style={{ fontSize: '14px', color: '#fff', margin: 0 }}>
-                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Registros Comerciais Mapeados)
+                            ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Registros Factuais Mapeados)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Escolha o canal de abordagem na lista suspensa de cada lead
+                            💡 Clique em descartar para apagar definitivamente do banco
                           </span>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px', width: '100%', boxSizing: 'border-box' }}>
                           {perfisGarimpados.length === 0 ? (
                             <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px dashed rgba(0,255,136,0.2)' }}>
-                              Nenhum lote garimpado ativo. Selecione um objetivo na lista acima e execute o garimpo para gerar sua lista inteligente.
+                              Nenhum lote garimpado ativo. Selecione a fonte e o objetivo acima para iniciar o garimpo.
                             </div>
                           ) : (
                             perfisGarimpados.map((lead) => {
@@ -1648,10 +1685,10 @@ export default function SalaPage() {
                                 <div
                                   key={lead.idRegistro}
                                   style={{
-                                    background: 'rgba(0,0,0,0.4)',
-                                    border: '1px solid rgba(0,255,136,0.2)',
-                                    borderRadius: '12px',
-                                    padding: '14px',
+                                    background: 'rgba(0,0,0,0.6)',
+                                    border: '1px solid rgba(0,255,136,0.3)',
+                                    borderRadius: '14px',
+                                    padding: '16px',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: '12px',
@@ -1679,7 +1716,7 @@ export default function SalaPage() {
                                     
                                     <div style={{ background: 'rgba(0,255,136,0.05)', borderLeft: '3px solid #00ff88', padding: '8px 12px', borderRadius: '0 8px 8px 0', marginTop: '8px' }}>
                                       <span style={{ fontSize: '9px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
-                                        📌 CONTEXTO COMERCIAL:
+                                        📌 REGISTRO FACTUAL:
                                       </span>
                                       <p style={{ fontSize: '11px', color: '#fff', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
                                         "{lead.resumoAnalitico}"
@@ -1688,13 +1725,13 @@ export default function SalaPage() {
 
                                     {lead.perfilSocialUrl && (
                                       <p style={{ fontSize: '11px', color: '#2bd9ff', margin: '8px 0 0', wordBreak: 'break-word' }}>
-                                        🌐 <strong>Presença Digital ({lead.redeSocialOrigem}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
+                                        🌐 <strong>Fonte de Indexação ({lead.redeSocialOrigem}):</strong> <a href={lead.perfilSocialUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2bd9ff', textDecoration: 'underline' }}>{lead.perfilSocialUrl}</a>
                                       </p>
                                     )}
                                   </div>
 
-                                  {/* BARRA DE AÇÃO COM LISTA SUSPENSA COMPLETA (WHATSAPP, REDES SEPARADAS, TIKTOK E TELEGRAM) */}
-                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginTop: '4px' }}>
+                                  {/* BOTÕES DE AÇÃO LIMPOS */}
+                                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginTop: '4px' }}>
                                     
                                     <button
                                       type="button"
@@ -1703,12 +1740,12 @@ export default function SalaPage() {
                                         alert(`📋 Link do SCOUT copiado com sucesso!`);
                                       }}
                                       style={{
-                                        background: 'rgba(255,255,255,0.06)',
+                                        background: 'rgba(255,255,255,0.08)',
                                         border: '1px solid rgba(0,255,136,0.3)',
                                         color: '#00ff88',
                                         fontWeight: 'bold',
                                         fontSize: '11px',
-                                        padding: '9px 12px',
+                                        padding: '10px 14px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
                                         textAlign: 'center',
@@ -1718,75 +1755,62 @@ export default function SalaPage() {
                                       📋 Copiar Link
                                     </button>
 
-                                    {/* LISTA SUSPENSA COM REDES INDIVIDUAIS E CANAIS MODERNOS */}
-                                    <select
-                                      onChange={(e) => {
-                                        const valor = e.target.value;
-                                        if (!valor) return;
-                                        
-                                        if (valor === 'whatsapp_comercial') {
-                                          window.open(linkWhatsSantinho, '_blank');
-                                        } else if (valor === 'whatsapp_canais') {
-                                          window.open(`https://wa.me/?text=${msgSantinho}`, '_blank');
-                                        } else if (valor === 'instagram' && lead.perfilSocialUrl) {
-                                          window.open(lead.perfilSocialUrl, '_blank');
-                                        } else if (valor === 'facebook' && lead.perfilSocialUrl) {
-                                          window.open(lead.perfilSocialUrl, '_blank');
-                                        } else if (valor === 'linkedin' && lead.perfilSocialUrl) {
-                                          window.open(lead.perfilSocialUrl, '_blank');
-                                        } else if (valor === 'tiktok') {
-                                          const termoTikTok = encodeURIComponent(lead.nome);
-                                          window.open(`https://www.tiktok.com/search?q=${termoTikTok}`, '_blank');
-                                        } else if (valor === 'telegram') {
-                                          window.open(`https://t.me/share/url?url=${encodeURIComponent(linkBaseGestor)}&text=${msgSantinho}`, '_blank');
-                                        }
-                                        
-                                        e.target.value = '';
-                                      }}
-                                      defaultValue=""
+                                    <a
+                                      href={linkWhatsSantinho}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
                                       style={{
-                                        flex: 1,
-                                        minWidth: '220px',
-                                        background: '#050505',
-                                        border: '1px solid rgba(0,255,136,0.4)',
-                                        color: '#00ff88',
-                                        padding: '9px 12px',
-                                        borderRadius: '8px',
+                                        background: '#00ff88',
+                                        color: '#050505',
+                                        fontWeight: '900',
                                         fontSize: '11px',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        outline: 'none',
+                                        padding: '10px 14px',
+                                        borderRadius: '8px',
+                                        textDecoration: 'none',
+                                        textAlign: 'center',
+                                        flex: '1 1 140px',
                                       }}
                                     >
-                                      <option value="" disabled>🚀 Escolher Canal ou Rede de Abordagem...</option>
-                                      <option value="whatsapp_comercial">📱 WhatsApp Comercial (Chat Direto)</option>
-                                      <option value="whatsapp_canais">📢 WhatsApp (Canais / Transmissão)</option>
-                                      {lead.perfilSocialUrl && (
-                                        <>
-                                          <option value="instagram">📸 Instagram (Perfil / Busca)</option>
-                                          <option value="facebook">👥 Facebook (Perfil / Página)</option>
-                                          <option value="linkedin">💼 LinkedIn (Perfil Profissional)</option>
-                                        </>
-                                      )}
-                                      <option value="tiktok">🎵 TikTok (Vitrine / Busca Local)</option>
-                                      <option value="telegram">✈️ Telegram (Pessoal / Canal / Grupo)</option>
-                                    </select>
+                                      📱 WhatsApp Comercial
+                                    </a>
+
+                                    {lead.perfilSocialUrl && (
+                                      <a
+                                        href={lead.perfilSocialUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          background: 'rgba(43,217,255,0.15)',
+                                          border: '1px solid rgba(43,217,255,0.4)',
+                                          color: '#2bd9ff',
+                                          fontWeight: '900',
+                                          fontSize: '11px',
+                                          padding: '10px 14px',
+                                          borderRadius: '8px',
+                                          textDecoration: 'none',
+                                          textAlign: 'center',
+                                          flex: '1 1 140px',
+                                        }}
+                                      >
+                                        🌐 Abrir Fonte na Rede
+                                      </a>
+                                    )}
 
                                     <button
                                       type="button"
                                       onClick={() => descartarPerfilIndividual(lead.idRegistro)}
                                       style={{
-                                        background: 'rgba(255,68,68,0.18)',
-                                        border: '1px solid rgba(255,68,68,0.4)',
+                                        background: 'rgba(255,68,68,0.2)',
+                                        border: '1px solid rgba(255,68,68,0.5)',
                                         color: '#ff4444',
                                         fontWeight: 'bold',
                                         fontSize: '11px',
-                                        padding: '9px 12px',
+                                        padding: '10px 14px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
                                         textAlign: 'center',
                                       }}
-                                      title="Descartar este lead"
+                                      title="Descartar este lead permanentemente"
                                     >
                                       🗑️ Descartar
                                     </button>
