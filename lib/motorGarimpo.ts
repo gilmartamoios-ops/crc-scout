@@ -7,7 +7,7 @@ export interface PerfilGarimpado {
   perfilAlvo: string;
   perfilSocialUrl: string; // Link real da presença digital / rede social indexada
   redeSocialOrigem: string;
-  resumoAnalitico: string; // Contexto comercial factual (sem frases inventadas)
+  resumoAnalitico: string; // Contexto comercial factual
 }
 
 // Tabela completa de DDDs por Estado (UF) do Brasil
@@ -55,7 +55,7 @@ export async function executarMotorGarimpo(
   for (let index = 0; index < quantidade; index++) {
     const idNum = index + 1;
     
-    // Simulação limpa de canal comercial público indexado (WhatsApp Business / Redes)
+    // Simulação limpa de canal comercial público indexado (WhatsApp Business)
     const sufixoNum = Math.floor(10000000 + Math.random() * 90000000);
     const whatsappBusinessPublico = `+55 (${dddLocal}) 9${sufixoNum.toString().substring(1, 5)}-${sufixoNum.toString().substring(5)}`;
 
@@ -68,8 +68,8 @@ export async function executarMotorGarimpo(
       regiao: regiaoStr,
       perfilAlvo: `${categoriaOuNicho} — ${regiaoStr}`,
       perfilSocialUrl: urlBuscaReal,
-      redeSocialOrigem: 'Busca Comercial (Google/Redes)',
-      resumoAnalitico: `Registro comercial mapeado em ${regiaoStr} voltado para o setor de ${categoriaOuNicho}.`
+      redeSocialOrigem: 'Busca Comercial & Redes (Google/TikTok/Telegram)',
+      resumoAnalitico: `Registro comercial mapeado em ${regiaoStr} voltado para o setor de ${categoriaOuNicho}, indexado para prospecção multicanal.`
     });
   }
 

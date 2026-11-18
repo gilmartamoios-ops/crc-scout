@@ -1630,7 +1630,7 @@ export default function SalaPage() {
                             ⚡ Lote Ativo no Banco ({perfisGarimpados.length} Registros Comerciais Mapeados)
                           </h4>
                           <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
-                            💡 Escolha entre WhatsApp Comercial ou Inspecionar na Rede
+                            💡 Escolha o canal de abordagem na lista suspensa de cada lead
                           </span>
                         </div>
 
@@ -1693,8 +1693,9 @@ export default function SalaPage() {
                                     )}
                                   </div>
 
-                                  {/* Botões atualizados para escolha entre WhatsApp Comercial e Presença Digital */}
-                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
+                                  {/* BARRA DE AÇÃO COM LISTA SUSPENSA COMPLETA (WHATSAPP, REDES SEPARADAS, TIKTOK E TELEGRAM) */}
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginTop: '4px' }}>
+                                    
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1707,59 +1708,69 @@ export default function SalaPage() {
                                         color: '#00ff88',
                                         fontWeight: 'bold',
                                         fontSize: '11px',
-                                        padding: '8px 10px',
+                                        padding: '9px 12px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
-                                        flex: 1,
-                                        minWidth: '110px',
                                         textAlign: 'center',
                                       }}
+                                      title="Copiar link exclusivo do Gestor"
                                     >
                                       📋 Copiar Link
                                     </button>
 
-                                    <a
-                                      href={linkWhatsSantinho}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                    {/* LISTA SUSPENSA COM REDES INDIVIDUAIS E CANAIS MODERNOS */}
+                                    <select
+                                      onChange={(e) => {
+                                        const valor = e.target.value;
+                                        if (!valor) return;
+                                        
+                                        if (valor === 'whatsapp_comercial') {
+                                          window.open(linkWhatsSantinho, '_blank');
+                                        } else if (valor === 'whatsapp_canais') {
+                                          window.open(`https://wa.me/?text=${msgSantinho}`, '_blank');
+                                        } else if (valor === 'instagram' && lead.perfilSocialUrl) {
+                                          window.open(lead.perfilSocialUrl, '_blank');
+                                        } else if (valor === 'facebook' && lead.perfilSocialUrl) {
+                                          window.open(lead.perfilSocialUrl, '_blank');
+                                        } else if (valor === 'linkedin' && lead.perfilSocialUrl) {
+                                          window.open(lead.perfilSocialUrl, '_blank');
+                                        } else if (valor === 'tiktok') {
+                                          const termoTikTok = encodeURIComponent(lead.nome);
+                                          window.open(`https://www.tiktok.com/search?q=${termoTikTok}`, '_blank');
+                                        } else if (valor === 'telegram') {
+                                          window.open(`https://t.me/share/url?url=${encodeURIComponent(linkBaseGestor)}&text=${msgSantinho}`, '_blank');
+                                        }
+                                        
+                                        e.target.value = '';
+                                      }}
+                                      defaultValue=""
                                       style={{
-                                        background: '#00ff88',
-                                        color: '#050505',
-                                        fontWeight: 'bold',
-                                        fontSize: '11px',
-                                        padding: '8px 12px',
-                                        borderRadius: '8px',
-                                        textDecoration: 'none',
-                                        textAlign: 'center',
                                         flex: 1,
-                                        minWidth: '140px',
+                                        minWidth: '220px',
+                                        background: '#050505',
+                                        border: '1px solid rgba(0,255,136,0.4)',
+                                        color: '#00ff88',
+                                        padding: '9px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        outline: 'none',
                                       }}
                                     >
-                                      📱 WhatsApp Comercial
-                                    </a>
-
-                                    {lead.perfilSocialUrl && (
-                                      <a
-                                        href={lead.perfilSocialUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          background: 'rgba(43,217,255,0.15)',
-                                          border: '1px solid rgba(43,217,255,0.4)',
-                                          color: '#2bd9ff',
-                                          fontWeight: 'bold',
-                                          fontSize: '11px',
-                                          padding: '8px 12px',
-                                          borderRadius: '8px',
-                                          textDecoration: 'none',
-                                          textAlign: 'center',
-                                          flex: 1,
-                                          minWidth: '130px',
-                                        }}
-                                      >
-                                        🌐 Inspecionar na Rede
-                                      </a>
-                                    )}
+                                      <option value="" disabled>🚀 Escolher Canal ou Rede de Abordagem...</option>
+                                      <option value="whatsapp_comercial">📱 WhatsApp Comercial (Chat Direto)</option>
+                                      <option value="whatsapp_canais">📢 WhatsApp (Canais / Transmissão)</option>
+                                      {lead.perfilSocialUrl && (
+                                        <>
+                                          <option value="instagram">📸 Instagram (Perfil / Busca)</option>
+                                          <option value="facebook">👥 Facebook (Perfil / Página)</option>
+                                          <option value="linkedin">💼 LinkedIn (Perfil Profissional)</option>
+                                        </>
+                                      )}
+                                      <option value="tiktok">🎵 TikTok (Vitrine / Busca Local)</option>
+                                      <option value="telegram">✈️ Telegram (Pessoal / Canal / Grupo)</option>
+                                    </select>
 
                                     <button
                                       type="button"
@@ -1770,15 +1781,17 @@ export default function SalaPage() {
                                         color: '#ff4444',
                                         fontWeight: 'bold',
                                         fontSize: '11px',
-                                        padding: '8px 12px',
+                                        padding: '9px 12px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
                                         textAlign: 'center',
                                       }}
+                                      title="Descartar este lead"
                                     >
                                       🗑️ Descartar
                                     </button>
                                   </div>
+
                                 </div>
                               );
                             })
