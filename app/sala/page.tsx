@@ -302,7 +302,10 @@ export default function SalaPage() {
   useEffect(() => {
     async function verificarSessao() {
       const dados = localStorage.getItem('scout_gestor') || sessionStorage.getItem('scout_gestor');
-      if (!dados) return;
+      if (!dados) {
+        carregarListaGestores();
+        return;
+      }
 
       try {
         const gestorSalvo = JSON.parse(dados);
@@ -324,9 +327,8 @@ export default function SalaPage() {
             setGestor(gestorBanco);
             setGestorDesbloqueado(true);
             localStorage.setItem('scout_gestor', JSON.stringify(gestorBanco));
-            identificarPatrocinadorLogado(gestorBanco.id);
-            carregarLeadsScout();
-            return;
+            await identificarPatrocinadorLogado(gestorBanco.id);
+            await carregarLeadsScout();
           }
         }
       } catch (err) {
@@ -334,10 +336,11 @@ export default function SalaPage() {
         localStorage.removeItem('scout_gestor');
         sessionStorage.removeItem('scout_gestor');
       }
+
+      carregarListaGestores();
     }
 
     verificarSessao();
-    carregarListaGestores();
   }, []);
 
   const carregarListaGestores = async () => {
@@ -661,12 +664,6 @@ export default function SalaPage() {
       supabase.removeChannel(canal);
     };
   }, [gestorDesbloqueado, gestor, isMasterUser]);
-
-  useEffect(() => {
-    if (gestorDesbloqueado) {
-      carregarLeadsScout();
-    }
-  }, [gestorDesbloqueado, moduloAtivo, subModuloAtivo]);
 
   const atribuirGestorLead = async (id: string, novoGestorId: string) => {
     const leadAlvo = leads.find((l) => l.id === id);
@@ -2245,7 +2242,7 @@ export default function SalaPage() {
         .sala-chave-btn {
           background: rgba(0,255,136,0.1);
           border: 1px solid rgba(0,255,136,0.3);
-          color: #00ff88;
+          color: '#00ff88';
           padding: 6px 12px;
           border-radius: 8px;
           cursor: pointer;
